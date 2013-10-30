@@ -1,4 +1,4 @@
-package com.alibaba.rocketmq.tools.command.rollback;
+package com.alibaba.rocketmq.tools.command.offset;
 
 import java.util.List;
 
@@ -6,28 +6,28 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 
-import com.alibaba.rocketmq.common.UtilALl;
+import com.alibaba.rocketmq.common.UtilAll;
 import com.alibaba.rocketmq.common.admin.RollbackStats;
 import com.alibaba.rocketmq.tools.admin.DefaultMQAdminExt;
 import com.alibaba.rocketmq.tools.command.SubCommand;
 
 
 /**
- * 根据时间回溯消费进度
+ * 根据时间来设置消费进度，设置之前要关闭这个订阅组的所有consumer，设置完再启动，方可生效。
  * 
  * @author: manhong.yqd<jodie.yqd@gmail.com>
  * @since: 13-9-12
  */
-public class RollbackByTimeStampCommand implements SubCommand {
+public class ResetOffsetByTimeSubCommand implements SubCommand {
     @Override
     public String commandName() {
-        return "rollbackByTimeStamp";
+        return "resetOffsetByTime";
     }
 
 
     @Override
     public String commandDesc() {
-        return "rollback consumer offset by timestamp.";
+        return "Reset consumer offset by timestamp.";
     }
 
 
@@ -69,12 +69,12 @@ public class RollbackByTimeStampCommand implements SubCommand {
             }
             catch (NumberFormatException e) {
                 // 输入的为日期格式，精确到毫秒
-                timestamp = UtilALl.parseDate(timeStampStr, UtilALl.yyyy_MM_dd_HH_mm_ss_SSS).getTime();
+                timestamp = UtilAll.parseDate(timeStampStr, UtilAll.yyyy_MM_dd_HH_mm_ss_SSS).getTime();
             }
             boolean force = Boolean.valueOf(commandLine.getOptionValue("f").trim());
             defaultMQAdminExt.start();
             List<RollbackStats> rollbackStatsList =
-                    defaultMQAdminExt.rollbackConsumerOffset(consumerGroup, topic, timestamp, force);
+                    defaultMQAdminExt.resetOffsetByTimestamp(consumerGroup, topic, timestamp, force);
             System.out
                 .printf(
                     "rollback consumer offset by specified consumerGroup[%s], topic[%s], force[%s], timestamp(string)[%s], timestamp(long)[%s]\n",
@@ -91,7 +91,7 @@ public class RollbackByTimeStampCommand implements SubCommand {
 
             for (RollbackStats rollbackStats : rollbackStatsList) {
                 System.out.printf("%-20s  %-20d  %-20d  %-20d  %-20d  %-20d\n",//
-                    UtilALl.frontStringAtLeast(rollbackStats.getBrokerName(), 32),//
+                    UtilAll.frontStringAtLeast(rollbackStats.getBrokerName(), 32),//
                     rollbackStats.getQueueId(),//
                     rollbackStats.getBrokerOffset(),//
                     rollbackStats.getConsumerOffset(),//

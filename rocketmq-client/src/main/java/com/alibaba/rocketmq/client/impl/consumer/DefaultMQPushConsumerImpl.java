@@ -281,6 +281,20 @@ public class DefaultMQPushConsumerImpl implements MQConsumerInner {
     }
 
 
+    /**
+     * 通过Tag过滤时，会存在offset不准确的情况，需要纠正
+     */
+    private void correctTagsOffset(final PullRequest pullRequest) {
+        // 说明本地没有可消费的消息
+        if (0L == pullRequest.getProcessQueue().getMsgCount().get()) {
+            this.offsetStore.updateOffset(pullRequest.getMessageQueue(), pullRequest.getNextOffset(), true);
+        }
+    }
+
+    private long flowControlTimes1 = 0;
+    private long flowControlTimes2 = 0;
+
+
     public void pullMessage(final PullRequest pullRequest) {
         final ProcessQueue processQueue = pullRequest.getProcessQueue();
         if (processQueue.isDroped()) {
@@ -308,7 +322,10 @@ public class DefaultMQPushConsumerImpl implements MQConsumerInner {
         long size = processQueue.getMsgCount().get();
         if (size > this.defaultMQPushConsumer.getPullThresholdForQueue()) {
             this.executePullRequestLater(pullRequest, PullTimeDelayMillsWhenFlowControl);
-            log.warn("the consumer message buffer is full, so do flow control, {} {}", size, pullRequest);
+            if ((flowControlTimes1++ % 3000) == 0) {
+                log.warn("the consumer message buffer is full, so do flow control, {} {} {}", size,
+                    pullRequest, flowControlTimes1);
+            }
             return;
         }
 
@@ -316,7 +333,10 @@ public class DefaultMQPushConsumerImpl implements MQConsumerInner {
         if (!this.consumeOrderly) {
             if (processQueue.getMaxSpan() > this.defaultMQPushConsumer.getConsumeConcurrentlyMaxSpan()) {
                 this.executePullRequestLater(pullRequest, PullTimeDelayMillsWhenFlowControl);
-                log.warn("the queue's messages, span too long, so do flow control, {} {}", size, pullRequest);
+                if ((flowControlTimes2++ % 3000) == 0) {
+                    log.warn("the queue's messages, span too long, so do flow control, {} {} {}", size,
+                        pullRequest, flowControlTimes2);
+                }
                 return;
             }
         }
@@ -338,10 +358,8 @@ public class DefaultMQPushConsumerImpl implements MQConsumerInner {
             public void onSuccess(PullResult pullResult) {
                 if (pullResult != null) {
                     pullResult =
-                            DefaultMQPushConsumerImpl.this.pullAPIWrapper.processPullResult(pullRequest
-                                .getMessageQueue(), pullResult, subscriptionData,
-                                DefaultMQPushConsumerImpl.this.mQClientFactory.getMQClientAPIImpl()
-                                    .getProjectGroupPrefix());
+                            DefaultMQPushConsumerImpl.this.pullAPIWrapper.processPullResult(
+                                pullRequest.getMessageQueue(), pullResult, subscriptionData);
 
                     switch (pullResult.getPullStatus()) {
                     case FOUND:
@@ -373,6 +391,8 @@ public class DefaultMQPushConsumerImpl implements MQConsumerInner {
                         break;
                     case NO_NEW_MSG:
                         pullRequest.setNextOffset(pullResult.getNextBeginOffset());
+
+                        DefaultMQPushConsumerImpl.this.correctTagsOffset(pullRequest);
 
                         DefaultMQPushConsumerImpl.this.executePullRequestImmediately(pullRequest);
                         break;
@@ -560,12 +580,12 @@ public class DefaultMQPushConsumerImpl implements MQConsumerInner {
     public void start() throws MQClientException {
         switch (this.serviceState) {
         case CREATE_JUST:
+            this.serviceState = ServiceState.START_FAILED;
+
             this.checkConfig();
 
             // 复制订阅关系
             this.copySubscription();
-
-            this.serviceState = ServiceState.RUNNING;
 
             this.mQClientFactory =
                     MQClientManager.getInstance().getAndCreateMQClientFactory(this.defaultMQPushConsumer);
@@ -633,11 +653,14 @@ public class DefaultMQPushConsumerImpl implements MQConsumerInner {
 
             mQClientFactory.start();
             log.info("the consumer [{}] start OK", this.defaultMQPushConsumer.getConsumerGroup());
+            this.serviceState = ServiceState.RUNNING;
             break;
         case RUNNING:
-            break;
+        case START_FAILED:
         case SHUTDOWN_ALREADY:
-            break;
+            throw new MQClientException("The PushConsumer service state not OK, maybe started once, "//
+                    + this.serviceState//
+                    + FAQUrl.suggestTodo(FAQUrl.CLIENT_SERVICE_NOT_OK), null);
         default:
             break;
         }

@@ -15,7 +15,14 @@
  */
 package com.alibaba.rocketmq.tools.admin;
 
-import java.util.*;
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
 
 import org.slf4j.Logger;
 
@@ -37,12 +44,21 @@ import com.alibaba.rocketmq.common.help.FAQUrl;
 import com.alibaba.rocketmq.common.message.MessageExt;
 import com.alibaba.rocketmq.common.message.MessageQueue;
 import com.alibaba.rocketmq.common.namesrv.NamesrvUtil;
-import com.alibaba.rocketmq.common.protocol.body.*;
+import com.alibaba.rocketmq.common.protocol.body.ClusterInfo;
+import com.alibaba.rocketmq.common.protocol.body.ConsumeByWho;
+import com.alibaba.rocketmq.common.protocol.body.ConsumerConnection;
+import com.alibaba.rocketmq.common.protocol.body.KVTable;
+import com.alibaba.rocketmq.common.protocol.body.ProducerConnection;
+import com.alibaba.rocketmq.common.protocol.body.TopicList;
 import com.alibaba.rocketmq.common.protocol.header.UpdateConsumerOffsetRequestHeader;
 import com.alibaba.rocketmq.common.protocol.route.BrokerData;
 import com.alibaba.rocketmq.common.protocol.route.TopicRouteData;
 import com.alibaba.rocketmq.common.subscription.SubscriptionGroupConfig;
-import com.alibaba.rocketmq.remoting.exception.*;
+import com.alibaba.rocketmq.remoting.exception.RemotingCommandException;
+import com.alibaba.rocketmq.remoting.exception.RemotingConnectException;
+import com.alibaba.rocketmq.remoting.exception.RemotingException;
+import com.alibaba.rocketmq.remoting.exception.RemotingSendRequestException;
+import com.alibaba.rocketmq.remoting.exception.RemotingTimeoutException;
 
 
 /**
@@ -67,7 +83,7 @@ public class DefaultMQAdminExtImpl implements MQAdminExt, MQAdminExtInner {
     public void start() throws MQClientException {
         switch (this.serviceState) {
         case CREATE_JUST:
-            this.serviceState = ServiceState.RUNNING;
+            this.serviceState = ServiceState.START_FAILED;
 
             this.mQClientFactory =
                     MQClientManager.getInstance().getAndCreateMQClientFactory(this.defaultMQAdminExt);
@@ -84,11 +100,15 @@ public class DefaultMQAdminExtImpl implements MQAdminExt, MQAdminExtInner {
             mQClientFactory.start();
 
             log.info("the adminExt [{}] start OK", this.defaultMQAdminExt.getAdminExtGroup());
+
+            this.serviceState = ServiceState.RUNNING;
             break;
         case RUNNING:
-            break;
+        case START_FAILED:
         case SHUTDOWN_ALREADY:
-            break;
+            throw new MQClientException("The AdminExt service state not OK, maybe started once, "//
+                    + this.serviceState//
+                    + FAQUrl.suggestTodo(FAQUrl.CLIENT_SERVICE_NOT_OK), null);
         default:
             break;
         }
@@ -177,8 +197,9 @@ public class DefaultMQAdminExtImpl implements MQAdminExt, MQAdminExtInner {
         for (BrokerData bd : topicRouteData.getBrokerDatas()) {
             String addr = bd.selectBrokerAddr();
             if (addr != null) {
+                // 由于查询时间戳会产生IO操作，可能会耗时较长，所以超时时间设置为15s
                 ConsumeStats consumeStats =
-                        this.mQClientFactory.getMQClientAPIImpl().getConsumeStats(addr, consumerGroup, 3000);
+                        this.mQClientFactory.getMQClientAPIImpl().getConsumeStats(addr, consumerGroup, 15000);
                 result.getOffsetTable().putAll(consumeStats.getOffsetTable());
                 long value = result.getConsumeTps() + consumeStats.getConsumeTps();
                 result.setConsumeTps(value);
@@ -186,7 +207,9 @@ public class DefaultMQAdminExtImpl implements MQAdminExt, MQAdminExtInner {
         }
 
         if (result.getOffsetTable().isEmpty()) {
-            throw new MQClientException("Not found the consumer group consume stats", null);
+            throw new MQClientException(
+                "Not found the consumer group consume stats, because return offset table is empty, maybe the consumer not consume any message",
+                null);
         }
 
         return result;
@@ -411,8 +434,9 @@ public class DefaultMQAdminExtImpl implements MQAdminExt, MQAdminExtInner {
 
 
     @Override
-    public List<RollbackStats> rollbackConsumerOffset(String consumerGroup, String topic, long timestamp, boolean force)
-            throws RemotingException, MQBrokerException, InterruptedException, MQClientException {
+    public List<RollbackStats> resetOffsetByTimestamp(String consumerGroup, String topic, long timestamp,
+            boolean force) throws RemotingException, MQBrokerException, InterruptedException,
+            MQClientException {
         String retryTopic = MixAll.getRetryTopic(consumerGroup);
         TopicRouteData topicRouteData = this.examineTopicRouteInfo(retryTopic);
         List<RollbackStats> rollbackStatsList = new ArrayList<RollbackStats>();
@@ -457,6 +481,21 @@ public class DefaultMQAdminExtImpl implements MQAdminExt, MQAdminExtInner {
                 }
             }
         }
-	    return rollbackStatsList;
+        return rollbackStatsList;
+    }
+
+
+    @Override
+    public KVTable getKVListByNamespace(String namespace) throws RemotingException, MQClientException,
+            InterruptedException {
+        return this.mQClientFactory.getMQClientAPIImpl().getKVListByNamespace(namespace, 5000);
+    }
+
+
+    @Override
+    public void updateBrokerConfig(String brokerAddr, Properties properties) throws RemotingConnectException,
+            RemotingSendRequestException, RemotingTimeoutException, UnsupportedEncodingException,
+            InterruptedException, MQBrokerException {
+        this.mQClientFactory.getMQClientAPIImpl().updateBrokerConfig(brokerAddr, properties, 5000);
     }
 }

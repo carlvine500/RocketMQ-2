@@ -15,7 +15,9 @@
  */
 package com.alibaba.rocketmq.tools.admin;
 
+import java.io.UnsupportedEncodingException;
 import java.util.List;
+import java.util.Properties;
 import java.util.Set;
 
 import com.alibaba.rocketmq.client.ClientConfig;
@@ -29,10 +31,19 @@ import com.alibaba.rocketmq.common.admin.RollbackStats;
 import com.alibaba.rocketmq.common.admin.TopicStatsTable;
 import com.alibaba.rocketmq.common.message.MessageExt;
 import com.alibaba.rocketmq.common.message.MessageQueue;
-import com.alibaba.rocketmq.common.protocol.body.*;
+import com.alibaba.rocketmq.common.protocol.body.ClusterInfo;
+import com.alibaba.rocketmq.common.protocol.body.ConsumeByWho;
+import com.alibaba.rocketmq.common.protocol.body.ConsumerConnection;
+import com.alibaba.rocketmq.common.protocol.body.KVTable;
+import com.alibaba.rocketmq.common.protocol.body.ProducerConnection;
+import com.alibaba.rocketmq.common.protocol.body.TopicList;
 import com.alibaba.rocketmq.common.protocol.route.TopicRouteData;
 import com.alibaba.rocketmq.common.subscription.SubscriptionGroupConfig;
-import com.alibaba.rocketmq.remoting.exception.*;
+import com.alibaba.rocketmq.remoting.exception.RemotingCommandException;
+import com.alibaba.rocketmq.remoting.exception.RemotingConnectException;
+import com.alibaba.rocketmq.remoting.exception.RemotingException;
+import com.alibaba.rocketmq.remoting.exception.RemotingSendRequestException;
+import com.alibaba.rocketmq.remoting.exception.RemotingTimeoutException;
 
 
 /**
@@ -301,9 +312,24 @@ public class DefaultMQAdminExt extends ClientConfig implements MQAdminExt {
     }
 
 
-    public List<RollbackStats> rollbackConsumerOffset(String consumerGroup, String topic, long timestamp,
+    public List<RollbackStats> resetOffsetByTimestamp(String consumerGroup, String topic, long timestamp,
             boolean force) throws RemotingException, MQBrokerException, InterruptedException,
             MQClientException {
-        return defaultMQAdminExtImpl.rollbackConsumerOffset(consumerGroup, topic, timestamp, force);
+        return defaultMQAdminExtImpl.resetOffsetByTimestamp(consumerGroup, topic, timestamp, force);
+    }
+
+
+    @Override
+    public KVTable getKVListByNamespace(String namespace) throws RemotingException, MQClientException,
+            InterruptedException {
+        return defaultMQAdminExtImpl.getKVListByNamespace(namespace);
+    }
+
+
+    @Override
+    public void updateBrokerConfig(String brokerAddr, Properties properties) throws RemotingConnectException,
+            RemotingSendRequestException, RemotingTimeoutException, UnsupportedEncodingException,
+            InterruptedException, MQBrokerException {
+        defaultMQAdminExtImpl.updateBrokerConfig(brokerAddr, properties);
     }
 }

@@ -52,7 +52,7 @@ import com.alibaba.rocketmq.client.producer.TransactionMQProducer;
 import com.alibaba.rocketmq.client.producer.TransactionSendResult;
 import com.alibaba.rocketmq.common.MixAll;
 import com.alibaba.rocketmq.common.ServiceState;
-import com.alibaba.rocketmq.common.UtilALl;
+import com.alibaba.rocketmq.common.UtilAll;
 import com.alibaba.rocketmq.common.help.FAQUrl;
 import com.alibaba.rocketmq.common.message.Message;
 import com.alibaba.rocketmq.common.message.MessageDecoder;
@@ -163,11 +163,9 @@ public class DefaultMQProducerImpl implements MQProducerInner {
     public void start(final boolean startFactory) throws MQClientException {
         switch (this.serviceState) {
         case CREATE_JUST:
+            this.serviceState = ServiceState.START_FAILED;
+
             this.checkConfig();
-
-            Validators.checkGroup(this.defaultMQProducer.getProducerGroup());
-
-            this.serviceState = ServiceState.RUNNING;
 
             this.mQClientFactory =
                     MQClientManager.getInstance().getAndCreateMQClientFactory(this.defaultMQProducer);
@@ -190,11 +188,14 @@ public class DefaultMQProducerImpl implements MQProducerInner {
             }
 
             log.info("the producer [{}] start OK", this.defaultMQProducer.getProducerGroup());
+            this.serviceState = ServiceState.RUNNING;
             break;
         case RUNNING:
-            break;
+        case START_FAILED:
         case SHUTDOWN_ALREADY:
-            break;
+            throw new MQClientException("The producer service state not OK, maybe started once, "//
+                    + this.serviceState//
+                    + FAQUrl.suggestTodo(FAQUrl.CLIENT_SERVICE_NOT_OK), null);
         default:
             break;
         }
@@ -541,7 +542,15 @@ public class DefaultMQProducerImpl implements MQProducerInner {
             throw new MQClientException("Retry many times, still failed", exception);
         }
 
-        throw new MQClientException("No route info of this topic, " + msg.getTopic(), null);
+        List<String> nsList = this.getmQClientFactory().getMQClientAPIImpl().getNameServerAddressList();
+        if (null == nsList || nsList.isEmpty()) {
+            // 说明没有设置Name Server地址
+            throw new MQClientException("No name server address, please set it."
+                    + FAQUrl.suggestTodo(FAQUrl.NAME_SERVER_ADDR_NOT_EXIST_URL), null);
+        }
+
+        throw new MQClientException("No route info of this topic, " + msg.getTopic()
+                + FAQUrl.suggestTodo(FAQUrl.NO_TOPIC_ROUTE_INFO), null);
     }
 
 
@@ -665,13 +674,18 @@ public class DefaultMQProducerImpl implements MQProducerInner {
         throw new MQClientException("The broker[" + mq.getBrokerName() + "] not exist", null);
     }
 
+    /**
+     * 消息压缩level，默认5
+     */
+    private int zipCompressLevel = Integer.parseInt(System.getProperty(MixAll.MESSAGE_COMPRESS_LEVEL, "5"));
+
 
     private boolean tryToCompressMessage(final Message msg) {
         byte[] body = msg.getBody();
         if (body != null) {
             if (body.length >= this.defaultMQProducer.getCompressMsgBodyOverHowmuch()) {
                 try {
-                    byte[] data = UtilALl.compress(body, 9);
+                    byte[] data = UtilAll.compress(body, zipCompressLevel);
                     if (data != null) {
                         msg.setBody(data);
                         return true;
@@ -934,5 +948,15 @@ public class DefaultMQProducerImpl implements MQProducerInner {
 
     public MQClientFactory getmQClientFactory() {
         return mQClientFactory;
+    }
+
+
+    public int getZipCompressLevel() {
+        return zipCompressLevel;
+    }
+
+
+    public void setZipCompressLevel(int zipCompressLevel) {
+        this.zipCompressLevel = zipCompressLevel;
     }
 }

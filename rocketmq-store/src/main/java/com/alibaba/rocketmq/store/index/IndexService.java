@@ -30,7 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.alibaba.rocketmq.common.ServiceThread;
-import com.alibaba.rocketmq.common.UtilALl;
+import com.alibaba.rocketmq.common.UtilAll;
 import com.alibaba.rocketmq.common.constant.LoggerName;
 import com.alibaba.rocketmq.common.message.Message;
 import com.alibaba.rocketmq.common.sysflag.MessageSysFlag;
@@ -411,7 +411,7 @@ public class IndexService extends ServiceThread {
             try {
                 String fileName =
                         this.storePath + File.separator
-                                + UtilALl.timeMillisToHumanString(System.currentTimeMillis());
+                                + UtilAll.timeMillisToHumanString(System.currentTimeMillis());
                 indexFile =
                         new IndexFile(fileName, this.hashSlotNum, this.indexNum, lastUpdateEndPhyOffset,
                             lastUpdateIndexTimestamp);
@@ -456,8 +456,10 @@ public class IndexService extends ServiceThread {
 
         f.flush();
 
-        this.defaultMessageStore.getStoreCheckpoint().setIndexMsgTimestamp(indexMsgTimestamp);
-        this.defaultMessageStore.getStoreCheckpoint().flush();
+        if (indexMsgTimestamp > 0) {
+            this.defaultMessageStore.getStoreCheckpoint().setIndexMsgTimestamp(indexMsgTimestamp);
+            this.defaultMessageStore.getStoreCheckpoint().flush();
+        }
     }
 
 

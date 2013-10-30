@@ -66,12 +66,14 @@ public class MixAll {
     public static final String NAMESRV_ADDR_PROPERTY = "rocketmq.namesrv.addr";
     public static final String WS_DOMAIN_NAME = System.getProperty("rocketmq.namesrv.domain",
         "jmenv.tbsite.net");
+    public static final String MESSAGE_COMPRESS_LEVEL = "rocketmq.message.compressLevel";
     // http://jmenv.tbsite.net:8080/rocketmq/nsaddr
     public static final String WS_ADDR = "http://" + WS_DOMAIN_NAME + ":8080/rocketmq/nsaddr";
     public static final String DEFAULT_TOPIC = "TBW102";
     public static final String BENCHMARK_TOPIC = "BenchmarkTest";
     public static final String DEFAULT_PRODUCER_GROUP = "DEFAULT_PRODUCER";
     public static final String DEFAULT_CONSUMER_GROUP = "DEFAULT_CONSUMER";
+    public static final String TOOLS_CONSUMER_GROUP = "TOOLS_CONSUMER";
     public static final String CLIENT_INNER_PRODUCER_GROUP = "CLIENT_INNER_PRODUCER";
     public static final String SELF_TEST_TOPIC = "SELF_TEST_TOPIC";
 

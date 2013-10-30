@@ -165,7 +165,7 @@ public class MQClientFactory {
             case CREATE_JUST:
                 this.makesureInstanceNameIsOnly(this.clientConfig.getInstanceName());
 
-                this.serviceState = ServiceState.RUNNING;
+                this.serviceState = ServiceState.START_FAILED;
                 if (null == this.clientConfig.getNamesrvAddr()) {
                     this.clientConfig.setNamesrvAddr(this.mQClientAPIImpl.fetchNameServerAddr());
                 }
@@ -177,11 +177,15 @@ public class MQClientFactory {
 
                 this.defaultMQProducer.getDefaultMQProducerImpl().start(false);
                 log.info("the client factory [{}] start OK", this.clientId);
+                this.serviceState = ServiceState.RUNNING;
                 break;
             case RUNNING:
                 break;
             case SHUTDOWN_ALREADY:
                 break;
+            case START_FAILED:
+                throw new MQClientException("The Factory object[" + this.getClientId()
+                        + "] has been created before, and failed.", null);
             default:
                 break;
             }
@@ -686,6 +690,23 @@ public class MQClientFactory {
             Collections.sort(qds);
             for (QueueData qd : qds) {
                 if (PermName.isWriteable(qd.getPerm())) {
+                    // 这里需要判断BrokerName对应的Master是否存在，因为只能向Master发送消息
+                    BrokerData brokerData = null;
+                    for (BrokerData bd : route.getBrokerDatas()) {
+                        if (bd.getBrokerName().equals(qd.getBrokerName())) {
+                            brokerData = bd;
+                            break;
+                        }
+                    }
+
+                    if (null == brokerData) {
+                        continue;
+                    }
+
+                    if (!brokerData.getBrokerAddrs().containsKey(MixAll.MASTER_ID)) {
+                        continue;
+                    }
+
                     for (int i = 0; i < qd.getWriteQueueNums(); i++) {
                         MessageQueue mq = new MessageQueue(topic, qd.getBrokerName(), i);
                         info.getMessageQueueList().add(mq);

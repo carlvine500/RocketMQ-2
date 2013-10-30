@@ -31,7 +31,7 @@ import com.alibaba.rocketmq.client.impl.CommunicationMode;
 import com.alibaba.rocketmq.client.impl.FindBrokerResult;
 import com.alibaba.rocketmq.client.impl.factory.MQClientFactory;
 import com.alibaba.rocketmq.common.MixAll;
-import com.alibaba.rocketmq.common.UtilALl;
+import com.alibaba.rocketmq.common.UtilAll;
 import com.alibaba.rocketmq.common.message.Message;
 import com.alibaba.rocketmq.common.message.MessageDecoder;
 import com.alibaba.rocketmq.common.message.MessageExt;
@@ -79,26 +79,13 @@ public class PullAPIWrapper {
      * @param mq
      * @param pullResult
      * @param subscriptionData
-     * @return
-     */
-    public PullResult processPullResult(final MessageQueue mq, final PullResult pullResult,
-            final SubscriptionData subscriptionData) {
-        return processPullResult(mq, pullResult, subscriptionData, null);
-    }
-
-
-    /**
-     * 对拉取结果进行处理，主要是消息反序列化
-     * 
-     * @param mq
-     * @param pullResult
-     * @param subscriptionData
      * @param projectGroupPrefix
      *            虚拟环境projectGroupPrefix，不存在可设置为 null
      * @return
      */
     public PullResult processPullResult(final MessageQueue mq, final PullResult pullResult,
-            final SubscriptionData subscriptionData, final String projectGroupPrefix) {
+            final SubscriptionData subscriptionData) {
+        final String projectGroupPrefix = this.mQClientFactory.getMQClientAPIImpl().getProjectGroupPrefix();
         PullResultExt pullResultExt = (PullResultExt) pullResult;
 
         this.updatePullFromWhichNode(mq, pullResultExt.getSuggestWhichBrokerId());
@@ -109,18 +96,18 @@ public class PullAPIWrapper {
             // 消息再次过滤
             List<MessageExt> msgListFilterAgain = msgList;
             if (!subscriptionData.getTagsSet().isEmpty()) {
-	            msgListFilterAgain = new ArrayList<MessageExt>(msgList.size());
+                msgListFilterAgain = new ArrayList<MessageExt>(msgList.size());
                 for (MessageExt msg : msgList) {
                     if (msg.getTags() != null) {
                         if (subscriptionData.getTagsSet().contains(msg.getTags())) {
-	                        msgListFilterAgain.add(msg);
+                            msgListFilterAgain.add(msg);
                         }
                     }
                 }
             }
 
             // 清除虚拟运行环境相关的projectGroupPrefix
-            if (!UtilALl.isBlank(projectGroupPrefix)) {
+            if (!UtilAll.isBlank(projectGroupPrefix)) {
                 subscriptionData.setTopic(VirtualEnvUtil.clearProjectGroup(subscriptionData.getTopic(),
                     projectGroupPrefix));
                 mq.setTopic(VirtualEnvUtil.clearProjectGroup(mq.getTopic(), projectGroupPrefix));

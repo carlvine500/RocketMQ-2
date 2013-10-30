@@ -28,11 +28,12 @@ import org.slf4j.LoggerFactory;
 
 import com.alibaba.rocketmq.common.ServiceThread;
 import com.alibaba.rocketmq.common.SystemClock;
-import com.alibaba.rocketmq.common.UtilALl;
+import com.alibaba.rocketmq.common.UtilAll;
 import com.alibaba.rocketmq.common.constant.LoggerName;
 import com.alibaba.rocketmq.common.message.MessageDecoder;
 import com.alibaba.rocketmq.common.message.MessageExt;
 import com.alibaba.rocketmq.common.protocol.heartbeat.SubscriptionData;
+import com.alibaba.rocketmq.common.running.RunningStats;
 import com.alibaba.rocketmq.common.sysflag.MessageSysFlag;
 import com.alibaba.rocketmq.store.config.BrokerRole;
 import com.alibaba.rocketmq.store.config.MessageStoreConfig;
@@ -139,6 +140,8 @@ public class DefaultMessageStore implements MessageStore {
         // load过程依赖此服务，所以提前启动
         this.allocateMapedFileService.start();
         this.dispatchMessageService.start();
+        // 因为下面的recover会分发请求到索引服务，如果不启动，分发过程会被流控
+        this.indexService.start();
     }
 
 
@@ -212,7 +215,9 @@ public class DefaultMessageStore implements MessageStore {
     public void start() throws Exception {
         this.cleanCommitLogService.start();
         this.cleanConsumeQueueService.start();
-        this.indexService.start();
+
+        // 在构造函数已经start了。
+        // this.indexService.start();
         // 在构造函数已经start了。
         // this.dispatchMessageService.start();
         this.flushConsumeQueueService.start();
@@ -601,8 +606,8 @@ public class DefaultMessageStore implements MessageStore {
         // 检测物理文件磁盘空间
         {
             String storePathPhysic = DefaultMessageStore.this.getMessageStoreConfig().getStorePathCommitLog();
-            double physicRatio = UtilALl.getDiskPartitionSpaceUsedPercent(storePathPhysic);
-            result.put("commitLogDiskRatio", String.valueOf(physicRatio));
+            double physicRatio = UtilAll.getDiskPartitionSpaceUsedPercent(storePathPhysic);
+            result.put(RunningStats.commitLogDiskRatio.name(), String.valueOf(physicRatio));
 
         }
 
@@ -610,12 +615,21 @@ public class DefaultMessageStore implements MessageStore {
         {
             String storePathLogics =
                     DefaultMessageStore.this.getMessageStoreConfig().getStorePathConsumeQueue();
-            double logicsRatio = UtilALl.getDiskPartitionSpaceUsedPercent(storePathLogics);
-            result.put("consumeQueueDiskRatio", String.valueOf(logicsRatio));
+            double logicsRatio = UtilAll.getDiskPartitionSpaceUsedPercent(storePathLogics);
+            result.put(RunningStats.consumeQueueDiskRatio.name(), String.valueOf(logicsRatio));
         }
 
-        result.put("commitLogMinOffset", String.valueOf(DefaultMessageStore.this.getMinPhyOffset()));
-        result.put("commitLogMaxOffset", String.valueOf(DefaultMessageStore.this.getMaxPhyOffset()));
+        // 延时进度
+        {
+            if (this.scheduleMessageService != null) {
+                this.scheduleMessageService.buildRunningStats(result);
+            }
+        }
+
+        result.put(RunningStats.commitLogMinOffset.name(),
+            String.valueOf(DefaultMessageStore.this.getMinPhyOffset()));
+        result.put(RunningStats.commitLogMaxOffset.name(),
+            String.valueOf(DefaultMessageStore.this.getMaxPhyOffset()));
 
         return result;
     }
@@ -1186,7 +1200,7 @@ public class DefaultMessageStore implements MessageStore {
             {
                 String storePathPhysic =
                         DefaultMessageStore.this.getMessageStoreConfig().getStorePathCommitLog();
-                double physicRatio = UtilALl.getDiskPartitionSpaceUsedPercent(storePathPhysic);
+                double physicRatio = UtilAll.getDiskPartitionSpaceUsedPercent(storePathPhysic);
                 if (physicRatio > DiskSpaceWarningLevelRatio) {
                     boolean diskok = DefaultMessageStore.this.runningFlags.getAndMakeDiskFull();
                     if (diskok) {
@@ -1219,7 +1233,7 @@ public class DefaultMessageStore implements MessageStore {
             {
                 String storePathLogics =
                         DefaultMessageStore.this.getMessageStoreConfig().getStorePathConsumeQueue();
-                double logicsRatio = UtilALl.getDiskPartitionSpaceUsedPercent(storePathLogics);
+                double logicsRatio = UtilAll.getDiskPartitionSpaceUsedPercent(storePathLogics);
                 if (logicsRatio > DiskSpaceWarningLevelRatio) {
                     boolean diskok = DefaultMessageStore.this.runningFlags.getAndMakeDiskFull();
                     if (diskok) {
@@ -1257,7 +1271,7 @@ public class DefaultMessageStore implements MessageStore {
          */
         private boolean isTimeToDelete() {
             String when = DefaultMessageStore.this.getMessageStoreConfig().getDeleteWhen();
-            if (UtilALl.isItTimeToDo(when)) {
+            if (UtilAll.isItTimeToDo(when)) {
                 DefaultMessageStore.log.info("it's time to reclaim disk space, " + when);
                 return true;
             }
@@ -1355,6 +1369,9 @@ public class DefaultMessageStore implements MessageStore {
 
 
         private void doFlush(int retryTimes) {
+            /**
+             * 变量含义：如果大于0，则标识这次刷盘必须刷多少个page，如果=0，则有多少刷多少
+             */
             int flushConsumeQueueLeastPages =
                     DefaultMessageStore.this.getMessageStoreConfig().getFlushConsumeQueueLeastPages();
 
@@ -1391,7 +1408,9 @@ public class DefaultMessageStore implements MessageStore {
                 flushConsumeQueueLeastPages);
 
             if (0 == flushConsumeQueueLeastPages) {
-                DefaultMessageStore.this.getStoreCheckpoint().setLogicsMsgTimestamp(logicsMsgTimestamp);
+                if (logicsMsgTimestamp > 0) {
+                    DefaultMessageStore.this.getStoreCheckpoint().setLogicsMsgTimestamp(logicsMsgTimestamp);
+                }
                 DefaultMessageStore.this.getStoreCheckpoint().flush();
             }
         }

@@ -74,7 +74,7 @@ public class MessageStoreConfig {
     private int diskMaxUsedSpaceRatio = 75;
     // 文件保留时间（单位小时）
     @ImportantField
-    private int fileReservedTime = 12;
+    private int fileReservedTime = 48;
     // 写消息索引到ConsumeQueue，缓冲区高水位，超过则开始流控
     private int putMsgIndexHightWater = 600000;
     // 最大消息大小，默认512K
@@ -110,6 +110,11 @@ public class MessageStoreConfig {
     private int maxHashSlotNum = 5000000;
     private int maxIndexNum = 5000000 * 4;
     private int maxMsgsNumBatch = 32;
+    // 是否使用安全的消息索引功能，即可靠模式。
+    // 可靠模式下，异常宕机恢复慢
+    // 非可靠模式下，异常宕机恢复快
+    @ImportantField
+    private boolean messageIndexSafe = false;
     // HA功能
     private int haListenPort = 10912;
     private int haSendHeartbeatInterval = 1000 * 5;
@@ -699,5 +704,15 @@ public class MessageStoreConfig {
 
     public void setCheckTransactionMessageEnable(boolean checkTransactionMessageEnable) {
         this.checkTransactionMessageEnable = checkTransactionMessageEnable;
+    }
+
+
+    public boolean isMessageIndexSafe() {
+        return messageIndexSafe;
+    }
+
+
+    public void setMessageIndexSafe(boolean messageIndexSafe) {
+        this.messageIndexSafe = messageIndexSafe;
     }
 }

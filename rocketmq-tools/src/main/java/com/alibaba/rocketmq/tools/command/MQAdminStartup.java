@@ -31,9 +31,11 @@ import com.alibaba.rocketmq.common.MQVersion;
 import com.alibaba.rocketmq.common.MixAll;
 import com.alibaba.rocketmq.remoting.protocol.RemotingCommand;
 import com.alibaba.rocketmq.tools.command.broker.BrokerStatsSubCommand;
+import com.alibaba.rocketmq.tools.command.broker.UpdateBrokerConfigSubCommand;
 import com.alibaba.rocketmq.tools.command.cluster.ClusterListSubCommand;
-import com.alibaba.rocketmq.tools.command.connection.ConnectionSubCommand;
-import com.alibaba.rocketmq.tools.command.consumer.ConsumeStatsSubCommand;
+import com.alibaba.rocketmq.tools.command.connection.ConsumerConnectionSubCommand;
+import com.alibaba.rocketmq.tools.command.connection.ProducerConnectionSubCommand;
+import com.alibaba.rocketmq.tools.command.consumer.ConsumerProgressSubCommand;
 import com.alibaba.rocketmq.tools.command.consumer.DeleteSubscriptionGroupCommand;
 import com.alibaba.rocketmq.tools.command.consumer.UpdateSubGroupSubCommand;
 import com.alibaba.rocketmq.tools.command.message.QueryMsgByIdSubCommand;
@@ -45,7 +47,7 @@ import com.alibaba.rocketmq.tools.command.namesrv.GetProjectGroupCommand;
 import com.alibaba.rocketmq.tools.command.namesrv.UpdateKvConfigCommand;
 import com.alibaba.rocketmq.tools.command.namesrv.UpdateProjectGroupCommand;
 import com.alibaba.rocketmq.tools.command.namesrv.WipeWritePermSubCommand;
-import com.alibaba.rocketmq.tools.command.rollback.RollbackByTimeStampCommand;
+import com.alibaba.rocketmq.tools.command.offset.ResetOffsetByTimeSubCommand;
 import com.alibaba.rocketmq.tools.command.topic.DeleteTopicSubCommand;
 import com.alibaba.rocketmq.tools.command.topic.TopicListSubCommand;
 import com.alibaba.rocketmq.tools.command.topic.TopicRouteSubCommand;
@@ -66,16 +68,19 @@ public class MQAdminStartup {
         subCommandList.add(new DeleteTopicSubCommand());
         subCommandList.add(new UpdateSubGroupSubCommand());
         subCommandList.add(new DeleteSubscriptionGroupCommand());
+        subCommandList.add(new UpdateBrokerConfigSubCommand());
 
         subCommandList.add(new TopicRouteSubCommand());
         subCommandList.add(new TopicStatsSubCommand());
 
         subCommandList.add(new BrokerStatsSubCommand());
-        subCommandList.add(new ConsumeStatsSubCommand());
-        subCommandList.add(new ConnectionSubCommand());
         subCommandList.add(new QueryMsgByIdSubCommand());
         subCommandList.add(new QueryMsgByKeySubCommand());
         subCommandList.add(new QueryMsgByOffsetSubCommand());
+
+        subCommandList.add(new ProducerConnectionSubCommand());
+        subCommandList.add(new ConsumerConnectionSubCommand());
+        subCommandList.add(new ConsumerProgressSubCommand());
 
         subCommandList.add(new ClusterListSubCommand());
         subCommandList.add(new TopicListSubCommand());
@@ -86,7 +91,7 @@ public class MQAdminStartup {
         subCommandList.add(new UpdateProjectGroupCommand());
         subCommandList.add(new DeleteProjectGroupCommand());
         subCommandList.add(new GetProjectGroupCommand());
-        subCommandList.add(new RollbackByTimeStampCommand());
+        subCommandList.add(new ResetOffsetByTimeSubCommand());
         subCommandList.add(new WipeWritePermSubCommand());
     }
 
@@ -109,6 +114,9 @@ public class MQAdminStartup {
                         if (options != null) {
                             MixAll.printCommandLineHelp("mqadmin " + cmd.commandName(), options);
                         }
+                    }
+                    else {
+                        System.out.println("The sub command \'" + args[1] + "\' not exist.");
                     }
                     break;
                 }
@@ -135,6 +143,9 @@ public class MQAdminStartup {
                     }
 
                     cmd.execute(commandLine, options);
+                }
+                else {
+                    System.out.println("The sub command \'" + args[0] + "\' not exist.");
                 }
                 break;
             }

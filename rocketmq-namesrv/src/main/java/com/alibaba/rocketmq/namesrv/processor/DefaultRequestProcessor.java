@@ -15,6 +15,8 @@
  */
 package com.alibaba.rocketmq.namesrv.processor;
 
+import io.netty.channel.ChannelHandlerContext;
+
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.slf4j.Logger;
@@ -27,7 +29,18 @@ import com.alibaba.rocketmq.common.namesrv.RegisterBrokerResult;
 import com.alibaba.rocketmq.common.protocol.MQProtos.MQRequestCode;
 import com.alibaba.rocketmq.common.protocol.MQProtos.MQResponseCode;
 import com.alibaba.rocketmq.common.protocol.body.TopicConfigSerializeWrapper;
-import com.alibaba.rocketmq.common.protocol.header.namesrv.*;
+import com.alibaba.rocketmq.common.protocol.header.namesrv.DeleteKVConfigRequestHeader;
+import com.alibaba.rocketmq.common.protocol.header.namesrv.DeleteTopicInNamesrvRequestHeader;
+import com.alibaba.rocketmq.common.protocol.header.namesrv.GetKVConfigRequestHeader;
+import com.alibaba.rocketmq.common.protocol.header.namesrv.GetKVConfigResponseHeader;
+import com.alibaba.rocketmq.common.protocol.header.namesrv.GetKVListByNamespaceRequestHeader;
+import com.alibaba.rocketmq.common.protocol.header.namesrv.GetRouteInfoRequestHeader;
+import com.alibaba.rocketmq.common.protocol.header.namesrv.PutKVConfigRequestHeader;
+import com.alibaba.rocketmq.common.protocol.header.namesrv.RegisterBrokerRequestHeader;
+import com.alibaba.rocketmq.common.protocol.header.namesrv.RegisterBrokerResponseHeader;
+import com.alibaba.rocketmq.common.protocol.header.namesrv.UnRegisterBrokerRequestHeader;
+import com.alibaba.rocketmq.common.protocol.header.namesrv.WipeWritePermOfBrokerRequestHeader;
+import com.alibaba.rocketmq.common.protocol.header.namesrv.WipeWritePermOfBrokerResponseHeader;
 import com.alibaba.rocketmq.common.protocol.route.TopicRouteData;
 import com.alibaba.rocketmq.namesrv.NamesrvController;
 import com.alibaba.rocketmq.remoting.common.RemotingHelper;
@@ -35,7 +48,6 @@ import com.alibaba.rocketmq.remoting.exception.RemotingCommandException;
 import com.alibaba.rocketmq.remoting.netty.NettyRequestProcessor;
 import com.alibaba.rocketmq.remoting.protocol.RemotingCommand;
 import com.alibaba.rocketmq.remoting.protocol.RemotingProtos.ResponseCode;
-import io.netty.channel.ChannelHandlerContext;
 
 
 /**
@@ -91,10 +103,37 @@ public class DefaultRequestProcessor implements NettyRequestProcessor {
             return getKVConfigByValue(ctx, request);
         case DELETE_KV_CONFIG_BY_VALUE:
             return deleteKVConfigByValue(ctx, request);
+        case GET_KVLIST_BY_NAMESPACE:
+            return this.getKVListByNamespace(ctx, request);
         default:
             break;
         }
         return null;
+    }
+
+
+    /**
+     * 获取一个Namespace下的所有kv
+     */
+    private RemotingCommand getKVListByNamespace(ChannelHandlerContext ctx, RemotingCommand request)
+            throws RemotingCommandException {
+        final RemotingCommand response = RemotingCommand.createResponseCommand(null);
+        final GetKVListByNamespaceRequestHeader requestHeader =
+                (GetKVListByNamespaceRequestHeader) request
+                    .decodeCommandCustomHeader(GetKVListByNamespaceRequestHeader.class);
+
+        byte[] jsonValue = this.namesrvController.getKvConfigManager().getKVListByNamespace(//
+            requestHeader.getNamespace());
+        if (null != jsonValue) {
+            response.setBody(jsonValue);
+            response.setCode(ResponseCode.SUCCESS_VALUE);
+            response.setRemark(null);
+            return response;
+        }
+
+        response.setCode(MQResponseCode.QUERY_NOT_FOUND_VALUE);
+        response.setRemark("No config item, Namespace: " + requestHeader.getNamespace());
+        return response;
     }
 
 
@@ -194,7 +233,7 @@ public class DefaultRequestProcessor implements NettyRequestProcessor {
         }
 
         response.setCode(MQResponseCode.TOPIC_NOT_EXIST_VALUE);
-        response.setRemark("No topic route info for this topic: " + requestHeader.getTopic()
+        response.setRemark("No topic route info in name server for the topic: " + requestHeader.getTopic()
                 + FAQUrl.suggestTodo(FAQUrl.APPLY_TOPIC_URL));
         return response;
     }
@@ -350,21 +389,22 @@ public class DefaultRequestProcessor implements NettyRequestProcessor {
         return response;
     }
 
-	public RemotingCommand deleteKVConfigByValue(ChannelHandlerContext ctx, RemotingCommand request)
-			throws RemotingCommandException {
-		final RemotingCommand response = RemotingCommand.createResponseCommand(null);
-		final DeleteKVConfigRequestHeader requestHeader =
-				(DeleteKVConfigRequestHeader) request
-						.decodeCommandCustomHeader(DeleteKVConfigRequestHeader.class);
 
-		this.namesrvController.getKvConfigManager().deleteKVConfigByValue(//
-				requestHeader.getNamespace(),//
-				requestHeader.getKey()//
-		);
+    public RemotingCommand deleteKVConfigByValue(ChannelHandlerContext ctx, RemotingCommand request)
+            throws RemotingCommandException {
+        final RemotingCommand response = RemotingCommand.createResponseCommand(null);
+        final DeleteKVConfigRequestHeader requestHeader =
+                (DeleteKVConfigRequestHeader) request
+                    .decodeCommandCustomHeader(DeleteKVConfigRequestHeader.class);
 
-		response.setCode(ResponseCode.SUCCESS_VALUE);
-		response.setRemark(null);
-		return response;
-	}
+        this.namesrvController.getKvConfigManager().deleteKVConfigByValue(//
+            requestHeader.getNamespace(),//
+            requestHeader.getKey()//
+            );
+
+        response.setCode(ResponseCode.SUCCESS_VALUE);
+        response.setRemark(null);
+        return response;
+    }
 
 }

@@ -2,21 +2,22 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
- <!--
-    <parent>
-        <groupId>com.taobao</groupId>
-        <artifactId>parent</artifactId>
-        <version>1.0.2</version>
-    </parent>
- -->
+	<parent>
+		<groupId>com.taobao</groupId>
+		<artifactId>parent</artifactId>
+		<version>1.0.2</version>
+	</parent>
+	<!-- <parent> <groupId>org.sonatype.oss</groupId> <artifactId>oss-parent</artifactId> 
+		<version>7</version> </parent> -->
 
 	<modelVersion>4.0.0</modelVersion>
 	<inceptionYear>2012</inceptionYear>
 	<groupId>com.alibaba.rocketmq</groupId>
 	<artifactId>rocketmq-all</artifactId>
-	<version>3.0.0-beta8</version>
+	<version>3.0.2</version>
 	<packaging>pom</packaging>
 	<name>rocketmq-all ${project.version}</name>
+	<url>https://github.com/alibaba/rocketmq</url>
 
 	<modules>
 		<module>rocketmq-client</module>
@@ -32,6 +33,51 @@
 		<module>rocketmq-qatest</module>
 	</modules>
 
+	<developers>
+		<developer>
+			<name>vintagewang</name>
+			<url>https://github.com/vintagewang</url>
+			<email>vintage.wang@gmail.com</email>
+			<timezone>8</timezone>
+		</developer>
+		<developer>
+			<name>manhong</name>
+			<url>https://github.com/YangJodie</url>
+			<email>manhong.yqd@alibaba-inc.com</email>
+			<timezone>8</timezone>
+		</developer>
+		<developer>
+			<name>lansheng</name>
+			<url>https://github.com/allenzhu</url>
+			<email>lansheng.zj@alibaba-inc.com</email>
+			<timezone>8</timezone>
+		</developer>
+	</developers>
+
+	<licenses>
+		<license>
+			<name>Apache License, Version 2.0</name>
+			<url>http://www.apache.org/licenses/LICENSE-2.0</url>
+		</license>
+	</licenses>
+
+	<scm>
+		<url>git@github.com:alibaba/rocketmq.git</url>
+		<connection>scm:git:git@github.com:alibaba/rocketmq.git</connection>
+		<developerConnection>scm:git:git@github.com:alibaba/rocketmq.git</developerConnection>
+	</scm>
+
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<!--maven properties -->
+		<maven.test.skip>true</maven.test.skip>
+		<downloadSources>true</downloadSources>
+		<!-- compiler settings properties -->
+		<java_source_version>1.6</java_source_version>
+		<java_target_version>1.6</java_target_version>
+		<file_encoding>UTF-8</file_encoding>
+	</properties>
+
 	<build>
 		<plugins>
 			<plugin>
@@ -39,9 +85,9 @@
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>2.3.2</version>
 				<configuration>
-					<source>1.6</source>
-					<target>1.6</target>
-					<encoding>UTF-8</encoding>
+					<source>${java_source_version}</source>
+					<target>${java_target_version}</target>
+					<encoding>${file_encoding}</encoding>
 					<showDeprecation>true</showDeprecation>
 					<showWarnings>true</showWarnings>
 				</configuration>
@@ -74,12 +120,28 @@
 				<version>2.3</version>
 				<configuration>
 					<argLine>-Xms512m -Xmx1024m</argLine>
-					<forkMode>always</forkMode>
+					<forkMode>once</forkMode>
 					<includes>
 						<include>**/*Test.java</include>
 					</includes>
+					<excludes>
+						<exclude>com/alibaba/rocketmq/remoting/ExceptionTest.java</exclude>
+						<exclude>com/alibaba/rocketmq/remoting/SyncInvokeTest.java</exclude>
+						<exclude>com/alibaba/rocketmq/remoting/NettyIdleTest.java</exclude>
+						<exclude>com/alibaba/rocketmq/remoting/NettyConnectionTest.java</exclude>
+						<exclude>com/alibaba/rocketmq/common/filter/PolishExprTest.java</exclude>
+						<exclude>com/alibaba/rocketmq/common/protocol/MQProtosHelperTest.java</exclude>
+						<exclude>com/alibaba/rocketmq/client/consumer/loadbalance/AllocateMessageQueueAveragelyTest.java</exclude>
+						<exclude>com/alibaba/rocketmq/store/RecoverTest.java</exclude>
+						<exclude>com/alibaba/rocketmq/broker/api/SendMessageTest.java</exclude>
+						<exclude>com/alibaba/rocketmq/test/integration/*/*.java</exclude>
+						<exclude>com/alibaba/rocketmq/test/integration/BaseTest.java</exclude>
+						<exclude>com/alibaba/rocketmq/test/*/*.java</exclude>
+						<exclude>com/alibaba/rocketmq/test/BaseTest.java</exclude>
+					</excludes>
 				</configuration>
 			</plugin>
+
 
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -206,4 +268,5 @@
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
+
 </project>

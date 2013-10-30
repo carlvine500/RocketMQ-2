@@ -28,7 +28,7 @@ public class FilterAPI {
         subscriptionData.setTopic(topic);
         subscriptionData.setSubString(subString);
 
-        if (null == subString || subString.equals(SubscriptionData.SUB_ALL)) {
+        if (null == subString || subString.equals(SubscriptionData.SUB_ALL) || subString.length() == 0) {
             subscriptionData.setSubString(SubscriptionData.SUB_ALL);
         }
         else {
@@ -37,8 +37,10 @@ public class FilterAPI {
                 for (String tag : tags) {
                     if (tag.length() > 0) {
                         String trimString = tag.trim();
-                        subscriptionData.getTagsSet().add(trimString);
-                        subscriptionData.getCodeSet().add(trimString.hashCode());
+                        if (trimString.length() > 0) {
+                            subscriptionData.getTagsSet().add(trimString);
+                            subscriptionData.getCodeSet().add(trimString.hashCode());
+                        }
                     }
                 }
             }

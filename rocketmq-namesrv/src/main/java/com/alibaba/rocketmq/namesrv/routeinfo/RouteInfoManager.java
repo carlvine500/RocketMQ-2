@@ -43,6 +43,7 @@ import com.alibaba.rocketmq.common.protocol.body.TopicList;
 import com.alibaba.rocketmq.common.protocol.route.BrokerData;
 import com.alibaba.rocketmq.common.protocol.route.QueueData;
 import com.alibaba.rocketmq.common.protocol.route.TopicRouteData;
+import com.alibaba.rocketmq.remoting.common.RemotingUtil;
 
 
 /**
@@ -442,8 +443,22 @@ public class RouteInfoManager {
         return null;
     }
 
+    // Broker Channel两分钟过期
+    private final static long BrokerChannelExpiredTime = 1000 * 60 * 2;
+
 
     public void scanNotActiveBroker() {
+        Iterator<Entry<String, BrokerLiveInfo>> it = this.brokerLiveTable.entrySet().iterator();
+        while (it.hasNext()) {
+            Entry<String, BrokerLiveInfo> next = it.next();
+            long last = next.getValue().getLastUpdateTimestamp();
+            if ((last + BrokerChannelExpiredTime) < System.currentTimeMillis()) {
+                RemotingUtil.closeChannel(next.getValue().getChannel());
+                it.remove();
+                log.warn("The broker channel expired, {} {}ms", next.getKey(), BrokerChannelExpiredTime);
+                this.onChannelDestroy(next.getKey(), next.getValue().getChannel());
+            }
+        }
     }
 
 
@@ -454,29 +469,35 @@ public class RouteInfoManager {
         String brokerAddrFound = null;
 
         // 加读锁，寻找断开连接的Broker
-        try {
+        if (channel != null) {
             try {
-                this.lock.readLock().lockInterruptibly();
-                Iterator<Entry<String, BrokerLiveInfo>> itBrokerLiveTable =
-                        this.brokerLiveTable.entrySet().iterator();
-                while (itBrokerLiveTable.hasNext()) {
-                    Entry<String, BrokerLiveInfo> entry = itBrokerLiveTable.next();
-                    if (entry.getValue().getChannel() == channel) {
-                        brokerAddrFound = entry.getKey();
-                        break;
+                try {
+                    this.lock.readLock().lockInterruptibly();
+                    Iterator<Entry<String, BrokerLiveInfo>> itBrokerLiveTable =
+                            this.brokerLiveTable.entrySet().iterator();
+                    while (itBrokerLiveTable.hasNext()) {
+                        Entry<String, BrokerLiveInfo> entry = itBrokerLiveTable.next();
+                        if (entry.getValue().getChannel() == channel) {
+                            brokerAddrFound = entry.getKey();
+                            break;
+                        }
                     }
                 }
+                finally {
+                    this.lock.readLock().unlock();
+                }
             }
-            finally {
-                this.lock.readLock().unlock();
+            catch (Exception e) {
+                log.error("onChannelDestroy Exception", e);
             }
         }
-        catch (Exception e) {
-            log.error("onChannelDestroy Exception", e);
+
+        if (null == brokerAddrFound) {
+            brokerAddrFound = remoteAddr;
         }
 
         // 加写锁，删除相关数据结构
-        if (brokerAddrFound != null) {
+        if (brokerAddrFound != null && brokerAddrFound.length() > 0) {
             log.info("the broker's channel destroyed, {}, clean it's data structure at once", brokerAddrFound);
 
             try {
@@ -487,13 +508,13 @@ public class RouteInfoManager {
 
                     // 清理brokerAddrTable
                     String brokerNameFound = null;
-                    boolean brokerNameDisappear = false;
+                    boolean removeBrokerName = false;
                     Iterator<Entry<String, BrokerData>> itBrokerAddrTable =
                             this.brokerAddrTable.entrySet().iterator();
                     while (itBrokerAddrTable.hasNext() && (null == brokerNameFound)) {
                         BrokerData brokerData = itBrokerAddrTable.next().getValue();
 
-                        // 遍历Master/Slave
+                        // 遍历Master/Slave，删除brokerAddr
                         Iterator<Entry<Long, String>> it = brokerData.getBrokerAddrs().entrySet().iterator();
                         while (it.hasNext()) {
                             Entry<Long, String> entry = it.next();
@@ -511,7 +532,7 @@ public class RouteInfoManager {
 
                         // BrokerName无关联BrokerAddr
                         if (brokerData.getBrokerAddrs().isEmpty()) {
-                            brokerNameDisappear = true;
+                            removeBrokerName = true;
                             itBrokerAddrTable.remove();
                             log.info("remove brokerName[{}] from brokerAddrTable, because channel destroyed",
                                 brokerData.getBrokerName());
@@ -519,7 +540,7 @@ public class RouteInfoManager {
                     }
 
                     // 清理clusterAddrTable
-                    if (brokerNameFound != null) {
+                    if (brokerNameFound != null && removeBrokerName) {
                         Iterator<Entry<String, Set<String>>> it = this.clusterAddrTable.entrySet().iterator();
                         while (it.hasNext()) {
                             Entry<String, Set<String>> entry = it.next();
@@ -530,13 +551,22 @@ public class RouteInfoManager {
                                 log.info(
                                     "remove brokerName[{}], clusterName[{}] from clusterAddrTable, because channel destroyed",
                                     brokerNameFound, clusterName);
+
+                                // 如果集群对应的所有broker都下线了， 则集群也删除掉
+                                if (brokerNames.isEmpty()) {
+                                    log.info(
+                                        "remove the clusterName[{}] from clusterAddrTable, because channel destroyed and no broker in this cluster",
+                                        clusterName);
+                                    it.remove();
+                                }
+
                                 break;
                             }
                         }
                     }
 
                     // 清理topicQueueTable
-                    if (brokerNameDisappear) {
+                    if (removeBrokerName) {
                         Iterator<Entry<String, List<QueueData>>> itTopicQueueTable =
                                 this.topicQueueTable.entrySet().iterator();
                         while (itTopicQueueTable.hasNext()) {
