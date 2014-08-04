@@ -16,6 +16,7 @@
 package com.alibaba.rocketmq.store;
 
 import java.util.HashMap;
+import java.util.Set;
 
 import com.alibaba.rocketmq.common.message.MessageExt;
 import com.alibaba.rocketmq.common.protocol.heartbeat.SubscriptionData;
@@ -170,5 +171,20 @@ public interface MessageStore {
     public void updateHaMasterAddress(final String newAddr);
 
 
+    /**
+     * Slave落后Master多少，单位字节
+     */
+    public long slaveFallBehindMuch();
+
+
     public long now();
+
+
+    public int cleanUnusedTopic(final Set<String> topics);
+
+
+    /**
+     * 清除失效的消费队列
+     */
+    public void cleanExpiredConsumerQueue();
 }

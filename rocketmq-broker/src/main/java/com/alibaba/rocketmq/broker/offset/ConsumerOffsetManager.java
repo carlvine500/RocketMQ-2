@@ -25,6 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.alibaba.rocketmq.broker.BrokerController;
+import com.alibaba.rocketmq.broker.BrokerPathConfigHelper;
 import com.alibaba.rocketmq.common.ConfigManager;
 import com.alibaba.rocketmq.common.constant.LoggerName;
 import com.alibaba.rocketmq.remoting.protocol.RemotingSerializable;
@@ -43,8 +44,6 @@ public class ConsumerOffsetManager extends ConfigManager {
     private ConcurrentHashMap<String/* topic@group */, ConcurrentHashMap<Integer, Long>> offsetTable =
             new ConcurrentHashMap<String, ConcurrentHashMap<Integer, Long>>(512);
 
-    private transient volatile ConcurrentHashMap<String, ConcurrentHashMap<Integer, Long>> offsetTableLastLast;
-    private transient volatile ConcurrentHashMap<String, ConcurrentHashMap<Integer, Long>> offsetTableLast;
     private transient BrokerController brokerController;
 
 
@@ -54,6 +53,47 @@ public class ConsumerOffsetManager extends ConfigManager {
 
     public ConsumerOffsetManager(BrokerController brokerController) {
         this.brokerController = brokerController;
+    }
+
+
+    /**
+     * 扫描数据被删除了的topic，offset记录也对应删除
+     */
+    public void scanUnsubscribedTopic() {
+        Iterator<Entry<String, ConcurrentHashMap<Integer, Long>>> it = this.offsetTable.entrySet().iterator();
+        while (it.hasNext()) {
+            Entry<String, ConcurrentHashMap<Integer, Long>> next = it.next();
+            String topicAtGroup = next.getKey();
+            String[] arrays = topicAtGroup.split(TOPIC_GROUP_SEPARATOR);
+            if (arrays != null && arrays.length == 2) {
+                String topic = arrays[0];
+                String group = arrays[1];
+                // 当前订阅关系里面没有group-topic订阅关系（消费端当前是停机的状态）并且offset落后很多,则删除消费进度
+                if (null == brokerController.getConsumerManager().findSubscriptionData(group, topic)
+                        && this.offsetBehindMuchThanData(topic, next.getValue())) {
+                    it.remove();
+                    log.warn("remove topic offset, {}", topicAtGroup);
+                }
+            }
+        }
+    }
+
+
+    private boolean offsetBehindMuchThanData(final String topic, ConcurrentHashMap<Integer, Long> table) {
+        Iterator<Entry<Integer, Long>> it = table.entrySet().iterator();
+        boolean result = !table.isEmpty();
+
+        while (it.hasNext() && result) {
+            Entry<Integer, Long> next = it.next();
+            long minOffsetInStore =
+                    this.brokerController.getMessageStore().getMinOffsetInQuque(topic, next.getKey());
+            long offsetInPersist = next.getValue();
+            if (offsetInPersist > minOffsetInStore) {
+                result = false;
+            }
+        }
+
+        return result;
     }
 
 
@@ -73,78 +113,6 @@ public class ConsumerOffsetManager extends ConfigManager {
         }
 
         return topics;
-    }
-
-
-    private static ConcurrentHashMap<String, ConcurrentHashMap<Integer, Long>> cloneOffsetTable(
-            final ConcurrentHashMap<String, ConcurrentHashMap<Integer, Long>> input) {
-        ConcurrentHashMap<String, ConcurrentHashMap<Integer, Long>> out =
-                new ConcurrentHashMap<String, ConcurrentHashMap<Integer, Long>>(input.size());
-
-        for (String topicgroup : input.keySet()) {
-            ConcurrentHashMap<Integer, Long> map = input.get(topicgroup);
-            if (map != null) {
-                ConcurrentHashMap<Integer, Long> mapNew = new ConcurrentHashMap<Integer, Long>(map.size());
-                for (Integer queueId : map.keySet()) {
-                    Long offset = map.get(queueId);
-                    Integer queueIdNew = new Integer(queueId.intValue());
-                    Long offsetNew = new Long(offset.longValue());
-                    mapNew.put(queueIdNew, offsetNew);
-                }
-
-                String topicgroupNew = new String(topicgroup);
-                out.put(topicgroupNew, mapNew);
-            }
-        }
-
-        return out;
-    }
-
-
-    public long computePullTPS(final String topic, final String group) {
-        // topic@group
-        String key = topic + TOPIC_GROUP_SEPARATOR + group;
-        return this.computePullTPS(key);
-    }
-
-
-    public long computePullTPS(final String topicgroup) {
-        ConcurrentHashMap<Integer, Long> mapLast = this.offsetTableLast.get(topicgroup);
-        ConcurrentHashMap<Integer, Long> mapLastLast = this.offsetTableLastLast.get(topicgroup);
-        long totalMsgs = 0;
-        if (mapLast != null && mapLastLast != null) {
-            for (Integer queueIdLast : mapLast.keySet()) {
-                Long offsetLast = mapLast.get(queueIdLast);
-                Long offsetLastLast = mapLastLast.get(queueIdLast);
-                if (offsetLast != null && offsetLastLast != null) {
-                    long diff = offsetLast - offsetLastLast;
-                    totalMsgs += diff;
-                }
-            }
-        }
-
-        if (0 == totalMsgs)
-            return 0;
-        double pullTps =
-                totalMsgs * 1000
-                        / this.brokerController.getBrokerConfig().getFlushConsumerOffsetHistoryInterval();
-
-        return Double.valueOf(pullTps).longValue();
-    }
-
-
-    public void recordPullTPS() {
-        ConcurrentHashMap<String, ConcurrentHashMap<Integer, Long>> snapshotNow =
-                cloneOffsetTable(this.offsetTable);
-        this.offsetTableLastLast = this.offsetTableLast;
-        this.offsetTableLast = snapshotNow;
-
-        if (this.offsetTableLast != null && this.offsetTableLastLast != null) {
-            for (String topicgroupLast : this.offsetTableLast.keySet()) {
-                long tps = this.computePullTPS(topicgroupLast);
-                log.info(topicgroupLast + " pull tps, " + tps);
-            }
-        }
     }
 
 
@@ -206,7 +174,8 @@ public class ConsumerOffsetManager extends ConfigManager {
 
     @Override
     public String configFilePath() {
-        return this.brokerController.getBrokerConfig().getConsumerOffsetPath();
+        return BrokerPathConfigHelper.getConsumerOffsetPath(this.brokerController.getMessageStoreConfig()
+            .getStorePathRootDir());
     }
 
 

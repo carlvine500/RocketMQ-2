@@ -16,8 +16,10 @@
 package com.alibaba.rocketmq.remoting.netty;
 
 import io.netty.bootstrap.ServerBootstrap;
+import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelDuplexHandler;
+import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
@@ -44,6 +46,7 @@ import org.slf4j.LoggerFactory;
 
 import com.alibaba.rocketmq.remoting.ChannelEventListener;
 import com.alibaba.rocketmq.remoting.InvokeCallback;
+import com.alibaba.rocketmq.remoting.RPCHook;
 import com.alibaba.rocketmq.remoting.RemotingServer;
 import com.alibaba.rocketmq.remoting.common.Pair;
 import com.alibaba.rocketmq.remoting.common.RemotingHelper;
@@ -63,7 +66,8 @@ import com.alibaba.rocketmq.remoting.protocol.RemotingCommand;
 public class NettyRemotingServer extends NettyRemotingAbstract implements RemotingServer {
     private static final Logger log = LoggerFactory.getLogger(RemotingHelper.RemotingLogName);
     private final ServerBootstrap serverBootstrap;
-    private final EventLoopGroup eventLoopGroup;
+    private final EventLoopGroup eventLoopGroupWorker;
+    private final EventLoopGroup eventLoopGroupBoss;
     private final NettyServerConfig nettyServerConfig;
     // 处理Callback应答器
     private final ExecutorService publicExecutor;
@@ -71,6 +75,11 @@ public class NettyRemotingServer extends NettyRemotingAbstract implements Remoti
     // 定时器
     private final Timer timer = new Timer("ServerHouseKeepingService", true);
     private DefaultEventExecutorGroup defaultEventExecutorGroup;
+
+    private RPCHook rpcHook;
+
+    // 本地server绑定的端口
+    private int port = 0;
 
 
     public NettyRemotingServer(final NettyServerConfig nettyServerConfig) {
@@ -101,12 +110,34 @@ public class NettyRemotingServer extends NettyRemotingAbstract implements Remoti
             }
         });
 
-        this.eventLoopGroup = new NioEventLoopGroup(nettyServerConfig.getServerSelectorThreads());
+        this.eventLoopGroupBoss = new NioEventLoopGroup(1, new ThreadFactory() {
+            private AtomicInteger threadIndex = new AtomicInteger(0);
+
+
+            @Override
+            public Thread newThread(Runnable r) {
+                return new Thread(r,
+                    String.format("NettyBossSelector_%d", this.threadIndex.incrementAndGet()));
+            }
+        });
+
+        this.eventLoopGroupWorker =
+                new NioEventLoopGroup(nettyServerConfig.getServerSelectorThreads(), new ThreadFactory() {
+                    private AtomicInteger threadIndex = new AtomicInteger(0);
+                    private int threadTotal = nettyServerConfig.getServerSelectorThreads();
+
+
+                    @Override
+                    public Thread newThread(Runnable r) {
+                        return new Thread(r, String.format("NettyServerSelector_%d_%d", threadTotal,
+                            this.threadIndex.incrementAndGet()));
+                    }
+                });
     }
 
 
     @Override
-    public void start() throws InterruptedException {
+    public void start() {
         this.defaultEventExecutorGroup = new DefaultEventExecutorGroup(//
             nettyServerConfig.getServerWorkerThreads(), //
             new ThreadFactory() {
@@ -120,28 +151,50 @@ public class NettyRemotingServer extends NettyRemotingAbstract implements Remoti
                 }
             });
 
-        this.serverBootstrap.group(this.eventLoopGroup, new NioEventLoopGroup())
-            .channel(NioServerSocketChannel.class)
-            .option(ChannelOption.SO_BACKLOG, 65536)
-            .option(ChannelOption.SO_REUSEADDR, true)
-            //
-            .childOption(ChannelOption.TCP_NODELAY, true)
-            .localAddress(new InetSocketAddress(this.nettyServerConfig.getListenPort()))
-            .childHandler(new ChannelInitializer<SocketChannel>() {
-                @Override
-                public void initChannel(SocketChannel ch) throws Exception {
-                    ch.pipeline().addLast(
+        ServerBootstrap childHandler = //
+                this.serverBootstrap.group(this.eventLoopGroupBoss, this.eventLoopGroupWorker)
+                    .channel(NioServerSocketChannel.class)
                     //
-                        defaultEventExecutorGroup, //
-                        new NettyEncoder(), //
-                        new NettyDecoder(), //
-                        new IdleStateHandler(0, 0, nettyServerConfig.getServerChannelMaxIdleTimeSeconds()),//
-                        new NettyConnetManageHandler(), //
-                        new NettyServerHandler());
-                }
-            });
+                    .option(ChannelOption.SO_BACKLOG, 1024)
+                    //
+                    .option(ChannelOption.SO_REUSEADDR, true)
+                    //
+                    .childOption(ChannelOption.TCP_NODELAY, true)
+                    //
+                    .childOption(ChannelOption.SO_SNDBUF, NettySystemConfig.SocketSndbufSize)
+                    //
+                    .childOption(ChannelOption.SO_RCVBUF, NettySystemConfig.SocketRcvbufSize)
 
-        this.serverBootstrap.bind().sync();
+                    .localAddress(new InetSocketAddress(this.nettyServerConfig.getListenPort()))
+                    .childHandler(new ChannelInitializer<SocketChannel>() {
+                        @Override
+                        public void initChannel(SocketChannel ch) throws Exception {
+                            ch.pipeline().addLast(
+                                //
+                                defaultEventExecutorGroup, //
+                                new NettyEncoder(), //
+                                new NettyDecoder(), //
+                                new IdleStateHandler(0, 0, nettyServerConfig
+                                    .getServerChannelMaxIdleTimeSeconds()),//
+                                new NettyConnetManageHandler(), //
+                                new NettyServerHandler());
+                        }
+                    });
+
+        if (NettySystemConfig.NettyPooledByteBufAllocatorEnable) {
+            // 这个选项有可能会占用大量堆外内存，暂时不使用。
+            childHandler.childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)//
+            ;
+        }
+
+        try {
+            ChannelFuture sync = this.serverBootstrap.bind().sync();
+            InetSocketAddress addr = (InetSocketAddress) sync.channel().localAddress();
+            this.port = addr.getPort();
+        }
+        catch (InterruptedException e1) {
+            throw new RuntimeException("this.serverBootstrap.bind().sync() InterruptedException", e1);
+        }
 
         if (this.channelEventListener != null) {
             this.nettyEventExecuter.start();
@@ -213,7 +266,9 @@ public class NettyRemotingServer extends NettyRemotingAbstract implements Remoti
                 this.timer.cancel();
             }
 
-            this.eventLoopGroup.shutdownGracefully();
+            this.eventLoopGroupBoss.shutdownGracefully();
+
+            this.eventLoopGroupWorker.shutdownGracefully();
 
             if (this.nettyEventExecuter != null) {
                 this.nettyEventExecuter.shutdown();
@@ -251,16 +306,9 @@ public class NettyRemotingServer extends NettyRemotingAbstract implements Remoti
 
     class NettyServerHandler extends SimpleChannelInboundHandler<RemotingCommand> {
 
-        // @Override
-        // protected void messageReceived(ChannelHandlerContext ctx,
-        // RemotingCommand msg) throws Exception {
-        // processMessageReceived(ctx, msg);
-        // }
-
         @Override
         protected void channelRead0(ChannelHandlerContext ctx, RemotingCommand msg) throws Exception {
             processMessageReceived(ctx, msg);
-
         }
     }
 
@@ -339,5 +387,23 @@ public class NettyRemotingServer extends NettyRemotingAbstract implements Remoti
 
             RemotingUtil.closeChannel(ctx.channel());
         }
+    }
+
+
+    @Override
+    public void registerRPCHook(RPCHook rpcHook) {
+        this.rpcHook = rpcHook;
+    }
+
+
+    @Override
+    public RPCHook getRPCHook() {
+        return this.rpcHook;
+    }
+
+
+    @Override
+    public int localListenPort() {
+        return this.port;
     }
 }

@@ -22,12 +22,18 @@ package com.alibaba.rocketmq.common;
  */
 public class MQVersion {
     // TODO 每次发布版本都要修改此处版本号
-    public static final int CurrentVersion = Version.V3_0_2.ordinal();
+    public static final int CurrentVersion = Version.V3_1_7.ordinal();
 
 
     public static String getVersionDesc(int value) {
-        Version v = Version.values()[value];
-        return v.name();
+        try {
+            Version v = Version.values()[value];
+            return v.name();
+        }
+        catch (Exception e) {
+        }
+
+        return "HigherVersion";
     }
 
 
@@ -35,7 +41,7 @@ public class MQVersion {
         return Version.values()[value];
     }
 
-    enum Version {
+    public static enum Version {
         V3_0_0_SNAPSHOT,
         V3_0_0_ALPHA1,
         V3_0_0_BETA1,
@@ -66,5 +72,167 @@ public class MQVersion {
         V3_0_6,
         V3_0_7_SNAPSHOT,
         V3_0_7,
+        V3_0_8_SNAPSHOT,
+        V3_0_8,
+        V3_0_9_SNAPSHOT,
+        V3_0_9,
+
+        V3_0_10_SNAPSHOT,
+        V3_0_10,
+
+        V3_0_11_SNAPSHOT,
+        V3_0_11,
+
+        V3_0_12_SNAPSHOT,
+        V3_0_12,
+
+        V3_0_13_SNAPSHOT,
+        V3_0_13,
+
+        V3_0_14_SNAPSHOT,
+        V3_0_14,
+
+        V3_0_15_SNAPSHOT,
+        V3_0_15,
+
+        V3_1_0_SNAPSHOT,
+        V3_1_0,
+
+        V3_1_1_SNAPSHOT,
+        V3_1_1,
+
+        V3_1_2_SNAPSHOT,
+        V3_1_2,
+
+        V3_1_3_SNAPSHOT,
+        V3_1_3,
+
+        V3_1_4_SNAPSHOT,
+        V3_1_4,
+
+        V3_1_5_SNAPSHOT,
+        V3_1_5,
+
+        V3_1_6_SNAPSHOT,
+        V3_1_6,
+
+        V3_1_7_SNAPSHOT,
+        V3_1_7,
+
+        V3_1_8_SNAPSHOT,
+        V3_1_8,
+
+        V3_1_9_SNAPSHOT,
+        V3_1_9,
+
+        V3_2_0_SNAPSHOT,
+        V3_2_0,
+
+        V3_2_1_SNAPSHOT,
+        V3_2_1,
+
+        V3_2_2_SNAPSHOT,
+        V3_2_2,
+
+        V3_2_3_SNAPSHOT,
+        V3_2_3,
+
+        V3_2_4_SNAPSHOT,
+        V3_2_4,
+
+        V3_2_5_SNAPSHOT,
+        V3_2_5,
+
+        V3_2_6_SNAPSHOT,
+        V3_2_6,
+
+        V3_2_7_SNAPSHOT,
+        V3_2_7,
+
+        V3_2_8_SNAPSHOT,
+        V3_2_8,
+
+        V3_2_9_SNAPSHOT,
+        V3_2_9,
+
+        V3_3_1_SNAPSHOT,
+        V3_3_1,
+
+        V3_3_2_SNAPSHOT,
+        V3_3_2,
+
+        V3_3_3_SNAPSHOT,
+        V3_3_3,
+
+        V3_3_4_SNAPSHOT,
+        V3_3_4,
+
+        V3_3_5_SNAPSHOT,
+        V3_3_5,
+
+        V3_3_6_SNAPSHOT,
+        V3_3_6,
+
+        V3_3_7_SNAPSHOT,
+        V3_3_7,
+
+        V3_3_8_SNAPSHOT,
+        V3_3_8,
+
+        V3_3_9_SNAPSHOT,
+        V3_3_9,
+
+        V3_4_1_SNAPSHOT,
+        V3_4_1,
+
+        V3_4_2_SNAPSHOT,
+        V3_4_2,
+
+        V3_4_3_SNAPSHOT,
+        V3_4_3,
+
+        V3_4_4_SNAPSHOT,
+        V3_4_4,
+
+        V3_4_5_SNAPSHOT,
+        V3_4_5,
+
+        V3_4_6_SNAPSHOT,
+        V3_4_6,
+
+        V3_4_7_SNAPSHOT,
+        V3_4_7,
+
+        V3_4_8_SNAPSHOT,
+        V3_4_8,
+
+        V3_4_9_SNAPSHOT,
+        V3_4_9,
+        V3_5_1_SNAPSHOT,
+        V3_5_1,
+
+        V3_5_2_SNAPSHOT,
+        V3_5_2,
+
+        V3_5_3_SNAPSHOT,
+        V3_5_3,
+
+        V3_5_4_SNAPSHOT,
+        V3_5_4,
+
+        V3_5_5_SNAPSHOT,
+        V3_5_5,
+
+        V3_5_6_SNAPSHOT,
+        V3_5_6,
+
+        V3_5_7_SNAPSHOT,
+        V3_5_7,
+
+        V3_5_8_SNAPSHOT,
+        V3_5_8,
+
+        V3_5_9_SNAPSHOT,
+        V3_5_9,
     }
 }

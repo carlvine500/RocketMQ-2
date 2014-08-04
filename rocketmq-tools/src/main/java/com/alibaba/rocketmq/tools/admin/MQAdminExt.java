@@ -17,6 +17,7 @@ package com.alibaba.rocketmq.tools.admin;
 
 import java.io.UnsupportedEncodingException;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
@@ -27,11 +28,14 @@ import com.alibaba.rocketmq.common.TopicConfig;
 import com.alibaba.rocketmq.common.admin.ConsumeStats;
 import com.alibaba.rocketmq.common.admin.RollbackStats;
 import com.alibaba.rocketmq.common.admin.TopicStatsTable;
+import com.alibaba.rocketmq.common.message.MessageQueue;
 import com.alibaba.rocketmq.common.protocol.body.ClusterInfo;
 import com.alibaba.rocketmq.common.protocol.body.ConsumeByWho;
 import com.alibaba.rocketmq.common.protocol.body.ConsumerConnection;
+import com.alibaba.rocketmq.common.protocol.body.GroupList;
 import com.alibaba.rocketmq.common.protocol.body.KVTable;
 import com.alibaba.rocketmq.common.protocol.body.ProducerConnection;
+import com.alibaba.rocketmq.common.protocol.body.QueueTimeSpan;
 import com.alibaba.rocketmq.common.protocol.body.TopicList;
 import com.alibaba.rocketmq.common.protocol.route.TopicRouteData;
 import com.alibaba.rocketmq.common.subscription.SubscriptionGroupConfig;
@@ -272,7 +276,8 @@ public interface MQAdminExt extends MQAdmin {
      * @param key
      * @return
      */
-    public String getKVConfig(final String namespace, final String key);
+    public String getKVConfig(final String namespace, final String key) throws RemotingException,
+            MQClientException, InterruptedException;
 
 
     /**
@@ -401,7 +406,7 @@ public interface MQAdminExt extends MQAdmin {
 
 
     /**
-     * 按照时间回溯消费进度
+     * 按照时间回溯消费进度(客户端需要重启)
      * 
      * @param consumerGroup
      * @param topic
@@ -413,7 +418,138 @@ public interface MQAdminExt extends MQAdmin {
      * @throws MQClientException
      * @return
      */
-    public List<RollbackStats> resetOffsetByTimestamp(String consumerGroup, String topic, long timestamp,
+    public List<RollbackStats> resetOffsetByTimestampOld(String consumerGroup, String topic, long timestamp,
             boolean force) throws RemotingException, MQBrokerException, InterruptedException,
             MQClientException;
+
+
+    /**
+     * 按照时间回溯消费进度(客户端不需要重启)
+     * 
+     * @param topic
+     * @param group
+     * @param timestamp
+     * @param isForce
+     * @throws RemotingException
+     * @throws MQBrokerException
+     * @throws InterruptedException
+     * @throws MQClientException
+     * @return
+     */
+    public Map<MessageQueue, Long> resetOffsetByTimestamp(String topic, String group, long timestamp,
+            boolean isForce) throws RemotingException, MQBrokerException, InterruptedException,
+            MQClientException;
+
+
+    /**
+     * 重置消费进度，无论Consumer是否在线，都可以执行。不保证最终结果是否成功，需要调用方通过消费进度查询来再次确认
+     * 
+     * @param consumerGroup
+     * @param topic
+     * @param timestamp
+     * @throws InterruptedException
+     * @throws MQBrokerException
+     * @throws RemotingException
+     * @throws MQClientException
+     */
+    public void resetOffsetNew(String consumerGroup, String topic, long timestamp) throws RemotingException,
+            MQBrokerException, InterruptedException, MQClientException;
+
+
+    /**
+     * 通过客户端查看消费者的消费情况
+     * 
+     * @param topic
+     * @param group
+     * @param clientAddr
+     * @return
+     * @throws RemotingException
+     * @throws MQBrokerException
+     * @throws InterruptedException
+     * @throws MQClientException
+     */
+    public Map<String, Map<MessageQueue, Long>> getConsumeStatus(String topic, String group, String clientAddr)
+            throws RemotingException, MQBrokerException, InterruptedException, MQClientException;
+
+
+    /**
+     * 创建或更新顺序消息的分区配置
+     * 
+     * @param key
+     * @param value
+     * @param isCluster
+     * @throws RemotingException
+     * @throws MQBrokerException
+     * @throws InterruptedException
+     * @throws MQClientException
+     */
+    public void createOrUpdateOrderConf(String key, String value, boolean isCluster)
+            throws RemotingException, MQBrokerException, InterruptedException, MQClientException;
+
+
+    /**
+     * 根据Topic查询被哪些订阅组消费
+     * 
+     * @param topic
+     * @return
+     * @throws MQBrokerException
+     * @throws InterruptedException
+     * @throws RemotingTimeoutException
+     * @throws RemotingSendRequestException
+     * @throws RemotingConnectException
+     * @throws MQClientException
+     * @throws RemotingException
+     */
+    public GroupList queryTopicConsumeByWho(final String topic) throws RemotingConnectException,
+            RemotingSendRequestException, RemotingTimeoutException, InterruptedException, MQBrokerException,
+            RemotingException, MQClientException;
+
+
+    /**
+     * 根据 topic 和 group 获取消息的时间跨度
+     * 
+     * @param topic
+     * @param group
+     * @return
+     * @throws RemotingConnectException
+     * @throws RemotingSendRequestException
+     * @throws RemotingTimeoutException
+     * @throws InterruptedException
+     * @throws MQBrokerException
+     * @throws RemotingException
+     * @throws MQClientException
+     */
+    public Set<QueueTimeSpan> queryConsumeTimeSpan(final String topic, final String group)
+            throws InterruptedException, MQBrokerException, RemotingException, MQClientException;
+
+
+    /**
+     * 触发清理失效的消费队列
+     * 
+     * @param cluster
+     *            null则表示所有集群
+     * @return 清理是否成功
+     * @throws RemotingConnectException
+     * @throws RemotingSendRequestException
+     * @throws RemotingTimeoutException
+     * @throws MQClientException
+     * @throws InterruptedException
+     */
+    public boolean cleanExpiredConsumerQueue(String cluster) throws RemotingConnectException,
+            RemotingSendRequestException, RemotingTimeoutException, MQClientException, InterruptedException;
+
+
+    /**
+     * 触发指定的broker清理失效的消费队列
+     * 
+     * @param addr
+     * @return 清理是否成功
+     * @throws RemotingConnectException
+     * @throws RemotingSendRequestException
+     * @throws RemotingTimeoutException
+     * @throws MQClientException
+     * @throws InterruptedException
+     */
+    public boolean cleanExpiredConsumerQueueByAddr(String addr) throws RemotingConnectException,
+            RemotingSendRequestException, RemotingTimeoutException, MQClientException, InterruptedException;
 }

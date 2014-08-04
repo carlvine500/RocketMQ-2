@@ -17,6 +17,7 @@ package com.alibaba.rocketmq.tools.admin;
 
 import java.io.UnsupportedEncodingException;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
@@ -34,8 +35,10 @@ import com.alibaba.rocketmq.common.message.MessageQueue;
 import com.alibaba.rocketmq.common.protocol.body.ClusterInfo;
 import com.alibaba.rocketmq.common.protocol.body.ConsumeByWho;
 import com.alibaba.rocketmq.common.protocol.body.ConsumerConnection;
+import com.alibaba.rocketmq.common.protocol.body.GroupList;
 import com.alibaba.rocketmq.common.protocol.body.KVTable;
 import com.alibaba.rocketmq.common.protocol.body.ProducerConnection;
+import com.alibaba.rocketmq.common.protocol.body.QueueTimeSpan;
 import com.alibaba.rocketmq.common.protocol.body.TopicList;
 import com.alibaba.rocketmq.common.protocol.route.TopicRouteData;
 import com.alibaba.rocketmq.common.subscription.SubscriptionGroupConfig;
@@ -184,7 +187,8 @@ public class DefaultMQAdminExt extends ClientConfig implements MQAdminExt {
 
 
     @Override
-    public String getKVConfig(String namespace, String key) {
+    public String getKVConfig(String namespace, String key) throws RemotingException, MQClientException,
+            InterruptedException {
         return defaultMQAdminExtImpl.getKVConfig(namespace, key);
     }
 
@@ -312,10 +316,10 @@ public class DefaultMQAdminExt extends ClientConfig implements MQAdminExt {
     }
 
 
-    public List<RollbackStats> resetOffsetByTimestamp(String consumerGroup, String topic, long timestamp,
+    public List<RollbackStats> resetOffsetByTimestampOld(String consumerGroup, String topic, long timestamp,
             boolean force) throws RemotingException, MQBrokerException, InterruptedException,
             MQClientException {
-        return defaultMQAdminExtImpl.resetOffsetByTimestamp(consumerGroup, topic, timestamp, force);
+        return defaultMQAdminExtImpl.resetOffsetByTimestampOld(consumerGroup, topic, timestamp, force);
     }
 
 
@@ -331,5 +335,62 @@ public class DefaultMQAdminExt extends ClientConfig implements MQAdminExt {
             RemotingSendRequestException, RemotingTimeoutException, UnsupportedEncodingException,
             InterruptedException, MQBrokerException {
         defaultMQAdminExtImpl.updateBrokerConfig(brokerAddr, properties);
+    }
+
+
+    @Override
+    public Map<MessageQueue, Long> resetOffsetByTimestamp(String topic, String group, long timestamp,
+            boolean isForce) throws RemotingException, MQBrokerException, InterruptedException,
+            MQClientException {
+        return defaultMQAdminExtImpl.resetOffsetByTimestamp(topic, group, timestamp, isForce);
+    }
+
+
+    @Override
+    public Map<String, Map<MessageQueue, Long>> getConsumeStatus(String topic, String group, String clientAddr)
+            throws RemotingException, MQBrokerException, InterruptedException, MQClientException {
+        return defaultMQAdminExtImpl.getConsumeStatus(topic, group, clientAddr);
+    }
+
+
+    @Override
+    public void createOrUpdateOrderConf(String key, String value, boolean isCluster)
+            throws RemotingException, MQBrokerException, InterruptedException, MQClientException {
+        defaultMQAdminExtImpl.createOrUpdateOrderConf(key, value, isCluster);
+    }
+
+
+    @Override
+    public GroupList queryTopicConsumeByWho(String topic) throws InterruptedException, MQBrokerException,
+            RemotingException, MQClientException {
+        return this.defaultMQAdminExtImpl.queryTopicConsumeByWho(topic);
+    }
+
+
+    @Override
+    public Set<QueueTimeSpan> queryConsumeTimeSpan(final String topic, final String group)
+            throws InterruptedException, MQBrokerException, RemotingException, MQClientException {
+        return this.defaultMQAdminExtImpl.queryConsumeTimeSpan(topic, group);
+    }
+
+
+    @Override
+    public void resetOffsetNew(String consumerGroup, String topic, long timestamp) throws RemotingException,
+            MQBrokerException, InterruptedException, MQClientException {
+        this.defaultMQAdminExtImpl.resetOffsetNew(consumerGroup, topic, timestamp);
+    }
+
+
+    @Override
+    public boolean cleanExpiredConsumerQueue(String cluster) throws RemotingConnectException,
+            RemotingSendRequestException, RemotingTimeoutException, MQClientException, InterruptedException {
+        return defaultMQAdminExtImpl.cleanExpiredConsumerQueue(cluster);
+    }
+
+
+    @Override
+    public boolean cleanExpiredConsumerQueueByAddr(String addr) throws RemotingConnectException,
+            RemotingSendRequestException, RemotingTimeoutException, MQClientException, InterruptedException {
+        return defaultMQAdminExtImpl.cleanExpiredConsumerQueueByAddr(addr);
     }
 }

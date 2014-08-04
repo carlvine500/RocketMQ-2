@@ -56,4 +56,7 @@ public interface MQConsumerInner {
 
 
     public boolean isSubscribeTopicNeedUpdate(final String topic);
+
+
+    public boolean isUnitMode();
 }

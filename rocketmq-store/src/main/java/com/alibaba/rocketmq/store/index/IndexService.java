@@ -22,7 +22,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -32,10 +31,11 @@ import org.slf4j.LoggerFactory;
 import com.alibaba.rocketmq.common.ServiceThread;
 import com.alibaba.rocketmq.common.UtilAll;
 import com.alibaba.rocketmq.common.constant.LoggerName;
-import com.alibaba.rocketmq.common.message.Message;
+import com.alibaba.rocketmq.common.message.MessageConst;
 import com.alibaba.rocketmq.common.sysflag.MessageSysFlag;
 import com.alibaba.rocketmq.store.DefaultMessageStore;
 import com.alibaba.rocketmq.store.DispatchRequest;
+import com.alibaba.rocketmq.store.config.StorePathConfigHelper;
 
 
 /**
@@ -55,15 +55,15 @@ public class IndexService extends ServiceThread {
     private final ArrayList<IndexFile> indexFileList = new ArrayList<IndexFile>();
     // 读写锁（针对indexFileList）
     private final ReadWriteLock readWriteLock = new ReentrantReadWriteLock();
-    private LinkedBlockingQueue<Object[]> requestQueue = new LinkedBlockingQueue<Object[]>();
-    private AtomicInteger requestCount = new AtomicInteger(0);
+    private LinkedBlockingQueue<Object[]> requestQueue = new LinkedBlockingQueue<Object[]>(300000);
 
 
     public IndexService(final DefaultMessageStore store) {
         this.defaultMessageStore = store;
         this.hashSlotNum = store.getMessageStoreConfig().getMaxHashSlotNum();
         this.indexNum = store.getMessageStoreConfig().getMaxIndexNum();
-        this.storePath = store.getMessageStoreConfig().getStorePathIndex();
+        this.storePath =
+                StorePathConfigHelper.getStorePathIndex(store.getMessageStoreConfig().getStorePathRootDir());
     }
 
 
@@ -148,7 +148,9 @@ public class IndexService extends ServiceThread {
             try {
                 this.readWriteLock.writeLock().lock();
                 for (IndexFile file : files) {
-                    if (!this.indexFileList.remove(file)) {
+                    boolean destroyed = file.destroy(3000);
+                    destroyed = destroyed && this.indexFileList.remove(file);
+                    if (!destroyed) {
                         log.error("deleteExpiredFile remove failed.");
                         break;
                     }
@@ -230,41 +232,16 @@ public class IndexService extends ServiceThread {
     }
 
 
-    // public void flush() {
-    // ArrayList<IndexFile> indexFileListClone = null;
-    // try {
-    // this.readWriteLock.readLock().lock();
-    // indexFileListClone = (ArrayList<IndexFile>) this.indexFileList.clone();
-    // }
-    // catch (Exception e) {
-    // log.error("flush exception", e);
-    // }
-    // finally {
-    // this.readWriteLock.readLock().unlock();
-    // }
-    //
-    // long indexMsgTimestamp = 0;
-    //
-    // if (indexFileListClone != null) {
-    // for (IndexFile f : indexFileListClone) {
-    // if (f.isWriteFull()) {
-    // indexMsgTimestamp = f.getEndTimestamp();
-    // }
-    //
-    // f.flush();
-    // }
-    // }
-    //
-    // this.defaultMessageStore.getStoreCheckpoint().setIndexMsgTimestamp(indexMsgTimestamp);
-    // this.defaultMessageStore.getStoreCheckpoint().flush();
-    // }
-
     /**
-     * 追加请求，返回队列中堆积的请求数
+     * 向队列中添加请求，队列满情况下，丢弃请求
      */
-    public int putRequest(final Object[] reqs) {
-        this.requestQueue.add(reqs);
-        return this.requestCount.addAndGet(reqs.length);
+    public void putRequest(final Object[] reqs) {
+        boolean offer = this.requestQueue.offer(reqs);
+        if (!offer) {
+            if (log.isDebugEnabled()) {
+                log.debug("putRequest index failed, {}", reqs);
+            }
+        }
     }
 
 
@@ -274,7 +251,6 @@ public class IndexService extends ServiceThread {
 
         while (!this.isStoped()) {
             try {
-                // Object[] req = this.requestQueue.take();
                 Object[] req = this.requestQueue.poll(3000, TimeUnit.MILLISECONDS);
 
                 if (req != null) {
@@ -314,7 +290,7 @@ public class IndexService extends ServiceThread {
                 }
 
                 if (keys != null && keys.length() > 0) {
-                    String[] keyset = keys.split(Message.KEY_SEPARATOR);
+                    String[] keyset = keys.split(MessageConst.KEY_SEPARATOR);
                     for (String key : keyset) {
                         // TODO 是否需要TRIM
                         if (key.length() > 0) {
@@ -344,10 +320,7 @@ public class IndexService extends ServiceThread {
 
         if (breakdown) {
             log.error("build index error, stop building index");
-            // TODO
         }
-
-        this.requestCount.addAndGet(req.length * (-1));
     }
 
 

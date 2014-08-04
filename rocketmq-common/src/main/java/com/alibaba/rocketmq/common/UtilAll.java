@@ -30,9 +30,6 @@ import java.util.zip.CRC32;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.InflaterInputStream;
 
-import com.alibaba.rocketmq.common.protocol.MQProtos.MQResponseCode;
-import com.alibaba.rocketmq.remoting.protocol.RemotingProtos.ResponseCode;
-
 
 /**
  * 各种方法大杂烩
@@ -54,6 +51,18 @@ public class UtilAll {
         catch (Exception e) {
             return -1;
         }
+    }
+
+
+    public static String currentStackTrace() {
+        StringBuilder sb = new StringBuilder();
+        StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
+        for (StackTraceElement ste : stackTrace) {
+            sb.append("\n\t");
+            sb.append(ste.toString());
+        }
+
+        return sb.toString();
     }
 
 
@@ -121,6 +130,45 @@ public class UtilAll {
     }
 
 
+    public static long computNextMinutesTimeMillis() {
+        Calendar cal = Calendar.getInstance();
+        cal.setTimeInMillis(System.currentTimeMillis());
+        cal.add(Calendar.DAY_OF_MONTH, 0);
+        cal.add(Calendar.HOUR_OF_DAY, 0);
+        cal.add(Calendar.MINUTE, 1);
+        cal.set(Calendar.SECOND, 0);
+        cal.set(Calendar.MILLISECOND, 0);
+
+        return cal.getTimeInMillis();
+    }
+
+
+    public static long computNextHourTimeMillis() {
+        Calendar cal = Calendar.getInstance();
+        cal.setTimeInMillis(System.currentTimeMillis());
+        cal.add(Calendar.DAY_OF_MONTH, 0);
+        cal.add(Calendar.HOUR_OF_DAY, 1);
+        cal.set(Calendar.MINUTE, 0);
+        cal.set(Calendar.SECOND, 0);
+        cal.set(Calendar.MILLISECOND, 0);
+
+        return cal.getTimeInMillis();
+    }
+
+
+    public static long computNextHalfHourTimeMillis() {
+        Calendar cal = Calendar.getInstance();
+        cal.setTimeInMillis(System.currentTimeMillis());
+        cal.add(Calendar.DAY_OF_MONTH, 0);
+        cal.add(Calendar.HOUR_OF_DAY, 1);
+        cal.set(Calendar.MINUTE, 30);
+        cal.set(Calendar.SECOND, 0);
+        cal.set(Calendar.MILLISECOND, 0);
+
+        return cal.getTimeInMillis();
+    }
+
+
     public static String timeMillisToHumanString2(final long t) {
         Calendar cal = Calendar.getInstance();
         cal.setTimeInMillis(t);
@@ -132,6 +180,26 @@ public class UtilAll {
             cal.get(Calendar.MINUTE),//
             cal.get(Calendar.SECOND),//
             cal.get(Calendar.MILLISECOND));
+    }
+
+
+    /**
+     * 返回日期时间格式，精度到秒<br>
+     * 格式如下：2013122305190000
+     * 
+     * @param t
+     * @return
+     */
+    public static String timeMillisToHumanString3(final long t) {
+        Calendar cal = Calendar.getInstance();
+        cal.setTimeInMillis(t);
+        return String.format("%04d%02d%02d%02d%02d%02d",//
+            cal.get(Calendar.YEAR),//
+            cal.get(Calendar.MONTH) + 1,//
+            cal.get(Calendar.DAY_OF_MONTH),//
+            cal.get(Calendar.HOUR_OF_DAY),//
+            cal.get(Calendar.MINUTE),//
+            cal.get(Calendar.SECOND));
     }
 
 
@@ -336,17 +404,7 @@ public class UtilAll {
 
 
     public static String responseCode2String(final int code) {
-        ResponseCode rc = ResponseCode.valueOf(code);
-        if (rc != null) {
-            return rc.toString();
-        }
-
-        MQResponseCode mrc = MQResponseCode.valueOf(code);
-        if (mrc != null) {
-            return mrc.toString();
-        }
-
-        return null;
+        return Integer.toString(code);
     }
 
 

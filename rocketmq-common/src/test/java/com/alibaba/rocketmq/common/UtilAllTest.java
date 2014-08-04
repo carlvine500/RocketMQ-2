@@ -11,6 +11,12 @@ import org.junit.Test;
 public class UtilAllTest {
 
     @Test
+    public void test_currentStackTrace() {
+        System.out.println(UtilAll.currentStackTrace());
+    }
+
+
+    @Test
     public void test_a() {
         URL url = this.getClass().getProtectionDomain().getCodeSource().getLocation();
         System.out.println(url);
@@ -61,6 +67,35 @@ public class UtilAllTest {
 
         System.out.println("PID = " + pid);
         assertTrue(pid > 0);
+    }
+
+
+    @Test
+    public void test_isBlank() {
+        {
+            boolean result = UtilAll.isBlank("Hello ");
+            assertTrue(!result);
+        }
+
+        {
+            boolean result = UtilAll.isBlank(" Hello");
+            assertTrue(!result);
+        }
+
+        {
+            boolean result = UtilAll.isBlank("He llo");
+            assertTrue(!result);
+        }
+
+        {
+            boolean result = UtilAll.isBlank("  ");
+            assertTrue(result);
+        }
+
+        {
+            boolean result = UtilAll.isBlank("Hello");
+            assertTrue(!result);
+        }
     }
 
     class DemoConfig {

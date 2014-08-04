@@ -22,9 +22,11 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 
 import com.alibaba.rocketmq.common.MixAll;
+import com.alibaba.rocketmq.srvutil.ServerUtil;
 import com.alibaba.rocketmq.tools.admin.DefaultMQAdminExt;
 import com.alibaba.rocketmq.tools.command.CommandUtil;
 import com.alibaba.rocketmq.tools.command.SubCommand;
+import com.alibaba.rocketmq.tools.command.topic.DeleteTopicSubCommand;
 
 
 /**
@@ -94,10 +96,19 @@ public class DeleteSubscriptionGroupCommand implements SubCommand {
                         groupName, master, clusterName);
                 }
 
+                // 删除%RETRY%打头的Topic
+                try {
+                    DeleteTopicSubCommand.deleteTopic(adminExt, clusterName, MixAll.RETRY_GROUP_TOPIC_PREFIX
+                            + groupName);
+                    DeleteTopicSubCommand.deleteTopic(adminExt, clusterName, MixAll.DLQ_GROUP_TOPIC_PREFIX
+                            + groupName);
+                }
+                catch (Exception e) {
+                }
                 return;
             }
 
-            MixAll.printCommandLineHelp("mqadmin " + this.commandName(), options);
+            ServerUtil.printCommandLineHelp("mqadmin " + this.commandName(), options);
         }
         catch (Exception e) {
             e.printStackTrace();

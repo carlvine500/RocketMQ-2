@@ -28,7 +28,6 @@ import com.alibaba.fastjson.annotation.JSONField;
 import com.alibaba.rocketmq.remoting.CommandCustomHeader;
 import com.alibaba.rocketmq.remoting.annotation.CFNotNull;
 import com.alibaba.rocketmq.remoting.exception.RemotingCommandException;
-import com.alibaba.rocketmq.remoting.protocol.RemotingProtos.ResponseCode;
 
 
 /**
@@ -82,7 +81,7 @@ public class RemotingCommand {
 
     public static RemotingCommand createResponseCommand(Class<? extends CommandCustomHeader> classHeader) {
         RemotingCommand cmd =
-                createResponseCommand(ResponseCode.SYSTEM_ERROR_VALUE, "not set any response code",
+                createResponseCommand(RemotingSysResponseCode.SYSTEM_ERROR, "not set any response code",
                     classHeader);
 
         return cmd;
@@ -140,7 +139,10 @@ public class RemotingCommand {
     private void makeCustomHeaderToNet() {
         if (this.customHeader != null) {
             Field[] fields = this.customHeader.getClass().getDeclaredFields();
-            this.extFields = new HashMap<String, String>();
+            if (null == this.extFields) {
+                this.extFields = new HashMap<String, String>();
+            }
+
             for (Field field : fields) {
                 if (!Modifier.isStatic(field.getModifiers())) {
                     String name = field.getName();
@@ -226,13 +228,7 @@ public class RemotingCommand {
 
                     field.set(objectHeader, valueParsed);
                 }
-                catch (SecurityException e) {
-                }
-                catch (NoSuchFieldException e) {
-                }
-                catch (IllegalArgumentException e) {
-                }
-                catch (IllegalAccessException e) {
+                catch (Throwable e) {
                 }
             }
 

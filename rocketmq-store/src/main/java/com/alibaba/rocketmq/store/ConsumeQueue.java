@@ -35,6 +35,7 @@ public class ConsumeQueue {
     // 存储单元大小
     public static final int CQStoreUnitSize = 20;
     private static final Logger log = LoggerFactory.getLogger(LoggerName.StoreLoggerName);
+    private static final Logger logError = LoggerFactory.getLogger(LoggerName.StoreErrorLoggerName);
     // 存储顶层对象
     private final DefaultMessageStore defaultMessageStore;
     // 存储消息索引的队列
@@ -314,12 +315,13 @@ public class ConsumeQueue {
 
         MapedFile mapedFile = this.mapedFileQueue.getLastMapedFile2();
         if (mapedFile != null) {
+            // 找到写入位置对应的索引项的起始位置
+            int position = mapedFile.getWrotePostion() - CQStoreUnitSize;
+            if (position < 0)
+                position = 0;
+
             ByteBuffer byteBuffer = mapedFile.sliceByteBuffer();
-
-            // 先将Offset清空
-            mapedFile.setWrotePostion(0);
-            mapedFile.setCommittedPosition(0);
-
+            byteBuffer.position(position);
             for (int i = 0; i < logicFileSize; i += CQStoreUnitSize) {
                 long offset = byteBuffer.getLong();
                 int size = byteBuffer.getInt();
@@ -328,10 +330,6 @@ public class ConsumeQueue {
                 // 说明当前存储单元有效
                 if (offset >= 0 && size > 0) {
                     lastOffset = offset + size;
-                    int pos = i + CQStoreUnitSize;
-                    mapedFile.setWrotePostion(pos);
-                    mapedFile.setCommittedPosition(pos);
-                    this.maxPhysicOffset = offset;
                 }
                 else {
                     break;
@@ -408,11 +406,12 @@ public class ConsumeQueue {
             }
             // 只有一种情况会失败，创建新的MapedFile时报错或者超时
             else {
-                log.warn("put commit log postion info to " + topic + ":" + queueId + " " + offset
+                // XXX: warn and notify me
+                log.warn("[BUG]put commit log postion info to " + topic + ":" + queueId + " " + offset
                         + " failed, retry " + i + " times");
 
                 try {
-                    Thread.sleep(1000 * 5);
+                    Thread.sleep(1000);
                 }
                 catch (InterruptedException e) {
                     log.warn("", e);
@@ -420,6 +419,8 @@ public class ConsumeQueue {
             }
         }
 
+        // XXX: warn and notify me
+        log.error("[BUG]consume queue can not write, {} {}", this.topic, this.queueId);
         this.defaultMessageStore.getRunningFlags().makeLogicsQueueError();
     }
 
@@ -448,22 +449,31 @@ public class ConsumeQueue {
         this.byteBufferIndex.putInt(size);
         this.byteBufferIndex.putLong(tagsCode);
 
-        final long realLogicOffset = cqOffset * CQStoreUnitSize;
+        final long expectLogicOffset = cqOffset * CQStoreUnitSize;
 
-        MapedFile mapedFile = this.mapedFileQueue.getLastMapedFile(realLogicOffset);
+        MapedFile mapedFile = this.mapedFileQueue.getLastMapedFile(expectLogicOffset);
         if (mapedFile != null) {
             // 纠正MapedFile逻辑队列索引顺序
             if (mapedFile.isFirstCreateInQueue() && cqOffset != 0 && mapedFile.getWrotePostion() == 0) {
-                this.minLogicOffset = realLogicOffset;
-                this.fillPreBlank(mapedFile, realLogicOffset);
-                log.info("fill pre blank space " + mapedFile.getFileName() + " " + realLogicOffset + " "
+                this.minLogicOffset = expectLogicOffset;
+                this.fillPreBlank(mapedFile, expectLogicOffset);
+                log.info("fill pre blank space " + mapedFile.getFileName() + " " + expectLogicOffset + " "
                         + mapedFile.getWrotePostion());
             }
 
             if (cqOffset != 0) {
-                if (realLogicOffset != (mapedFile.getWrotePostion() + mapedFile.getFileFromOffset())) {
-                    log.warn("logic queue order maybe wrong " + realLogicOffset + " "
-                            + (mapedFile.getWrotePostion() + mapedFile.getFileFromOffset()));
+                long currentLogicOffset = mapedFile.getWrotePostion() + mapedFile.getFileFromOffset();
+                if (expectLogicOffset != currentLogicOffset) {
+                    // XXX: warn and notify me
+                    logError
+                        .warn(
+                            "[BUG]logic queue order maybe wrong, expectLogicOffset: {} currentLogicOffset: {} Topic: {} QID: {} Diff: {}",//
+                            expectLogicOffset, //
+                            currentLogicOffset,//
+                            this.topic,//
+                            this.queueId,//
+                            expectLogicOffset - currentLogicOffset//
+                        );
                 }
             }
 

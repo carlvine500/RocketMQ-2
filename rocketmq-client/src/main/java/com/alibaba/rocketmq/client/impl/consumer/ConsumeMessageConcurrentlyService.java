@@ -16,15 +16,14 @@
 package com.alibaba.rocketmq.client.impl.consumer;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
 
 import org.slf4j.Logger;
 
@@ -36,7 +35,8 @@ import com.alibaba.rocketmq.client.hook.ConsumeMessageContext;
 import com.alibaba.rocketmq.client.log.ClientLogger;
 import com.alibaba.rocketmq.client.stat.ConsumerStat;
 import com.alibaba.rocketmq.common.MixAll;
-import com.alibaba.rocketmq.common.message.Message;
+import com.alibaba.rocketmq.common.ThreadFactoryImpl;
+import com.alibaba.rocketmq.common.message.MessageConst;
 import com.alibaba.rocketmq.common.message.MessageExt;
 import com.alibaba.rocketmq.common.message.MessageQueue;
 import com.alibaba.rocketmq.remoting.common.RemotingHelper;
@@ -76,24 +76,11 @@ public class ConsumeMessageConcurrentlyService implements ConsumeMessageService 
             1000 * 60,//
             TimeUnit.MILLISECONDS,//
             this.consumeRequestQueue,//
-            new ThreadFactory() {
-                private AtomicLong threadIndex = new AtomicLong(0);
+            new ThreadFactoryImpl("ConsumeMessageThread_"));
 
-
-                @Override
-                public Thread newThread(Runnable r) {
-                    return new Thread(r, "ConsumeMessageThread-" //
-                            + ConsumeMessageConcurrentlyService.this.consumerGroup//
-                            + "-" + this.threadIndex.incrementAndGet());
-                }
-            });
-
-        this.scheduledExecutorService = Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
-            @Override
-            public Thread newThread(Runnable r) {
-                return new Thread(r, "ConsumeMessageScheduledThread-" + consumerGroup);
-            }
-        });
+        this.scheduledExecutorService =
+                Executors.newSingleThreadScheduledExecutor(new ThreadFactoryImpl(
+                    "ConsumeMessageScheduledThread_"));
     }
 
 
@@ -127,7 +114,7 @@ public class ConsumeMessageConcurrentlyService implements ConsumeMessageService 
         private void resetRetryTopic(final List<MessageExt> msgs) {
             final String groupTopic = MixAll.getRetryTopic(consumerGroup);
             for (MessageExt msg : msgs) {
-                String retryTopic = msg.getProperty(Message.PROPERTY_RETRY_TOPIC);
+                String retryTopic = msg.getProperty(MessageConst.PROPERTY_RETRY_TOPIC);
                 if (retryTopic != null && groupTopic.equals(msg.getTopic())) {
                     msg.setTopic(retryTopic);
                 }
@@ -138,7 +125,7 @@ public class ConsumeMessageConcurrentlyService implements ConsumeMessageService 
         @Override
         public void run() {
             if (this.processQueue.isDroped()) {
-                log.info("the message queue not be able to consume, because it's droped {}",
+                log.info("the message queue not be able to consume, because it's dropped {}",
                     this.messageQueue);
                 return;
             }
@@ -165,7 +152,7 @@ public class ConsumeMessageConcurrentlyService implements ConsumeMessageService 
 
             try {
                 this.resetRetryTopic(msgs);
-                status = listener.consumeMessage(msgs, context);
+                status = listener.consumeMessage(Collections.unmodifiableList(msgs), context);
             }
             catch (Throwable e) {
                 log.warn("consumeMessage exception: {} Group: {} Msgs: {} MQ: {}",//
@@ -207,7 +194,15 @@ public class ConsumeMessageConcurrentlyService implements ConsumeMessageService 
                     messageQueue);
             }
 
-            ConsumeMessageConcurrentlyService.this.processConsumeResult(status, context, this);
+            // 如果ProcessQueue是dropped状态，不需要直接更新 offset
+            if (!processQueue.isDroped()) {
+                ConsumeMessageConcurrentlyService.this.processConsumeResult(status, context, this);
+            }
+            else {
+                log.warn(
+                    "processQueue is dropped without process consume result. messageQueue={}, msgTreeMap={}, msgs={}",
+                    new Object[] { messageQueue, processQueue.getMsgTreeMap(), msgs });
+            }
         }
 
 
@@ -368,8 +363,44 @@ public class ConsumeMessageConcurrentlyService implements ConsumeMessageService 
 
     @Override
     public void updateCorePoolSize(int corePoolSize) {
-        if (corePoolSize > 0 && corePoolSize <= Short.MAX_VALUE) {
+        if (corePoolSize > 0 //
+                && corePoolSize <= Short.MAX_VALUE //
+                && corePoolSize < this.defaultMQPushConsumer.getConsumeThreadMax()) {
             this.consumeExecutor.setCorePoolSize(corePoolSize);
         }
+    }
+
+
+    @Override
+    public void incCorePoolSize() {
+        long corePoolSize = this.consumeExecutor.getCorePoolSize();
+        if (corePoolSize < this.defaultMQPushConsumer.getConsumeThreadMax()) {
+            this.consumeExecutor.setCorePoolSize(this.consumeExecutor.getCorePoolSize() + 1);
+        }
+
+        log.info("incCorePoolSize Concurrently from {} to {}, ConsumerGroup: {}", //
+            corePoolSize,//
+            this.consumeExecutor.getCorePoolSize(),//
+            this.consumerGroup);
+    }
+
+
+    @Override
+    public void decCorePoolSize() {
+        long corePoolSize = this.consumeExecutor.getCorePoolSize();
+        if (corePoolSize > this.defaultMQPushConsumer.getConsumeThreadMin()) {
+            this.consumeExecutor.setCorePoolSize(this.consumeExecutor.getCorePoolSize() - 1);
+        }
+
+        log.info("decCorePoolSize Concurrently from {} to {}, ConsumerGroup: {}", //
+            corePoolSize,//
+            this.consumeExecutor.getCorePoolSize(),//
+            this.consumerGroup);
+    }
+
+
+    @Override
+    public int getCorePoolSize() {
+        return this.consumeExecutor.getCorePoolSize();
     }
 }

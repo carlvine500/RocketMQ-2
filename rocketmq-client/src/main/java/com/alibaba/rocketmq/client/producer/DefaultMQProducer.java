@@ -15,8 +15,6 @@
  */
 package com.alibaba.rocketmq.client.producer;
 
-import java.util.List;
-
 import com.alibaba.rocketmq.client.ClientConfig;
 import com.alibaba.rocketmq.client.QueryResult;
 import com.alibaba.rocketmq.client.exception.MQBrokerException;
@@ -27,6 +25,8 @@ import com.alibaba.rocketmq.common.message.Message;
 import com.alibaba.rocketmq.common.message.MessageExt;
 import com.alibaba.rocketmq.common.message.MessageQueue;
 import com.alibaba.rocketmq.remoting.exception.RemotingException;
+
+import java.util.List;
 
 
 /**
@@ -58,6 +58,10 @@ public class DefaultMQProducer extends ClientConfig implements MQProducer {
      */
     private int compressMsgBodyOverHowmuch = 1024 * 4;
     /**
+     * 发送失败后，重试几次
+     */
+    private int retryTimesWhenSendFailed = 2;
+    /**
      * 消息已经成功写入Master，但是刷盘超时或者同步到Slave失败，则尝试重试另一个Broker，不建议修改默认值<br>
      * 顺序消息无效
      */
@@ -66,6 +70,10 @@ public class DefaultMQProducer extends ClientConfig implements MQProducer {
      * 最大消息大小，默认512K
      */
     private int maxMessageSize = 1024 * 128;
+    /**
+     * 是否为单元化的发布者
+     */
+    private boolean unitMode = false;
 
 
     public DefaultMQProducer() {
@@ -281,5 +289,25 @@ public class DefaultMQProducer extends ClientConfig implements MQProducer {
 
     public void setDefaultTopicQueueNums(int defaultTopicQueueNums) {
         this.defaultTopicQueueNums = defaultTopicQueueNums;
+    }
+
+
+    public int getRetryTimesWhenSendFailed() {
+        return retryTimesWhenSendFailed;
+    }
+
+
+    public void setRetryTimesWhenSendFailed(int retryTimesWhenSendFailed) {
+        this.retryTimesWhenSendFailed = retryTimesWhenSendFailed;
+    }
+
+
+    public boolean isUnitMode() {
+        return unitMode;
+    }
+
+
+    public void setUnitMode(boolean isUnitMode) {
+        this.unitMode = isUnitMode;
     }
 }

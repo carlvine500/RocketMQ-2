@@ -33,6 +33,8 @@ public class SendMessageRequestHeader implements CommandCustomHeader {
     private String properties;
     @CFNullable
     private Integer reconsumeTimes;
+    @CFNullable
+    private boolean unitMode = false;
 
 
     @Override
@@ -137,5 +139,15 @@ public class SendMessageRequestHeader implements CommandCustomHeader {
 
     public void setReconsumeTimes(Integer reconsumeTimes) {
         this.reconsumeTimes = reconsumeTimes;
+    }
+
+
+    public boolean isUnitMode() {
+        return unitMode;
+    }
+
+
+    public void setUnitMode(boolean isUnitMode) {
+        this.unitMode = isUnitMode;
     }
 }

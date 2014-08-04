@@ -15,7 +15,6 @@
  */
 package com.alibaba.rocketmq.common;
 
-import java.io.File;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
@@ -32,8 +31,10 @@ import com.alibaba.rocketmq.remoting.common.RemotingUtil;
 public class BrokerConfig {
     private String rocketmqHome = System.getProperty(MixAll.ROCKETMQ_HOME_PROPERTY,
         System.getenv(MixAll.ROCKETMQ_HOME_ENV));
+    @ImportantField
     private String namesrvAddr = System.getProperty(MixAll.NAMESRV_ADDR_PROPERTY,
         System.getenv(MixAll.NAMESRV_ADDR_ENV));
+    @ImportantField
     private String brokerIP1 = RemotingUtil.getLocalAddress();
     private String brokerIP2 = RemotingUtil.getLocalAddress();
     @ImportantField
@@ -49,40 +50,39 @@ public class BrokerConfig {
     private boolean autoCreateTopicEnable = true;
     // 自动创建以集群名字命名的Topic功能是否开启
     private boolean clusterTopicEnable = true;
+    // 自动创建以服务器名字命名的Topic功能是否开启
+    private boolean brokerTopicEnable = true;
     // 自动创建订阅组功能是否开启（线上建议关闭）
     @ImportantField
     private boolean autoCreateSubscriptionGroup = true;
 
-    private int sendMessageThreadPoolNums = 32 + Runtime.getRuntime().availableProcessors() * 4;
-    private int pullMessageThreadPoolNums = 32 + Runtime.getRuntime().availableProcessors() * 4;
+    private int sendMessageThreadPoolNums = 16 + Runtime.getRuntime().availableProcessors() * 4;
+    private int pullMessageThreadPoolNums = 16 + Runtime.getRuntime().availableProcessors() * 2;
     private int adminBrokerThreadPoolNums = 8;
-
-    private String topicConfigPath = System.getProperty("user.home") + File.separator + "store"
-            + File.separator + "config" + File.separator + "topics.json";
-
-    private String consumerOffsetPath = System.getProperty("user.home") + File.separator + "store"
-            + File.separator + "config" + File.separator + "consumerOffset.json";
-
-    private String brokerConfigPath = System.getProperty("user.home") + File.separator + "store"
-            + File.separator + "config" + File.separator + "broker.properties";
-
-    private String subscriptionGroupPath = System.getProperty("user.home") + File.separator + "store"
-            + File.separator + "config" + File.separator + "subscriptionGroup.json";
 
     private int flushConsumerOffsetInterval = 1000 * 5;
 
     private int flushConsumerOffsetHistoryInterval = 1000 * 60;
 
-    // 查询消息最大时间跨度，单位小时
-    private long queryMessageMaxTimeSpan = 6;
-
-    // 是否拒接接收事务消息
+    // 是否拒绝接收事务消息
     @ImportantField
     private boolean rejectTransactionMessage = false;
 
     // 是否从地址服务器寻找Name Server地址，正式发布后，默认值为false
     @ImportantField
     private boolean fetchNamesrvAddrByAddressServer = false;
+
+    // 发送消息对应的线程池阻塞队列size
+    private int sendThreadPoolQueueCapacity = 100000;
+
+    // 订阅消息对应的线程池阻塞队列size
+    private int pullThreadPoolQueueCapacity = 100000;
+
+    // 过滤服务器数量
+    private int filterServerNums = 0;
+
+    // Consumer订阅消息时，Broker是否开启长轮询
+    private boolean longPollingEnable = true;
 
 
     public static String localHostName() {
@@ -207,26 +207,6 @@ public class BrokerConfig {
     }
 
 
-    public String getTopicConfigPath() {
-        return topicConfigPath;
-    }
-
-
-    public void setTopicConfigPath(String topicConfigPath) {
-        this.topicConfigPath = topicConfigPath;
-    }
-
-
-    public String getConsumerOffsetPath() {
-        return consumerOffsetPath;
-    }
-
-
-    public void setConsumerOffsetPath(String consumerOffsetPath) {
-        this.consumerOffsetPath = consumerOffsetPath;
-    }
-
-
     public int getFlushConsumerOffsetInterval() {
         return flushConsumerOffsetInterval;
     }
@@ -244,16 +224,6 @@ public class BrokerConfig {
 
     public void setFlushConsumerOffsetHistoryInterval(int flushConsumerOffsetHistoryInterval) {
         this.flushConsumerOffsetHistoryInterval = flushConsumerOffsetHistoryInterval;
-    }
-
-
-    public String getBrokerConfigPath() {
-        return brokerConfigPath;
-    }
-
-
-    public void setBrokerConfigPath(String brokerConfigPath) {
-        this.brokerConfigPath = brokerConfigPath;
     }
 
 
@@ -297,26 +267,6 @@ public class BrokerConfig {
     }
 
 
-    public String getSubscriptionGroupPath() {
-        return subscriptionGroupPath;
-    }
-
-
-    public void setSubscriptionGroupPath(String subscriptionGroupPath) {
-        this.subscriptionGroupPath = subscriptionGroupPath;
-    }
-
-
-    public long getQueryMessageMaxTimeSpan() {
-        return queryMessageMaxTimeSpan;
-    }
-
-
-    public void setQueryMessageMaxTimeSpan(long queryMessageMaxTimeSpan) {
-        this.queryMessageMaxTimeSpan = queryMessageMaxTimeSpan;
-    }
-
-
     public boolean isRejectTransactionMessage() {
         return rejectTransactionMessage;
     }
@@ -334,5 +284,55 @@ public class BrokerConfig {
 
     public void setFetchNamesrvAddrByAddressServer(boolean fetchNamesrvAddrByAddressServer) {
         this.fetchNamesrvAddrByAddressServer = fetchNamesrvAddrByAddressServer;
+    }
+
+
+    public int getSendThreadPoolQueueCapacity() {
+        return sendThreadPoolQueueCapacity;
+    }
+
+
+    public void setSendThreadPoolQueueCapacity(int sendThreadPoolQueueCapacity) {
+        this.sendThreadPoolQueueCapacity = sendThreadPoolQueueCapacity;
+    }
+
+
+    public int getPullThreadPoolQueueCapacity() {
+        return pullThreadPoolQueueCapacity;
+    }
+
+
+    public void setPullThreadPoolQueueCapacity(int pullThreadPoolQueueCapacity) {
+        this.pullThreadPoolQueueCapacity = pullThreadPoolQueueCapacity;
+    }
+
+
+    public boolean isBrokerTopicEnable() {
+        return brokerTopicEnable;
+    }
+
+
+    public void setBrokerTopicEnable(boolean brokerTopicEnable) {
+        this.brokerTopicEnable = brokerTopicEnable;
+    }
+
+
+    public int getFilterServerNums() {
+        return filterServerNums;
+    }
+
+
+    public void setFilterServerNums(int filterServerNums) {
+        this.filterServerNums = filterServerNums;
+    }
+
+
+    public boolean isLongPollingEnable() {
+        return longPollingEnable;
+    }
+
+
+    public void setLongPollingEnable(boolean longPollingEnable) {
+        this.longPollingEnable = longPollingEnable;
     }
 }

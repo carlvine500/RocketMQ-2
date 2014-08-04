@@ -36,7 +36,9 @@ import com.alibaba.rocketmq.common.MixAll;
 import com.alibaba.rocketmq.common.constant.LoggerName;
 import com.alibaba.rocketmq.common.namesrv.NamesrvConfig;
 import com.alibaba.rocketmq.remoting.netty.NettyServerConfig;
+import com.alibaba.rocketmq.remoting.netty.NettySystemConfig;
 import com.alibaba.rocketmq.remoting.protocol.RemotingCommand;
+import com.alibaba.rocketmq.srvutil.ServerUtil;
 
 
 /**
@@ -46,6 +48,9 @@ import com.alibaba.rocketmq.remoting.protocol.RemotingCommand;
  * @since 2013-7-5
  */
 public class NamesrvStartup {
+    public static Properties properties = null;
+    public static CommandLine commandLine = null;
+
 
     public static Options buildCommandlineOptions(final Options options) {
         Option opt = new Option("c", "configFile", true, "Name server config properties file");
@@ -61,17 +66,32 @@ public class NamesrvStartup {
 
 
     public static void main(String[] args) {
+        main0(args);
+    }
+
+
+    public static NamesrvController main0(String[] args) {
         System.setProperty(RemotingCommand.RemotingVersionKey, Integer.toString(MQVersion.CurrentVersion));
+
+        // Socket发送缓冲区大小
+        if (null == System.getProperty(NettySystemConfig.SystemPropertySocketSndbufSize)) {
+            NettySystemConfig.SocketSndbufSize = 2048;
+        }
+
+        // Socket接收缓冲区大小
+        if (null == System.getProperty(NettySystemConfig.SystemPropertySocketRcvbufSize)) {
+            NettySystemConfig.SocketRcvbufSize = 1024;
+        }
 
         try {
             // 解析命令行
-            Options options = MixAll.buildCommandlineOptions(new Options());
-            final CommandLine commandLine =
-                    MixAll.parseCmdLine("mqnamesrv", args, buildCommandlineOptions(options),
+            Options options = ServerUtil.buildCommandlineOptions(new Options());
+            commandLine =
+                    ServerUtil.parseCmdLine("mqnamesrv", args, buildCommandlineOptions(options),
                         new PosixParser());
             if (null == commandLine) {
                 System.exit(-1);
-                return;
+                return null;
             }
 
             // 初始化配置文件
@@ -82,7 +102,7 @@ public class NamesrvStartup {
                 String file = commandLine.getOptionValue('c');
                 if (file != null) {
                     InputStream in = new BufferedInputStream(new FileInputStream(file));
-                    Properties properties = new Properties();
+                    properties = new Properties();
                     properties.load(in);
                     MixAll.properties2Object(properties, namesrvConfig);
                     MixAll.properties2Object(properties, nettyServerConfig);
@@ -98,7 +118,7 @@ public class NamesrvStartup {
                 System.exit(0);
             }
 
-            MixAll.properties2Object(MixAll.commandLine2Properties(commandLine), namesrvConfig);
+            MixAll.properties2Object(ServerUtil.commandLine2Properties(commandLine), namesrvConfig);
 
             if (null == namesrvConfig.getRocketmqHome()) {
                 System.out.println("Please set the " + MixAll.ROCKETMQ_HOME_ENV
@@ -113,6 +133,10 @@ public class NamesrvStartup {
             lc.reset();
             configurator.doConfigure(namesrvConfig.getRocketmqHome() + "/conf/logback_namesrv.xml");
             final Logger log = LoggerFactory.getLogger(LoggerName.NamesrvLoggerName);
+
+            // 打印服务器配置参数
+            MixAll.printObjectProperties(log, namesrvConfig);
+            MixAll.printObjectProperties(log, nettyServerConfig);
 
             // 初始化服务控制对象
             final NamesrvController controller = new NamesrvController(namesrvConfig, nettyServerConfig);
@@ -148,10 +172,14 @@ public class NamesrvStartup {
             String tip = "The Name Server boot success.";
             log.info(tip);
             System.out.println(tip);
+
+            return controller;
         }
         catch (Throwable e) {
             e.printStackTrace();
             System.exit(-1);
         }
+
+        return null;
     }
 }

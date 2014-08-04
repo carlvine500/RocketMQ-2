@@ -20,12 +20,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.slf4j.Logger;
 
 import com.alibaba.rocketmq.client.log.ClientLogger;
+import com.alibaba.rocketmq.common.message.MessageConst;
 import com.alibaba.rocketmq.common.message.MessageExt;
 
 
@@ -51,10 +54,15 @@ public class ProcessQueue {
 
     // 当前Q是否被rebalance丢弃
     private volatile boolean droped = false;
+    private volatile long lastPullTimestamp = System.currentTimeMillis();
+    private final static long PullMaxIdleTime = Long.parseLong(System.getProperty(
+        "rocketmq.client.pull.pullMaxIdleTime", "120000"));
 
     /**
      * 顺序消息专用
      */
+    private final Lock lockConsume = new ReentrantLock();
+
     // 是否从Broker锁定
     private volatile boolean locked = false;
     // 最后一次锁定成功时间戳
@@ -64,9 +72,20 @@ public class ProcessQueue {
     // 事务方式消费，未提交的消息
     private final TreeMap<Long, MessageExt> msgTreeMapTemp = new TreeMap<Long, MessageExt>();
 
+    /**
+     * 当前队列的消息堆积数量
+     */
+    private volatile long msgDuijiCnt = 0;
+
 
     public boolean isLockExpired() {
         boolean result = (System.currentTimeMillis() - this.lastLockTimestamp) > RebalanceLockMaxLiveTime;
+        return result;
+    }
+
+
+    public boolean isPullExpired() {
+        boolean result = (System.currentTimeMillis() - this.lastPullTimestamp) > PullMaxIdleTime;
         return result;
     }
 
@@ -79,15 +98,31 @@ public class ProcessQueue {
         try {
             this.lockTreeMap.writeLock().lockInterruptibly();
             try {
+                int validMsgCnt = 0;
                 for (MessageExt msg : msgs) {
-                    msgTreeMap.put(msg.getQueueOffset(), msg);
-                    this.queueOffsetMax = msg.getQueueOffset();
+                    MessageExt old = msgTreeMap.put(msg.getQueueOffset(), msg);
+                    if (null == old) {
+                        validMsgCnt++;
+                        this.queueOffsetMax = msg.getQueueOffset();
+                    }
                 }
-                msgCount.addAndGet(msgs.size());
+                msgCount.addAndGet(validMsgCnt);
 
                 if (!msgTreeMap.isEmpty() && !this.consuming) {
                     dispathToConsume = true;
                     this.consuming = true;
+                }
+
+                // 计算当前队列堆积的消息数量
+                if (!msgs.isEmpty()) {
+                    MessageExt messageExt = msgs.get(msgs.size() - 1);
+                    String property = messageExt.getProperty(MessageConst.PROPERTY_MAX_OFFSET);
+                    if (property != null) {
+                        long duiji = Long.parseLong(property) - messageExt.getQueueOffset();
+                        if (duiji > 0) {
+                            this.msgDuijiCnt = duiji;
+                        }
+                    }
                 }
             }
             finally {
@@ -139,10 +174,14 @@ public class ProcessQueue {
             try {
                 if (!msgTreeMap.isEmpty()) {
                     result = this.queueOffsetMax + 1;
+                    int removedCnt = 0;
                     for (MessageExt msg : msgs) {
-                        msgTreeMap.remove(msg.getQueueOffset());
+                        MessageExt prev = msgTreeMap.remove(msg.getQueueOffset());
+                        if (prev != null) {
+                            removedCnt--;
+                        }
                     }
-                    msgCount.addAndGet(msgs.size() * (-1));
+                    msgCount.addAndGet(removedCnt);
 
                     if (!msgTreeMap.isEmpty()) {
                         result = msgTreeMap.firstKey();
@@ -153,8 +192,8 @@ public class ProcessQueue {
                 this.lockTreeMap.writeLock().unlock();
             }
         }
-        catch (InterruptedException e) {
-            log.error("removeMessage exception", e);
+        catch (Throwable t) {
+            log.error("removeMessage exception", t);
         }
 
         return result;
@@ -297,6 +336,25 @@ public class ProcessQueue {
     }
 
 
+    public void clear() {
+        try {
+            this.lockTreeMap.writeLock().lockInterruptibly();
+            try {
+                this.msgTreeMap.clear();
+                this.msgTreeMapTemp.clear();
+                this.msgCount.set(0);
+                this.queueOffsetMax = 0L;
+            }
+            finally {
+                this.lockTreeMap.writeLock().unlock();
+            }
+        }
+        catch (InterruptedException e) {
+            log.error("rollback exception", e);
+        }
+    }
+
+
     public long getLastLockTimestamp() {
         return lastLockTimestamp;
     }
@@ -304,5 +362,30 @@ public class ProcessQueue {
 
     public void setLastLockTimestamp(long lastLockTimestamp) {
         this.lastLockTimestamp = lastLockTimestamp;
+    }
+
+
+    public Lock getLockConsume() {
+        return lockConsume;
+    }
+
+
+    public long getLastPullTimestamp() {
+        return lastPullTimestamp;
+    }
+
+
+    public void setLastPullTimestamp(long lastPullTimestamp) {
+        this.lastPullTimestamp = lastPullTimestamp;
+    }
+
+
+    public long getMsgDuijiCnt() {
+        return msgDuijiCnt;
+    }
+
+
+    public void setMsgDuijiCnt(long msgDuijiCnt) {
+        this.msgDuijiCnt = msgDuijiCnt;
     }
 }
