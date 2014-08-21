@@ -26,7 +26,6 @@ import com.alibaba.rocketmq.client.consumer.listener.ConsumeConcurrentlyContext;
 import com.alibaba.rocketmq.client.consumer.listener.ConsumeConcurrentlyStatus;
 import com.alibaba.rocketmq.client.consumer.listener.MessageListenerConcurrently;
 import com.alibaba.rocketmq.client.exception.MQClientException;
-import com.alibaba.rocketmq.common.consumer.ConsumeFromWhere;
 import com.alibaba.rocketmq.common.message.MessageExt;
 
 
@@ -86,10 +85,10 @@ public class Consumer {
             }
         }, 10000, 10000);
 
-        DefaultMQPushConsumer consumer = new DefaultMQPushConsumer("benchmark_consumer");
+        DefaultMQPushConsumer consumer =
+                new DefaultMQPushConsumer("benchmark_consumer_"
+                        + Long.toString(System.currentTimeMillis() % 100));
         consumer.setInstanceName(Long.toString(System.currentTimeMillis()));
-
-        consumer.setConsumeFromWhere(ConsumeFromWhere.CONSUME_FROM_MAX_OFFSET);
 
         consumer.subscribe("BenchmarkTest", "*");
 

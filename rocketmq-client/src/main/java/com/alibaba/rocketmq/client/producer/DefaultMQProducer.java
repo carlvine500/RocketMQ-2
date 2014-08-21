@@ -26,6 +26,7 @@ import com.alibaba.rocketmq.common.MixAll;
 import com.alibaba.rocketmq.common.message.Message;
 import com.alibaba.rocketmq.common.message.MessageExt;
 import com.alibaba.rocketmq.common.message.MessageQueue;
+import com.alibaba.rocketmq.remoting.RPCHook;
 import com.alibaba.rocketmq.remoting.exception.RemotingException;
 
 
@@ -36,11 +37,11 @@ import com.alibaba.rocketmq.remoting.exception.RemotingException;
  * @since 2013-7-25
  */
 public class DefaultMQProducer extends ClientConfig implements MQProducer {
-    protected final transient DefaultMQProducerImpl defaultMQProducerImpl = new DefaultMQProducerImpl(this);
+    protected final transient DefaultMQProducerImpl defaultMQProducerImpl;
     /**
      * 一般发送同样消息的Producer，归为同一个Group，应用必须设置，并保证命名唯一
      */
-    private String producerGroup = MixAll.DEFAULT_PRODUCER_GROUP;
+    private String producerGroup;
     /**
      * 支持在发送消息时，如果Topic不存在，自动创建Topic，但是要指定Key
      */
@@ -52,11 +53,15 @@ public class DefaultMQProducer extends ClientConfig implements MQProducer {
     /**
      * 发送消息超时，不建议修改
      */
-    private int sendMsgTimeout = 10000;
+    private int sendMsgTimeout = 3000;
     /**
      * Message Body大小超过阀值，则压缩
      */
     private int compressMsgBodyOverHowmuch = 1024 * 4;
+    /**
+     * 发送失败后，重试几次
+     */
+    private int retryTimesWhenSendFailed = 2;
     /**
      * 消息已经成功写入Master，但是刷盘超时或者同步到Slave失败，则尝试重试另一个Broker，不建议修改默认值<br>
      * 顺序消息无效
@@ -66,14 +71,30 @@ public class DefaultMQProducer extends ClientConfig implements MQProducer {
      * 最大消息大小，默认512K
      */
     private int maxMessageSize = 1024 * 128;
+    /**
+     * 是否为单元化的发布者
+     */
+    private boolean unitMode = false;
 
 
     public DefaultMQProducer() {
+        this(MixAll.DEFAULT_PRODUCER_GROUP, null);
     }
 
 
     public DefaultMQProducer(final String producerGroup) {
+        this(producerGroup, null);
+    }
+
+
+    public DefaultMQProducer(RPCHook rpcHook) {
+        this(MixAll.DEFAULT_PRODUCER_GROUP, rpcHook);
+    }
+
+
+    public DefaultMQProducer(final String producerGroup, RPCHook rpcHook) {
         this.producerGroup = producerGroup;
+        defaultMQProducerImpl = new DefaultMQProducerImpl(this, rpcHook);
     }
 
 
@@ -281,5 +302,25 @@ public class DefaultMQProducer extends ClientConfig implements MQProducer {
 
     public void setDefaultTopicQueueNums(int defaultTopicQueueNums) {
         this.defaultTopicQueueNums = defaultTopicQueueNums;
+    }
+
+
+    public int getRetryTimesWhenSendFailed() {
+        return retryTimesWhenSendFailed;
+    }
+
+
+    public void setRetryTimesWhenSendFailed(int retryTimesWhenSendFailed) {
+        this.retryTimesWhenSendFailed = retryTimesWhenSendFailed;
+    }
+
+
+    public boolean isUnitMode() {
+        return unitMode;
+    }
+
+
+    public void setUnitMode(boolean isUnitMode) {
+        this.unitMode = isUnitMode;
     }
 }

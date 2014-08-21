@@ -21,12 +21,13 @@ import java.net.SocketAddress;
 import java.net.UnknownHostException;
 import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.alibaba.rocketmq.common.UtilALl;
+import com.alibaba.rocketmq.common.UtilAll;
 import com.alibaba.rocketmq.common.sysflag.MessageSysFlag;
 
 
@@ -59,7 +60,7 @@ public class MessageDecoder {
         // 消息对应的物理分区 OFFSET 8
         input.putLong(offset);
 
-        return UtilALl.bytes2string(input.array());
+        return UtilAll.bytes2string(input.array());
     }
 
 
@@ -68,14 +69,14 @@ public class MessageDecoder {
         long offset;
 
         // 地址
-        byte[] ip = UtilALl.string2bytes(msgId.substring(0, 8));
-        byte[] port = UtilALl.string2bytes(msgId.substring(8, 16));
+        byte[] ip = UtilAll.string2bytes(msgId.substring(0, 8));
+        byte[] port = UtilAll.string2bytes(msgId.substring(8, 16));
         ByteBuffer bb = ByteBuffer.wrap(port);
         int portInt = bb.getInt(0);
         address = new InetSocketAddress(InetAddress.getByAddress(ip), portInt);
 
         // offset
-        byte[] data = UtilALl.string2bytes(msgId.substring(16, 32));
+        byte[] data = UtilAll.string2bytes(msgId.substring(16, 32));
         bb = ByteBuffer.wrap(data);
         offset = bb.getLong(0);
 
@@ -84,7 +85,7 @@ public class MessageDecoder {
 
 
     public static MessageExt decode(java.nio.ByteBuffer byteBuffer) {
-        return decode(byteBuffer, true);
+        return decode(byteBuffer, true, true);
     }
 
 
@@ -92,6 +93,12 @@ public class MessageDecoder {
      * 客户端使用，SLAVE也会使用
      */
     public static MessageExt decode(java.nio.ByteBuffer byteBuffer, final boolean readBody) {
+        return decode(byteBuffer, readBody, true);
+    }
+
+
+    public static MessageExt decode(java.nio.ByteBuffer byteBuffer, final boolean readBody,
+            final boolean deCompressBody) {
         try {
             MessageExt msgExt = new MessageExt();
 
@@ -162,8 +169,9 @@ public class MessageDecoder {
                     byteBuffer.get(body);
 
                     // uncompress body
-                    if ((sysFlag & MessageSysFlag.CompressedFlag) == MessageSysFlag.CompressedFlag) {
-                        body = UtilALl.uncompress(body);
+                    if (deCompressBody
+                            && (sysFlag & MessageSysFlag.CompressedFlag) == MessageSysFlag.CompressedFlag) {
+                        body = UtilAll.uncompress(body);
                     }
 
                     msgExt.setBody(body);
@@ -184,7 +192,7 @@ public class MessageDecoder {
             if (propertiesLength > 0) {
                 byte[] properties = new byte[propertiesLength];
                 byteBuffer.get(properties);
-                String propertiesString = new String(properties);
+                String propertiesString = new String(properties, Charset.forName("UTF-8"));
                 Map<String, String> map = string2messageProperties(propertiesString);
                 msgExt.setProperties(map);
             }

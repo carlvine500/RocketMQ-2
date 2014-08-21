@@ -20,15 +20,12 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.alibaba.fastjson.annotation.JSONField;
 import com.alibaba.rocketmq.remoting.CommandCustomHeader;
 import com.alibaba.rocketmq.remoting.annotation.CFNotNull;
 import com.alibaba.rocketmq.remoting.exception.RemotingCommandException;
-import com.alibaba.rocketmq.remoting.protocol.RemotingProtos.ResponseCode;
 
 
 /**
@@ -82,7 +79,7 @@ public class RemotingCommand {
 
     public static RemotingCommand createResponseCommand(Class<? extends CommandCustomHeader> classHeader) {
         RemotingCommand cmd =
-                createResponseCommand(ResponseCode.SYSTEM_ERROR_VALUE, "not set any response code",
+                createResponseCommand(RemotingSysResponseCode.SYSTEM_ERROR, "not set any response code",
                     classHeader);
 
         return cmd;
@@ -137,10 +134,13 @@ public class RemotingCommand {
     }
 
 
-    private void makeCustomHeaderToNet() {
+    public void makeCustomHeaderToNet() {
         if (this.customHeader != null) {
             Field[] fields = this.customHeader.getClass().getDeclaredFields();
-            this.extFields = new HashMap<String, String>();
+            if (null == this.extFields) {
+                this.extFields = new HashMap<String, String>();
+            }
+
             for (Field field : fields) {
                 if (!Modifier.isStatic(field.getModifiers())) {
                     String name = field.getName();
@@ -165,9 +165,28 @@ public class RemotingCommand {
     }
 
 
-    public CommandCustomHeader getCustomHeader() {
+    public CommandCustomHeader readCustomHeader() {
         return customHeader;
     }
+
+
+    public void writeCustomHeader(CommandCustomHeader customHeader) {
+        this.customHeader = customHeader;
+    }
+
+    private static final String StringName = String.class.getCanonicalName();//
+
+    private static final String IntegerName1 = Integer.class.getCanonicalName();//
+    private static final String IntegerName2 = int.class.getCanonicalName();//
+
+    private static final String LongName1 = Long.class.getCanonicalName();//
+    private static final String LongName2 = long.class.getCanonicalName();//
+
+    private static final String BooleanName1 = Boolean.class.getCanonicalName();//
+    private static final String BooleanName2 = boolean.class.getCanonicalName();//
+
+    private static final String DoubleName1 = Double.class.getCanonicalName();//
+    private static final String DoubleName2 = double.class.getCanonicalName();//
 
 
     public CommandCustomHeader decodeCommandCustomHeader(Class<? extends CommandCustomHeader> classHeader)
@@ -184,80 +203,52 @@ public class RemotingCommand {
                 return null;
             }
 
-            Iterator<Entry<String, String>> it = this.extFields.entrySet().iterator();
-            while (it.hasNext()) {
-                Entry<String, String> entry = it.next();
-                String name = entry.getKey();
-                String value = entry.getValue();
-
-                try {
-                    Field field = objectHeader.getClass().getDeclaredField(name);
-                    field.setAccessible(true);
-                    String type = field.getType().getSimpleName();
-                    Object valueParsed = null;
-
-                    if (type.equals("String")) {
-                        valueParsed = value;
-                    }
-                    else if (type.equals("Integer")) {
-                        valueParsed = Integer.parseInt(value);
-                    }
-                    else if (type.equals("Long")) {
-                        valueParsed = Long.parseLong(value);
-                    }
-                    else if (type.equals("Boolean")) {
-                        valueParsed = Boolean.parseBoolean(value);
-                    }
-                    else if (type.equals("Double")) {
-                        valueParsed = Double.parseDouble(value);
-                    }
-                    else if (type.equals("int")) {
-                        valueParsed = Integer.parseInt(value);
-                    }
-                    else if (type.equals("long")) {
-                        valueParsed = Long.parseLong(value);
-                    }
-                    else if (type.equals("boolean")) {
-                        valueParsed = Boolean.parseBoolean(value);
-                    }
-                    else if (type.equals("double")) {
-                        valueParsed = Double.parseDouble(value);
-                    }
-
-                    field.set(objectHeader, valueParsed);
-                }
-                catch (SecurityException e) {
-                }
-                catch (NoSuchFieldException e) {
-                }
-                catch (IllegalArgumentException e) {
-                }
-                catch (IllegalAccessException e) {
-                }
-            }
-
             // 检查返回对象是否有效
             Field[] fields = objectHeader.getClass().getDeclaredFields();
             for (Field field : fields) {
                 if (!Modifier.isStatic(field.getModifiers())) {
-                    String name = field.getName();
-                    if (!name.startsWith("this")) {
-                        Object value = null;
+                    String fieldName = field.getName();
+                    if (!fieldName.startsWith("this")) {
                         try {
-                            field.setAccessible(true);
-                            value = field.get(objectHeader);
-                        }
-                        catch (IllegalArgumentException e) {
-                        }
-                        catch (IllegalAccessException e) {
-                        }
+                            String value = this.extFields.get(fieldName);
+                            if (null == value) {
+                                Annotation annotation = field.getAnnotation(CFNotNull.class);
+                                if (annotation != null) {
+                                    throw new RemotingCommandException("the custom field <" + fieldName
+                                            + "> is null");
+                                }
 
-                        // 空值检查
-                        if (null == value) {
-                            Annotation annotation = field.getAnnotation(CFNotNull.class);
-                            if (annotation != null) {
-                                throw new RemotingCommandException("the custom field <" + name + "> is null");
+                                continue;
                             }
+
+                            field.setAccessible(true);
+                            String type = field.getType().getCanonicalName();
+                            Object valueParsed = null;
+
+                            if (type.equals(StringName)) {
+                                valueParsed = value;
+                            }
+                            else if (type.equals(IntegerName1) || type.equals(IntegerName2)) {
+                                valueParsed = Integer.parseInt(value);
+                            }
+                            else if (type.equals(LongName1) || type.equals(LongName2)) {
+                                valueParsed = Long.parseLong(value);
+                            }
+                            else if (type.equals(BooleanName1) || type.equals(BooleanName2)) {
+                                valueParsed = Boolean.parseBoolean(value);
+                            }
+                            else if (type.equals(DoubleName1) || type.equals(DoubleName2)) {
+                                valueParsed = Double.parseDouble(value);
+                            }
+                            else {
+                                throw new RemotingCommandException("the custom field <" + fieldName
+                                        + "> type is not supported");
+                            }
+
+                            field.set(objectHeader, valueParsed);
+
+                        }
+                        catch (Throwable e) {
                         }
                     }
                 }
@@ -492,10 +483,24 @@ public class RemotingCommand {
     }
 
 
+    public static int createNewRequestId() {
+        return RequestId.incrementAndGet();
+    }
+
+
+    public void addExtField(String key, String value) {
+        if (null == extFields) {
+            extFields = new HashMap<String, String>();
+        }
+        extFields.put(key, value);
+    }
+
+
     @Override
     public String toString() {
         return "RemotingCommand [code=" + code + ", language=" + language + ", version=" + version
                 + ", opaque=" + opaque + ", flag(B)=" + Integer.toBinaryString(flag) + ", remark=" + remark
                 + ", extFields=" + extFields + "]";
     }
+
 }

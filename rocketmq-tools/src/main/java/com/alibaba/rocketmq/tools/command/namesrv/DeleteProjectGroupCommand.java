@@ -19,8 +19,9 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 
-import com.alibaba.rocketmq.common.MixAll;
 import com.alibaba.rocketmq.common.namesrv.NamesrvUtil;
+import com.alibaba.rocketmq.remoting.RPCHook;
+import com.alibaba.rocketmq.srvutil.ServerUtil;
 import com.alibaba.rocketmq.tools.admin.DefaultMQAdminExt;
 import com.alibaba.rocketmq.tools.command.SubCommand;
 
@@ -40,7 +41,7 @@ public class DeleteProjectGroupCommand implements SubCommand {
 
     @Override
     public String commandDesc() {
-        return "delete project group by server ip.";
+        return "Delete project group by server ip.";
     }
 
 
@@ -58,8 +59,8 @@ public class DeleteProjectGroupCommand implements SubCommand {
 
 
     @Override
-    public void execute(CommandLine commandLine, Options options) {
-        DefaultMQAdminExt defaultMQAdminExt = new DefaultMQAdminExt();
+    public void execute(CommandLine commandLine, Options options, RPCHook rpcHook) {
+        DefaultMQAdminExt defaultMQAdminExt = new DefaultMQAdminExt(rpcHook);
         defaultMQAdminExt.setInstanceName(Long.toString(System.currentTimeMillis()));
         try {
             String namespace = NamesrvUtil.NAMESPACE_PROJECT_CONFIG;
@@ -77,7 +78,7 @@ public class DeleteProjectGroupCommand implements SubCommand {
                 System.out.printf("delete all server ip from namespace by project group success.\n");
             }
             else {
-                MixAll.printCommandLineHelp("mqadmin " + this.commandName(), options);
+                ServerUtil.printCommandLineHelp("mqadmin " + this.commandName(), options);
             }
         }
         catch (Exception e) {

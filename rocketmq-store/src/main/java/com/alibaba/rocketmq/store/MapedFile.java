@@ -32,7 +32,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.alibaba.rocketmq.common.UtilALl;
+import com.alibaba.rocketmq.common.UtilAll;
 import com.alibaba.rocketmq.common.constant.LoggerName;
 
 
@@ -148,7 +148,18 @@ public class MapedFile extends ReferenceResource {
 
 
     private static ByteBuffer viewed(ByteBuffer buffer) {
-        ByteBuffer viewedBuffer = (ByteBuffer) invoke(buffer, "viewedBuffer");
+        String methodName = "viewedBuffer";
+
+        // JDK7中将DirectByteBuffer类中的viewedBuffer方法换成了attachment方法
+        Method[] methods = buffer.getClass().getMethods();
+        for (int i = 0; i < methods.length; i++) {
+            if (methods[i].getName().equals("attachment")) {
+                methodName = "attachment";
+                break;
+            }
+        }
+
+        ByteBuffer viewedBuffer = (ByteBuffer) invoke(buffer, methodName);
         if (viewedBuffer == null)
             return buffer;
         else
@@ -399,7 +410,7 @@ public class MapedFile extends ReferenceResource {
                 log.info("delete file[REF:" + this.getRefCount() + "] " + this.fileName
                         + (result ? " OK, " : " Failed, ") + "W:" + this.getWrotePostion() + " M:"
                         + this.getCommittedPosition() + ", "
-                        + UtilALl.computeEclipseTimeMilliseconds(beginTime));
+                        + UtilAll.computeEclipseTimeMilliseconds(beginTime));
             }
             catch (Exception e) {
                 log.warn("close file channel " + this.fileName + " Failed. ", e);

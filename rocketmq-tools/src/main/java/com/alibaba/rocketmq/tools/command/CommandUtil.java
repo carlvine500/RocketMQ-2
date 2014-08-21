@@ -15,7 +15,10 @@
  */
 package com.alibaba.rocketmq.tools.command;
 
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
 
 import com.alibaba.rocketmq.client.exception.MQBrokerException;
@@ -63,4 +66,33 @@ public class CommandUtil {
 
         return masterSet;
     }
+
+
+    public static Set<String> fetchBrokerNameByClusterName(final MQAdminExt adminExt, final String clusterName)
+            throws Exception {
+        ClusterInfo clusterInfoSerializeWrapper = adminExt.examineBrokerClusterInfo();
+        Set<String> brokerNameSet = clusterInfoSerializeWrapper.getClusterAddrTable().get(clusterName);
+        if (brokerNameSet.isEmpty()) {
+            throw new Exception(
+                "Make sure the specified clusterName exists or the nameserver which connected is correct.");
+        }
+        return brokerNameSet;
+    }
+
+
+    public static String fetchBrokerNameByAddr(final MQAdminExt adminExt, final String addr) throws Exception {
+        ClusterInfo clusterInfoSerializeWrapper = adminExt.examineBrokerClusterInfo();
+        HashMap<String/* brokerName */, BrokerData> brokerAddrTable =
+                clusterInfoSerializeWrapper.getBrokerAddrTable();
+        Iterator<Map.Entry<String, BrokerData>> it = brokerAddrTable.entrySet().iterator();
+        while (it.hasNext()) {
+            Map.Entry<String, BrokerData> entry = it.next();
+            HashMap<Long, String> brokerAddrs = entry.getValue().getBrokerAddrs();
+            if (brokerAddrs.containsValue(addr))
+                return entry.getKey();
+        }
+        throw new Exception(
+            "Make sure the specified broker addr exists or the nameserver which connected is correct.");
+    }
+
 }

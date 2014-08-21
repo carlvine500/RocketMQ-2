@@ -23,7 +23,11 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 
-import com.alibaba.rocketmq.common.MixAll;
+import com.alibaba.rocketmq.client.exception.MQBrokerException;
+import com.alibaba.rocketmq.client.exception.MQClientException;
+import com.alibaba.rocketmq.remoting.RPCHook;
+import com.alibaba.rocketmq.remoting.exception.RemotingException;
+import com.alibaba.rocketmq.srvutil.ServerUtil;
 import com.alibaba.rocketmq.tools.admin.DefaultMQAdminExt;
 import com.alibaba.rocketmq.tools.command.CommandUtil;
 import com.alibaba.rocketmq.tools.command.SubCommand;
@@ -44,7 +48,7 @@ public class DeleteTopicSubCommand implements SubCommand {
 
     @Override
     public String commandDesc() {
-        return "delete topic from broker and NameServer.";
+        return "Delete topic from broker and NameServer.";
     }
 
 
@@ -62,9 +66,31 @@ public class DeleteTopicSubCommand implements SubCommand {
     }
 
 
+    public static void deleteTopic(final DefaultMQAdminExt adminExt,//
+            final String clusterName,//
+            final String topic//
+    ) throws InterruptedException, MQBrokerException, RemotingException, MQClientException {
+        // 删除 broker 上的 topic 信息
+        Set<String> masterSet = CommandUtil.fetchMasterAddrByClusterName(adminExt, clusterName);
+        adminExt.deleteTopicInBroker(masterSet, topic);
+        System.out.printf("delete topic [%s] from cluster [%s] success.\n", topic, clusterName);
+
+        // 删除 NameServer 上的 topic 信息
+        Set<String> nameServerSet = null;
+        if (adminExt.getNamesrvAddr() != null) {
+            String[] ns = adminExt.getNamesrvAddr().trim().split(";");
+            nameServerSet = new HashSet(Arrays.asList(ns));
+        }
+
+        // 删除 NameServer 上的 topic 信息
+        adminExt.deleteTopicInNameServer(nameServerSet, topic);
+        System.out.printf("delete topic [%s] from NameServer success.\n", topic);
+    }
+
+
     @Override
-    public void execute(CommandLine commandLine, Options options) {
-        DefaultMQAdminExt adminExt = new DefaultMQAdminExt();
+    public void execute(CommandLine commandLine, Options options, RPCHook rpcHook) {
+        DefaultMQAdminExt adminExt = new DefaultMQAdminExt(rpcHook);
         adminExt.setInstanceName(Long.toString(System.currentTimeMillis()));
         try {
             String topic = commandLine.getOptionValue('t').trim();
@@ -73,23 +99,11 @@ public class DeleteTopicSubCommand implements SubCommand {
                 String clusterName = commandLine.getOptionValue('c').trim();
 
                 adminExt.start();
-                // 删除 broker 上的 topic 信息
-                Set<String> masterSet = CommandUtil.fetchMasterAddrByClusterName(adminExt, clusterName);
-                adminExt.deleteTopicInBroker(masterSet, topic);
-                System.out.printf("delete topic [%s] from cluster [%s] success.\n", topic, clusterName);
-
-                // 删除 NameServer 上的 topic 信息
-                Set<String> nameServerSet = null;
-                if (commandLine.hasOption('n')) {
-                    String[] ns = commandLine.getOptionValue('n').trim().split(";");
-                    nameServerSet = new HashSet(Arrays.asList(ns));
-                }
-                adminExt.deleteTopicInNameServer(nameServerSet, topic);
-                System.out.printf("delete topic [%s] from NameServer success.\n", topic);
+                deleteTopic(adminExt, clusterName, topic);
                 return;
             }
 
-            MixAll.printCommandLineHelp("mqadmin " + this.commandName(), options);
+            ServerUtil.printCommandLineHelp("mqadmin " + this.commandName(), options);
         }
         catch (Exception e) {
             e.printStackTrace();

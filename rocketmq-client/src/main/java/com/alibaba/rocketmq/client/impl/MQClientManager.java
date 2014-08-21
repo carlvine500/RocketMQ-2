@@ -19,7 +19,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.alibaba.rocketmq.client.ClientConfig;
-import com.alibaba.rocketmq.client.impl.factory.MQClientFactory;
+import com.alibaba.rocketmq.client.impl.factory.MQClientInstance;
+import com.alibaba.rocketmq.remoting.RPCHook;
 
 
 /**
@@ -31,8 +32,8 @@ import com.alibaba.rocketmq.client.impl.factory.MQClientFactory;
 public class MQClientManager {
     private static MQClientManager instance = new MQClientManager();
     private AtomicInteger factoryIndexGenerator = new AtomicInteger();
-    private ConcurrentHashMap<String/* clientId */, MQClientFactory> factoryTable =
-            new ConcurrentHashMap<String, MQClientFactory>();
+    private ConcurrentHashMap<String/* clientId */, MQClientInstance> factoryTable =
+            new ConcurrentHashMap<String, MQClientInstance>();
 
 
     private MQClientManager() {
@@ -45,23 +46,28 @@ public class MQClientManager {
     }
 
 
-    public MQClientFactory getAndCreateMQClientFactory(final ClientConfig clientConfig) {
+    public MQClientInstance getAndCreateMQClientInstance(final ClientConfig clientConfig, RPCHook rpcHook) {
         String clientId = clientConfig.buildMQClientId();
-        MQClientFactory factory = this.factoryTable.get(clientId);
-        if (null == factory) {
-            factory =
-                    new MQClientFactory(clientConfig.cloneClientConfig(),
-                        this.factoryIndexGenerator.getAndIncrement(), clientId);
-            MQClientFactory prev = this.factoryTable.putIfAbsent(clientId, factory);
+        MQClientInstance instance = this.factoryTable.get(clientId);
+        if (null == instance) {
+            instance =
+                    new MQClientInstance(clientConfig.cloneClientConfig(),
+                        this.factoryIndexGenerator.getAndIncrement(), clientId, rpcHook);
+            MQClientInstance prev = this.factoryTable.putIfAbsent(clientId, instance);
             if (prev != null) {
-                factory = prev;
+                instance = prev;
             }
             else {
                 // TODO log
             }
         }
 
-        return factory;
+        return instance;
+    }
+
+
+    public MQClientInstance getAndCreateMQClientInstance(final ClientConfig clientConfig) {
+        return getAndCreateMQClientInstance(clientConfig, null);
     }
 
 

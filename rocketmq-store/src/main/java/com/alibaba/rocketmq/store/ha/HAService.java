@@ -237,9 +237,10 @@ public class HAService {
                                 log.warn("Unexpected ops in select " + k.readyOps());
                             }
                         }
+
+                        selected.clear();
                     }
 
-                    selected.clear();
                 }
                 catch (Exception e) {
                     log.error(this.getServiceName() + " service has exception.", e);
@@ -683,5 +684,10 @@ public class HAService {
         public String getServiceName() {
             return HAClient.class.getSimpleName();
         }
+    }
+
+
+    public AtomicLong getPush2SlaveMaxOffset() {
+        return push2SlaveMaxOffset;
     }
 }

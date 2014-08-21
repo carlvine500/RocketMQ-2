@@ -28,10 +28,12 @@ import com.alibaba.rocketmq.client.exception.MQBrokerException;
 import com.alibaba.rocketmq.client.exception.MQClientException;
 import com.alibaba.rocketmq.client.impl.consumer.DefaultMQPushConsumerImpl;
 import com.alibaba.rocketmq.common.MixAll;
+import com.alibaba.rocketmq.common.UtilAll;
 import com.alibaba.rocketmq.common.consumer.ConsumeFromWhere;
 import com.alibaba.rocketmq.common.message.MessageExt;
 import com.alibaba.rocketmq.common.message.MessageQueue;
 import com.alibaba.rocketmq.common.protocol.heartbeat.MessageModel;
+import com.alibaba.rocketmq.remoting.RPCHook;
 import com.alibaba.rocketmq.remoting.exception.RemotingException;
 
 
@@ -43,20 +45,27 @@ import com.alibaba.rocketmq.remoting.exception.RemotingException;
  * @since 2013-7-24
  */
 public class DefaultMQPushConsumer extends ClientConfig implements MQPushConsumer {
-    protected final transient DefaultMQPushConsumerImpl defaultMQPushConsumerImpl =
-            new DefaultMQPushConsumerImpl(this);
+    protected final transient DefaultMQPushConsumerImpl defaultMQPushConsumerImpl;
     /**
      * 做同样事情的Consumer归为同一个Group，应用必须设置，并保证命名唯一
      */
-    private String consumerGroup = MixAll.DEFAULT_CONSUMER_GROUP;
+    private String consumerGroup;
     /**
      * 集群消费/广播消费
      */
     private MessageModel messageModel = MessageModel.CLUSTERING;
     /**
-     * Consumer启动时，从哪里开始消费
+     * Consumer第一次启动时，从哪里开始消费
      */
     private ConsumeFromWhere consumeFromWhere = ConsumeFromWhere.CONSUME_FROM_LAST_OFFSET;
+    /**
+     * Consumer第一次启动时，如果回溯消费，默认回溯到哪个时间点，数据格式如下，时间精度秒：<br>
+     * 20131223171201<br>
+     * 表示2013年12月23日17点12分01秒<br>
+     * 默认回溯到相对启动时间的半小时前
+     */
+    private String consumeTimestamp = UtilAll.timeMillisToHumanString3(System.currentTimeMillis()
+            - (1000 * 60 * 30));
     /**
      * 队列分配算法，应用可重写
      */
@@ -76,11 +85,17 @@ public class DefaultMQPushConsumer extends ClientConfig implements MQPushConsume
     /**
      * 消费消息线程，最小数目
      */
-    private int consumeThreadMin = 10;
+    private int consumeThreadMin = 20;
     /**
      * 消费消息线程，最大数目
      */
-    private int consumeThreadMax = 20;
+    private int consumeThreadMax = 64;
+
+    /**
+     * 消息堆积超过此阀值，动态调整线程池数
+     */
+    private long adjustThreadPoolNumsThreshold = 100000;
+
     /**
      * 同一队列并行消费的最大跨度，顺序消费方式情况下，此参数无效
      */
@@ -102,14 +117,35 @@ public class DefaultMQPushConsumer extends ClientConfig implements MQPushConsume
      */
     private int pullBatchSize = 32;
 
+    /**
+     * 是否每次拉消息时，都上传订阅关系
+     */
+    private boolean postSubscriptionWhenPull = false;
+
+    /**
+     * 是否为单元化的订阅组
+     */
+    private boolean unitMode = false;
+
 
     public DefaultMQPushConsumer() {
+        this(MixAll.DEFAULT_CONSUMER_GROUP, null);
+    }
 
+
+    public DefaultMQPushConsumer(RPCHook rpcHook) {
+        this(MixAll.DEFAULT_CONSUMER_GROUP, rpcHook);
     }
 
 
     public DefaultMQPushConsumer(final String consumerGroup) {
+        this(consumerGroup, null);
+    }
+
+
+    public DefaultMQPushConsumer(final String consumerGroup, RPCHook rpcHook) {
         this.consumerGroup = consumerGroup;
+        defaultMQPushConsumerImpl = new DefaultMQPushConsumerImpl(this, rpcHook);
     }
 
 
@@ -363,4 +399,43 @@ public class DefaultMQPushConsumer extends ClientConfig implements MQPushConsume
         this.offsetStore = offsetStore;
     }
 
+
+    public String getConsumeTimestamp() {
+        return consumeTimestamp;
+    }
+
+
+    public void setConsumeTimestamp(String consumeTimestamp) {
+        this.consumeTimestamp = consumeTimestamp;
+    }
+
+
+    public boolean isPostSubscriptionWhenPull() {
+        return postSubscriptionWhenPull;
+    }
+
+
+    public void setPostSubscriptionWhenPull(boolean postSubscriptionWhenPull) {
+        this.postSubscriptionWhenPull = postSubscriptionWhenPull;
+    }
+
+
+    public boolean isUnitMode() {
+        return unitMode;
+    }
+
+
+    public void setUnitMode(boolean isUnitMode) {
+        this.unitMode = isUnitMode;
+    }
+
+
+    public long getAdjustThreadPoolNumsThreshold() {
+        return adjustThreadPoolNumsThreshold;
+    }
+
+
+    public void setAdjustThreadPoolNumsThreshold(long adjustThreadPoolNumsThreshold) {
+        this.adjustThreadPoolNumsThreshold = adjustThreadPoolNumsThreshold;
+    }
 }

@@ -17,7 +17,9 @@ package com.alibaba.rocketmq.namesrv.kvconfig;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -26,6 +28,7 @@ import org.slf4j.LoggerFactory;
 
 import com.alibaba.rocketmq.common.MixAll;
 import com.alibaba.rocketmq.common.constant.LoggerName;
+import com.alibaba.rocketmq.common.protocol.body.KVTable;
 import com.alibaba.rocketmq.namesrv.NamesrvController;
 
 
@@ -116,6 +119,29 @@ public class KVConfigManager {
         }
 
         this.persist();
+    }
+
+
+    public byte[] getKVListByNamespace(final String namespace) {
+        try {
+            this.lock.readLock().lockInterruptibly();
+            try {
+                HashMap<String, String> kvTable = this.configTable.get(namespace);
+                if (null != kvTable) {
+                    KVTable table = new KVTable();
+                    table.setTable(kvTable);
+                    return table.encode();
+                }
+            }
+            finally {
+                this.lock.readLock().unlock();
+            }
+        }
+        catch (InterruptedException e) {
+            log.error("getKVListByNamespace InterruptedException", e);
+        }
+
+        return null;
     }
 
 
@@ -231,7 +257,20 @@ public class KVConfigManager {
             try {
                 log.info("--------------------------------------------------------");
 
-                log.info("KVConfigManager {}", this.configTable);
+                {
+                    log.info("configTable SIZE: {}", this.configTable.size());
+                    Iterator<Entry<String, HashMap<String, String>>> it =
+                            this.configTable.entrySet().iterator();
+                    while (it.hasNext()) {
+                        Entry<String, HashMap<String, String>> next = it.next();
+                        Iterator<Entry<String, String>> itSub = next.getValue().entrySet().iterator();
+                        while (itSub.hasNext()) {
+                            Entry<String, String> nextSub = itSub.next();
+                            log.info("configTable NS: {} Key: {} Value: {}", next.getKey(), nextSub.getKey(),
+                                nextSub.getValue());
+                        }
+                    }
+                }
             }
             finally {
                 this.lock.readLock().unlock();

@@ -15,6 +15,8 @@
  */
 package com.alibaba.rocketmq.client.hook;
 
+import java.util.Properties;
+
 import com.alibaba.rocketmq.client.impl.CommunicationMode;
 import com.alibaba.rocketmq.client.producer.SendResult;
 import com.alibaba.rocketmq.common.message.Message;
@@ -26,10 +28,12 @@ public class SendMessageContext {
     private Message message;
     private MessageQueue mq;
     private String brokerAddr;
+    private String bornHost;
     private CommunicationMode communicationMode;
     private SendResult sendResult;
     private Exception exception;
-    private Object arg;
+    private Object mqTraceContext;
+    private Properties properties;
 
 
     public String getProducerGroup() {
@@ -102,20 +106,37 @@ public class SendMessageContext {
     }
 
 
-    public Object getArg() {
-        return arg;
+    public Object getMqTraceContext() {
+        return mqTraceContext;
     }
 
 
-    public void setArg(Object arg) {
-        this.arg = arg;
+    public void setMqTraceContext(Object mqTraceContext) {
+        this.mqTraceContext = mqTraceContext;
     }
 
 
-    @Override
-    public String toString() {
-        return "SendMessageContext [producerGroup=" + producerGroup + ", message=" + message + ", mq=" + mq
-                + ", brokerAddr=" + brokerAddr + ", communicationMode=" + communicationMode + ", sendResult="
-                + sendResult + ", exception=" + exception + ", arg=" + arg + "]";
+    public Properties getProperties() {
+        return properties;
+    }
+
+
+    public void setProperties(Properties properties) {
+        this.properties = properties;
+    }
+
+
+    public void clearProperty() {
+        this.properties.clear();
+    }
+
+
+    public String getBornHost() {
+        return bornHost;
+    }
+
+
+    public void setBornHost(String bornHost) {
+        this.bornHost = bornHost;
     }
 }

@@ -29,13 +29,22 @@ import ch.qos.logback.core.joran.spi.JoranException;
 
 import com.alibaba.rocketmq.common.MQVersion;
 import com.alibaba.rocketmq.common.MixAll;
+import com.alibaba.rocketmq.remoting.RPCHook;
 import com.alibaba.rocketmq.remoting.protocol.RemotingCommand;
-import com.alibaba.rocketmq.tools.command.broker.BrokerStatsSubCommand;
+import com.alibaba.rocketmq.srvutil.ServerUtil;
+import com.alibaba.rocketmq.tools.command.broker.BrokerStatusSubCommand;
+import com.alibaba.rocketmq.tools.command.broker.CleanExpiredCQSubCommand;
+import com.alibaba.rocketmq.tools.command.broker.UpdateBrokerConfigSubCommand;
 import com.alibaba.rocketmq.tools.command.cluster.ClusterListSubCommand;
-import com.alibaba.rocketmq.tools.command.connection.ConnectionSubCommand;
-import com.alibaba.rocketmq.tools.command.consumer.ConsumeStatsSubCommand;
+import com.alibaba.rocketmq.tools.command.connection.ConsumerConnectionSubCommand;
+import com.alibaba.rocketmq.tools.command.connection.ProducerConnectionSubCommand;
+import com.alibaba.rocketmq.tools.command.consumer.ConsumerProgressSubCommand;
+import com.alibaba.rocketmq.tools.command.consumer.ConsumerStatusSubCommand;
 import com.alibaba.rocketmq.tools.command.consumer.DeleteSubscriptionGroupCommand;
+import com.alibaba.rocketmq.tools.command.consumer.StartMonitoringSubCommand;
 import com.alibaba.rocketmq.tools.command.consumer.UpdateSubGroupSubCommand;
+import com.alibaba.rocketmq.tools.command.message.CheckMsgSubCommand;
+import com.alibaba.rocketmq.tools.command.message.PrintMessageSubCommand;
 import com.alibaba.rocketmq.tools.command.message.QueryMsgByIdSubCommand;
 import com.alibaba.rocketmq.tools.command.message.QueryMsgByKeySubCommand;
 import com.alibaba.rocketmq.tools.command.message.QueryMsgByOffsetSubCommand;
@@ -45,11 +54,12 @@ import com.alibaba.rocketmq.tools.command.namesrv.GetProjectGroupCommand;
 import com.alibaba.rocketmq.tools.command.namesrv.UpdateKvConfigCommand;
 import com.alibaba.rocketmq.tools.command.namesrv.UpdateProjectGroupCommand;
 import com.alibaba.rocketmq.tools.command.namesrv.WipeWritePermSubCommand;
-import com.alibaba.rocketmq.tools.command.rollback.ResetOffsetByTimeSubCommand;
+import com.alibaba.rocketmq.tools.command.offset.ResetOffsetByTimeCommand;
 import com.alibaba.rocketmq.tools.command.topic.DeleteTopicSubCommand;
 import com.alibaba.rocketmq.tools.command.topic.TopicListSubCommand;
 import com.alibaba.rocketmq.tools.command.topic.TopicRouteSubCommand;
-import com.alibaba.rocketmq.tools.command.topic.TopicStatsSubCommand;
+import com.alibaba.rocketmq.tools.command.topic.TopicStatusSubCommand;
+import com.alibaba.rocketmq.tools.command.topic.UpdateOrderConfCommand;
 import com.alibaba.rocketmq.tools.command.topic.UpdateTopicSubCommand;
 
 
@@ -66,16 +76,21 @@ public class MQAdminStartup {
         subCommandList.add(new DeleteTopicSubCommand());
         subCommandList.add(new UpdateSubGroupSubCommand());
         subCommandList.add(new DeleteSubscriptionGroupCommand());
+        subCommandList.add(new UpdateBrokerConfigSubCommand());
 
         subCommandList.add(new TopicRouteSubCommand());
-        subCommandList.add(new TopicStatsSubCommand());
+        subCommandList.add(new TopicStatusSubCommand());
 
-        subCommandList.add(new BrokerStatsSubCommand());
-        subCommandList.add(new ConsumeStatsSubCommand());
-        subCommandList.add(new ConnectionSubCommand());
+        subCommandList.add(new BrokerStatusSubCommand());
         subCommandList.add(new QueryMsgByIdSubCommand());
         subCommandList.add(new QueryMsgByKeySubCommand());
         subCommandList.add(new QueryMsgByOffsetSubCommand());
+        subCommandList.add(new PrintMessageSubCommand());
+
+        subCommandList.add(new ProducerConnectionSubCommand());
+        subCommandList.add(new ConsumerConnectionSubCommand());
+        subCommandList.add(new ConsumerProgressSubCommand());
+        subCommandList.add(new ConsumerStatusSubCommand());
 
         subCommandList.add(new ClusterListSubCommand());
         subCommandList.add(new TopicListSubCommand());
@@ -86,12 +101,23 @@ public class MQAdminStartup {
         subCommandList.add(new UpdateProjectGroupCommand());
         subCommandList.add(new DeleteProjectGroupCommand());
         subCommandList.add(new GetProjectGroupCommand());
-        subCommandList.add(new ResetOffsetByTimeSubCommand());
         subCommandList.add(new WipeWritePermSubCommand());
+        subCommandList.add(new ResetOffsetByTimeCommand());
+
+        subCommandList.add(new UpdateOrderConfCommand());
+        subCommandList.add(new CleanExpiredCQSubCommand());
+
+        subCommandList.add(new StartMonitoringSubCommand());
+        subCommandList.add(new CheckMsgSubCommand());
     }
 
 
     public static void main(String[] args) {
+        main0(args, null);
+    }
+
+
+    public static void main0(String[] args, RPCHook rpcHook) {
         System.setProperty(RemotingCommand.RemotingVersionKey, Integer.toString(MQVersion.CurrentVersion));
 
         try {
@@ -104,11 +130,14 @@ public class MQAdminStartup {
                 if (args[0].equals("help")) {
                     SubCommand cmd = findSubCommand(args[1]);
                     if (cmd != null) {
-                        Options options = MixAll.buildCommandlineOptions(new Options());
+                        Options options = ServerUtil.buildCommandlineOptions(new Options());
                         options = cmd.buildCommandlineOptions(options);
                         if (options != null) {
-                            MixAll.printCommandLineHelp("mqadmin " + cmd.commandName(), options);
+                            ServerUtil.printCommandLineHelp("mqadmin " + cmd.commandName(), options);
                         }
+                    }
+                    else {
+                        System.out.println("The sub command \'" + args[1] + "\' not exist.");
                     }
                     break;
                 }
@@ -120,9 +149,9 @@ public class MQAdminStartup {
                     String[] subargs = parseSubArgs(args);
 
                     // 解析命令行
-                    Options options = MixAll.buildCommandlineOptions(new Options());
+                    Options options = ServerUtil.buildCommandlineOptions(new Options());
                     final CommandLine commandLine =
-                            MixAll.parseCmdLine("mqadmin " + cmd.commandName(), subargs,
+                            ServerUtil.parseCmdLine("mqadmin " + cmd.commandName(), subargs,
                                 cmd.buildCommandlineOptions(options), new PosixParser());
                     if (null == commandLine) {
                         System.exit(-1);
@@ -134,7 +163,10 @@ public class MQAdminStartup {
                         System.setProperty(MixAll.NAMESRV_ADDR_PROPERTY, namesrvAddr);
                     }
 
-                    cmd.execute(commandLine, options);
+                    cmd.execute(commandLine, options, rpcHook);
+                }
+                else {
+                    System.out.println("The sub command \'" + args[0] + "\' not exist.");
                 }
                 break;
             }

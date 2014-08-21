@@ -19,8 +19,9 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 
-import com.alibaba.rocketmq.common.MixAll;
-import com.alibaba.rocketmq.common.UtilALl;
+import com.alibaba.rocketmq.common.UtilAll;
+import com.alibaba.rocketmq.remoting.RPCHook;
+import com.alibaba.rocketmq.srvutil.ServerUtil;
 import com.alibaba.rocketmq.tools.admin.DefaultMQAdminExt;
 import com.alibaba.rocketmq.tools.command.SubCommand;
 
@@ -40,7 +41,7 @@ public class GetProjectGroupCommand implements SubCommand {
 
     @Override
     public String commandDesc() {
-        return "get project group by server ip or project group name.";
+        return "Get project group by server ip or project group name.";
     }
 
 
@@ -58,8 +59,8 @@ public class GetProjectGroupCommand implements SubCommand {
 
 
     @Override
-    public void execute(CommandLine commandLine, Options options) {
-        DefaultMQAdminExt defaultMQAdminExt = new DefaultMQAdminExt();
+    public void execute(CommandLine commandLine, Options options, RPCHook rpcHook) {
+        DefaultMQAdminExt defaultMQAdminExt = new DefaultMQAdminExt(rpcHook);
         defaultMQAdminExt.setInstanceName(Long.toString(System.currentTimeMillis()));
         try {
             if (commandLine.hasOption("i")) {
@@ -72,7 +73,7 @@ public class GetProjectGroupCommand implements SubCommand {
                 String project = commandLine.getOptionValue('p').trim();
                 defaultMQAdminExt.start();
                 String ips = defaultMQAdminExt.getIpsByProjectGroup(project);
-                if (UtilALl.isBlank(ips)) {
+                if (UtilAll.isBlank(ips)) {
                     System.out.printf("No ip in project group[%s]\n", project);
                 }
                 else {
@@ -80,7 +81,7 @@ public class GetProjectGroupCommand implements SubCommand {
                 }
             }
             else {
-                MixAll.printCommandLineHelp("mqadmin " + this.commandName(), options);
+                ServerUtil.printCommandLineHelp("mqadmin " + this.commandName(), options);
             }
         }
         catch (Exception e) {

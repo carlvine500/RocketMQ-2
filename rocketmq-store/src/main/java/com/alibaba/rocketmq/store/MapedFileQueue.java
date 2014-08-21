@@ -26,7 +26,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.alibaba.rocketmq.common.UtilALl;
+import com.alibaba.rocketmq.common.UtilAll;
 import com.alibaba.rocketmq.common.constant.LoggerName;
 
 
@@ -39,8 +39,9 @@ import com.alibaba.rocketmq.common.constant.LoggerName;
  */
 public class MapedFileQueue {
     private static final Logger log = LoggerFactory.getLogger(LoggerName.StoreLoggerName);
+    private static final Logger logError = LoggerFactory.getLogger(LoggerName.StoreErrorLoggerName);
     // 每次触发删除文件，最多删除多少个文件
-    private static final int DeleteFilesBatchMax = 30;
+    private static final int DeleteFilesBatchMax = 10;
     // 文件存储位置
     private final String storePath;
     // 每个文件的大小
@@ -236,10 +237,10 @@ public class MapedFileQueue {
         }
 
         if (createOffset != -1) {
-            String nextFilePath = this.storePath + File.separator + UtilALl.offset2FileName(createOffset);
+            String nextFilePath = this.storePath + File.separator + UtilAll.offset2FileName(createOffset);
             String nextNextFilePath =
                     this.storePath + File.separator
-                            + UtilALl.offset2FileName(createOffset + this.mapedFileSize);
+                            + UtilAll.offset2FileName(createOffset + this.mapedFileSize);
             MapedFile mapedFile = null;
 
             if (this.allocateMapedFileService != null) {
@@ -364,7 +365,6 @@ public class MapedFileQueue {
                                 Thread.sleep(deleteFilesInterval);
                             }
                             catch (InterruptedException e) {
-                                e.printStackTrace();
                             }
                         }
                     }
@@ -464,9 +464,14 @@ public class MapedFileQueue {
                 int index =
                         (int) ((offset / this.mapedFileSize) - (mapedFile.getFileFromOffset() / this.mapedFileSize));
                 if (index < 0 || index >= this.mapedFiles.size()) {
-                    log.warn("findMapedFileByOffset offset not matched, request Offset: " + offset
-                            + ", index: " + index + ", mapedFileSize: " + this.mapedFileSize
-                            + ", mapedFiles count: " + this.mapedFiles.size());
+                    logError
+                        .warn(
+                            "findMapedFileByOffset offset not matched, request Offset: {}, index: {}, mapedFileSize: {}, mapedFiles count: {}, StackTrace: {}",//
+                            offset,//
+                            index,//
+                            this.mapedFileSize,//
+                            this.mapedFiles.size(),//
+                            UtilAll.currentStackTrace());
                 }
 
                 try {
@@ -480,7 +485,7 @@ public class MapedFileQueue {
             }
         }
         catch (Exception e) {
-            e.printStackTrace();
+            log.error("findMapedFileByOffset Exception", e);
         }
         finally {
             this.readWriteLock.readLock().unlock();
@@ -585,6 +590,12 @@ public class MapedFileQueue {
         }
         this.mapedFiles.clear();
         this.committedWhere = 0;
+
+        // delete parent directory
+        File file = new File(storePath);
+        if (file.isDirectory()) {
+            file.delete();
+        }
         this.readWriteLock.writeLock().unlock();
     }
 

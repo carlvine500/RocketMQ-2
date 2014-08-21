@@ -23,6 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.alibaba.rocketmq.broker.BrokerController;
+import com.alibaba.rocketmq.broker.BrokerPathConfigHelper;
 import com.alibaba.rocketmq.common.ConfigManager;
 import com.alibaba.rocketmq.common.DataVersion;
 import com.alibaba.rocketmq.common.MixAll;
@@ -48,9 +49,17 @@ public class SubscriptionGroupManager extends ConfigManager {
 
 
     private void init() {
-        SubscriptionGroupConfig subscriptionGroupConfig = new SubscriptionGroupConfig();
-        subscriptionGroupConfig.setGroupName(MixAll.TOOLS_CONSUMER_GROUP);
-        this.subscriptionGroupTable.put(MixAll.TOOLS_CONSUMER_GROUP, subscriptionGroupConfig);
+        {
+            SubscriptionGroupConfig subscriptionGroupConfig = new SubscriptionGroupConfig();
+            subscriptionGroupConfig.setGroupName(MixAll.TOOLS_CONSUMER_GROUP);
+            this.subscriptionGroupTable.put(MixAll.TOOLS_CONSUMER_GROUP, subscriptionGroupConfig);
+        }
+
+        {
+            SubscriptionGroupConfig subscriptionGroupConfig = new SubscriptionGroupConfig();
+            subscriptionGroupConfig.setGroupName(MixAll.FILTERSRV_CONSUMER_GROUP);
+            this.subscriptionGroupTable.put(MixAll.FILTERSRV_CONSUMER_GROUP, subscriptionGroupConfig);
+        }
     }
 
 
@@ -134,7 +143,8 @@ public class SubscriptionGroupManager extends ConfigManager {
 
     @Override
     public String configFilePath() {
-        return this.brokerController.getBrokerConfig().getSubscriptionGroupPath();
+        return BrokerPathConfigHelper.getSubscriptionGroupPath(this.brokerController.getMessageStoreConfig()
+            .getStorePathRootDir());
     }
 
 

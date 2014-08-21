@@ -1,20 +1,19 @@
-### RocketMQ是什么？
+### RocketMQ是什么？[![Build Status](https://travis-ci.org/alibaba/RocketMQ.svg?branch=develop)](https://travis-ci.org/alibaba/RocketMQ)
 RocketMQ是一款分布式、队列模型的消息中间件，具有以下特点：
 
-* 能够保证严格的消息顺序
-* 提供丰富的消息拉取模式
-* 高效的订阅者水平扩展能力
-* 实时的消息订阅机制
+* 支持严格的消息顺序
+* 支持Topic与Queue两种模式
 * 亿级消息堆积能力
-* 较少的依赖
-
+* 比较友好的分布式特性
+* 同时支持Push与Pull方式消费消息
 
 ----------
 
-### 如何开始？
-* [下载最新稳定版安装包](https://github.com/alibaba/RocketMQ/releases)
-* Quick Start（[阿里内部用户](http://gitlab.alibaba-inc.com/middleware//rocketmq/wikis/RocketMQ_Notes) | [开源外部用户](https://github.com/alibaba/RocketMQ/wiki/Quick-Start)）
-* 通过Wiki了解更多（[阿里内部用户](http://gitlab.alibaba-inc.com/middleware/rocketmq/wikis/home) | [开源外部用户](https://github.com/alibaba/RocketMQ/wiki)）
+### 如何开始？`必读`
+* [下载安装包](https://github.com/alibaba/RocketMQ/releases)
+* [Quick Start](https://github.com/alibaba/RocketMQ/wiki/Quick-Start)
+* [通过Wiki了解更多](https://github.com/alibaba/RocketMQ/wiki)
+* [`在阿里云上使用RocketMQ`](http://ons-all.oss-cn-hangzhou.aliyuncs.com/ALIYUN_ONS_USER_GUIDE.pdf)
 
 ----------
 
@@ -35,7 +34,10 @@ RocketMQ是一款分布式、队列模型的消息中间件，具有以下特点
 ### 联系我们
 
 * [向我们提交建议、BUG、寻求技术帮助](https://github.com/alibaba/RocketMQ/issues/new)
-* 欢迎参与RocketMQ项目，只需在Github上fork、pull request即可。RocketMQ目前只支持Java客户端，欢迎大家能贡献其他语言客户端。
-* [到新浪微博交流RocketMQ（限开源外部用户）](http://q.weibo.com/1628465)
+* 欢迎参与RocketMQ项目，只需在Github上fork、pull request即可。
+* [到新浪微博交流RocketMQ](http://q.weibo.com/1628465)
+* 加入QQ群交流，[5776652](http://url.cn/Knxm0o)
+* [哪些人或组织在使用RocketMQ](https://github.com/alibaba/RocketMQ/issues/368)
+* [国内用户到oschina.net访问，速度更快（oschina与github代码完全一致）](https://git.oschina.net/vintagewang/RocketMQ)
 
 ----------

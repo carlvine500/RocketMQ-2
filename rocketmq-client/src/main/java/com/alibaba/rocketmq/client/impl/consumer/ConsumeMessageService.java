@@ -19,6 +19,7 @@ import java.util.List;
 
 import com.alibaba.rocketmq.common.message.MessageExt;
 import com.alibaba.rocketmq.common.message.MessageQueue;
+import com.alibaba.rocketmq.common.protocol.body.ConsumeMessageDirectlyResult;
 
 
 /**
@@ -35,6 +36,18 @@ public interface ConsumeMessageService {
 
 
     public void updateCorePoolSize(int corePoolSize);
+
+
+    public void incCorePoolSize();
+
+
+    public void decCorePoolSize();
+
+
+    public int getCorePoolSize();
+
+
+    public ConsumeMessageDirectlyResult consumeMessageDirectly(final MessageExt msg, final String brokerName);
 
 
     public void submitConsumeRequest(//

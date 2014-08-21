@@ -18,6 +18,7 @@ public class ConsumerData {
     private MessageModel messageModel;
     private ConsumeFromWhere consumeFromWhere;
     private Set<SubscriptionData> subscriptionDataSet = new HashSet<SubscriptionData>();
+    private boolean unitMode;
 
 
     public String getGroupName() {
@@ -70,10 +71,20 @@ public class ConsumerData {
     }
 
 
+    public boolean isUnitMode() {
+        return unitMode;
+    }
+
+
+    public void setUnitMode(boolean isUnitMode) {
+        this.unitMode = isUnitMode;
+    }
+
+
     @Override
     public String toString() {
         return "ConsumerData [groupName=" + groupName + ", consumeType=" + consumeType + ", messageModel="
-                + messageModel + ", consumeFromWhere=" + consumeFromWhere + ", subscriptionDataSet="
-                + subscriptionDataSet + "]";
+                + messageModel + ", consumeFromWhere=" + consumeFromWhere + ", unitMode=" + unitMode
+                + ", subscriptionDataSet=" + subscriptionDataSet + "]";
     }
 }

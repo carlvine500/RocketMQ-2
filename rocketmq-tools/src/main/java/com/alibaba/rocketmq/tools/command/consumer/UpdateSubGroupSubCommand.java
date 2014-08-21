@@ -21,8 +21,9 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 
-import com.alibaba.rocketmq.common.MixAll;
 import com.alibaba.rocketmq.common.subscription.SubscriptionGroupConfig;
+import com.alibaba.rocketmq.remoting.RPCHook;
+import com.alibaba.rocketmq.srvutil.ServerUtil;
 import com.alibaba.rocketmq.tools.admin.DefaultMQAdminExt;
 import com.alibaba.rocketmq.tools.command.CommandUtil;
 import com.alibaba.rocketmq.tools.command.SubCommand;
@@ -95,8 +96,8 @@ public class UpdateSubGroupSubCommand implements SubCommand {
 
 
     @Override
-    public void execute(final CommandLine commandLine, final Options options) {
-        DefaultMQAdminExt defaultMQAdminExt = new DefaultMQAdminExt();
+    public void execute(final CommandLine commandLine, final Options options, RPCHook rpcHook) {
+        DefaultMQAdminExt defaultMQAdminExt = new DefaultMQAdminExt(rpcHook);
 
         defaultMQAdminExt.setInstanceName(Long.toString(System.currentTimeMillis()));
 
@@ -175,7 +176,7 @@ public class UpdateSubGroupSubCommand implements SubCommand {
                 return;
             }
 
-            MixAll.printCommandLineHelp("mqadmin " + this.commandName(), options);
+            ServerUtil.printCommandLineHelp("mqadmin " + this.commandName(), options);
         }
         catch (Exception e) {
             e.printStackTrace();

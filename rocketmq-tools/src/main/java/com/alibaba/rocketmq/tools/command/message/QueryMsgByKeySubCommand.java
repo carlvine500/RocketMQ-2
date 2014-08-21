@@ -22,6 +22,7 @@ import org.apache.commons.cli.Options;
 import com.alibaba.rocketmq.client.QueryResult;
 import com.alibaba.rocketmq.client.exception.MQClientException;
 import com.alibaba.rocketmq.common.message.MessageExt;
+import com.alibaba.rocketmq.remoting.RPCHook;
 import com.alibaba.rocketmq.tools.admin.DefaultMQAdminExt;
 import com.alibaba.rocketmq.tools.command.SubCommand;
 
@@ -56,22 +57,15 @@ public class QueryMsgByKeySubCommand implements SubCommand {
         opt.setRequired(true);
         options.addOption(opt);
 
-        opt = new Option("f", "fallbackHours", true, "Fallback Hours");
-        opt.setRequired(false);
-        options.addOption(opt);
-
         return options;
     }
 
 
-    void queryByKey(final DefaultMQAdminExt admin, final String topic, final String key,
-            final long fallbackHours) throws MQClientException, InterruptedException {
+    void queryByKey(final DefaultMQAdminExt admin, final String topic, final String key)
+            throws MQClientException, InterruptedException {
         admin.start();
 
-        long end = System.currentTimeMillis() - (fallbackHours * 60 * 60 * 1000);
-        long begin = end - (6 * 60 * 60 * 1000);
-
-        QueryResult queryResult = admin.queryMessage(topic, key, 32, begin, end);
+        QueryResult queryResult = admin.queryMessage(topic, key, 32, 0, Long.MAX_VALUE);
         System.out.printf("%-50s %-4s  %s\n",//
             "#Message ID",//
             "#QID",//
@@ -83,23 +77,16 @@ public class QueryMsgByKeySubCommand implements SubCommand {
 
 
     @Override
-    public void execute(CommandLine commandLine, Options options) {
-        DefaultMQAdminExt defaultMQAdminExt = new DefaultMQAdminExt();
+    public void execute(CommandLine commandLine, Options options, RPCHook rpcHook) {
+        DefaultMQAdminExt defaultMQAdminExt = new DefaultMQAdminExt(rpcHook);
 
         defaultMQAdminExt.setInstanceName(Long.toString(System.currentTimeMillis()));
 
         try {
             final String topic = commandLine.getOptionValue('t').trim();
             final String key = commandLine.getOptionValue('k').trim();
-            long h = 0;
-            if (commandLine.hasOption('f')) {
-                final String fallbackHours = commandLine.getOptionValue('f').trim();
-                if (fallbackHours != null) {
-                    h = Long.parseLong(fallbackHours);
-                }
-            }
 
-            this.queryByKey(defaultMQAdminExt, topic, key, h);
+            this.queryByKey(defaultMQAdminExt, topic, key);
         }
         catch (Exception e) {
             e.printStackTrace();

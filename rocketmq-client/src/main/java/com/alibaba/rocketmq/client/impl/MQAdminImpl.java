@@ -29,16 +29,18 @@ import org.slf4j.Logger;
 import com.alibaba.rocketmq.client.QueryResult;
 import com.alibaba.rocketmq.client.exception.MQBrokerException;
 import com.alibaba.rocketmq.client.exception.MQClientException;
-import com.alibaba.rocketmq.client.impl.factory.MQClientFactory;
+import com.alibaba.rocketmq.client.impl.factory.MQClientInstance;
 import com.alibaba.rocketmq.client.impl.producer.TopicPublishInfo;
 import com.alibaba.rocketmq.client.log.ClientLogger;
 import com.alibaba.rocketmq.common.MixAll;
 import com.alibaba.rocketmq.common.TopicConfig;
-import com.alibaba.rocketmq.common.message.Message;
+import com.alibaba.rocketmq.common.help.FAQUrl;
+import com.alibaba.rocketmq.common.message.MessageConst;
 import com.alibaba.rocketmq.common.message.MessageDecoder;
 import com.alibaba.rocketmq.common.message.MessageExt;
 import com.alibaba.rocketmq.common.message.MessageId;
 import com.alibaba.rocketmq.common.message.MessageQueue;
+import com.alibaba.rocketmq.common.protocol.ResponseCode;
 import com.alibaba.rocketmq.common.protocol.header.QueryMessageRequestHeader;
 import com.alibaba.rocketmq.common.protocol.header.QueryMessageResponseHeader;
 import com.alibaba.rocketmq.common.protocol.route.BrokerData;
@@ -49,7 +51,6 @@ import com.alibaba.rocketmq.remoting.exception.RemotingCommandException;
 import com.alibaba.rocketmq.remoting.exception.RemotingException;
 import com.alibaba.rocketmq.remoting.netty.ResponseFuture;
 import com.alibaba.rocketmq.remoting.protocol.RemotingCommand;
-import com.alibaba.rocketmq.remoting.protocol.RemotingProtos.ResponseCode;
 
 
 /**
@@ -60,10 +61,10 @@ import com.alibaba.rocketmq.remoting.protocol.RemotingProtos.ResponseCode;
  */
 public class MQAdminImpl {
     private final Logger log = ClientLogger.getLog();
-    private final MQClientFactory mQClientFactory;
+    private final MQClientInstance mQClientFactory;
 
 
-    public MQAdminImpl(MQClientFactory mQClientFactory) {
+    public MQAdminImpl(MQClientInstance mQClientFactory) {
         this.mQClientFactory = mQClientFactory;
     }
 
@@ -124,7 +125,7 @@ public class MQAdminImpl {
                         .getTopicRouteInfoFromNameServer(topic, 1000 * 3);
             if (topicRouteData != null) {
                 TopicPublishInfo topicPublishInfo =
-                        MQClientFactory.topicRouteData2TopicPublishInfo(topic, topicRouteData);
+                        MQClientInstance.topicRouteData2TopicPublishInfo(topic, topicRouteData);
                 if (topicPublishInfo != null && topicPublishInfo.ok()) {
                     return topicPublishInfo.getMessageQueueList();
                 }
@@ -145,17 +146,20 @@ public class MQAdminImpl {
                         .getTopicRouteInfoFromNameServer(topic, 1000 * 3);
             if (topicRouteData != null) {
                 Set<MessageQueue> mqList =
-                        MQClientFactory.topicRouteData2TopicSubscribeInfo(topic, topicRouteData);
+                        MQClientInstance.topicRouteData2TopicSubscribeInfo(topic, topicRouteData);
                 if (!mqList.isEmpty()) {
                     return mqList;
                 }
                 else {
-                    throw new MQClientException("Can not find Message Queue for this topic, " + topic, null);
+                    throw new MQClientException("Can not find Message Queue for this topic, " + topic
+                            + " Namesrv return empty", null);
                 }
             }
         }
         catch (Exception e) {
-            throw new MQClientException("Can not find Message Queue for this topic, " + topic, e);
+            throw new MQClientException("Can not find Message Queue for this topic, " + topic
+                    + FAQUrl.suggestTodo(FAQUrl.MQLIST_NOT_EXIST), //
+                e);
         }
 
         throw new MQClientException("Unknow why, Can not find Message Queue for this topic, " + topic, null);
@@ -289,15 +293,15 @@ public class MQAdminImpl {
                         requestHeader.setBeginTimestamp(begin);
                         requestHeader.setEndTimestamp(end);
 
-                        this.mQClientFactory.getMQClientAPIImpl().queryMessage(addr, requestHeader, 1000 * 5,
-                            new InvokeCallback() {
+                        this.mQClientFactory.getMQClientAPIImpl().queryMessage(addr, requestHeader,
+                            1000 * 15, new InvokeCallback() {
                                 @Override
                                 public void operationComplete(ResponseFuture responseFuture) {
                                     try {
                                         RemotingCommand response = responseFuture.getResponseCommand();
                                         if (response != null) {
                                             switch (response.getCode()) {
-                                            case ResponseCode.SUCCESS_VALUE: {
+                                            case ResponseCode.SUCCESS: {
                                                 QueryMessageResponseHeader responseHeader = null;
                                                 try {
                                                     responseHeader =
@@ -341,7 +345,7 @@ public class MQAdminImpl {
 
                 } // end of for
 
-                boolean ok = countDownLatch.await(1000 * 10, TimeUnit.MILLISECONDS);
+                boolean ok = countDownLatch.await(1000 * 20, TimeUnit.MILLISECONDS);
                 if (!ok) {
                     log.warn("queryMessage, maybe some broker failed");
                 }
@@ -357,7 +361,7 @@ public class MQAdminImpl {
                         String keys = msgExt.getKeys();
                         if (keys != null) {
                             boolean matched = false;
-                            String[] keyArray = keys.split(Message.KEY_SEPARATOR);
+                            String[] keyArray = keys.split(MessageConst.KEY_SEPARATOR);
                             if (keyArray != null) {
                                 for (String k : keyArray) {
                                     if (key.equals(k)) {

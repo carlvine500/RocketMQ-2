@@ -10,8 +10,9 @@ import java.util.Set;
 /**
  * @author shijia.wxr<vintage.wang@gmail.com>
  */
-public class SubscriptionData {
+public class SubscriptionData implements Comparable<SubscriptionData> {
     public final static String SUB_ALL = "*";
+    private boolean classFilterMode = false;
     private String topic;
     private String subString;
     private Set<String> tagsSet = new HashSet<String>();
@@ -81,13 +82,23 @@ public class SubscriptionData {
     }
 
 
+    public boolean isClassFilterMode() {
+        return classFilterMode;
+    }
+
+
+    public void setClassFilterMode(boolean classFilterMode) {
+        this.classFilterMode = classFilterMode;
+    }
+
+
     @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
+        result = prime * result + (classFilterMode ? 1231 : 1237);
         result = prime * result + ((codeSet == null) ? 0 : codeSet.hashCode());
         result = prime * result + ((subString == null) ? 0 : subString.hashCode());
-        result = prime * result + (int) (subVersion ^ (subVersion >>> 32));
         result = prime * result + ((tagsSet == null) ? 0 : tagsSet.hashCode());
         result = prime * result + ((topic == null) ? 0 : topic.hashCode());
         return result;
@@ -103,6 +114,8 @@ public class SubscriptionData {
         if (getClass() != obj.getClass())
             return false;
         SubscriptionData other = (SubscriptionData) obj;
+        if (classFilterMode != other.classFilterMode)
+            return false;
         if (codeSet == null) {
             if (other.codeSet != null)
                 return false;
@@ -135,7 +148,16 @@ public class SubscriptionData {
 
     @Override
     public String toString() {
-        return "SubscriptionData [topic=" + topic + ", subString=" + subString + ", tagsSet=" + tagsSet
-                + ", codeSet=" + codeSet + ", subVersion=" + subVersion + "]";
+        return "SubscriptionData [classFilterMode=" + classFilterMode + ", topic=" + topic + ", subString="
+                + subString + ", tagsSet=" + tagsSet + ", codeSet=" + codeSet + ", subVersion=" + subVersion
+                + "]";
+    }
+
+
+    @Override
+    public int compareTo(SubscriptionData other) {
+        String thisValue = this.topic + "@" + this.subString;
+        String otherValue = other.topic + "@" + other.subString;
+        return thisValue.compareTo(otherValue);
     }
 }

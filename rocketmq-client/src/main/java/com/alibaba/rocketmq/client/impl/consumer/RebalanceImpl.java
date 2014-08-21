@@ -30,7 +30,7 @@ import org.slf4j.Logger;
 
 import com.alibaba.rocketmq.client.consumer.AllocateMessageQueueStrategy;
 import com.alibaba.rocketmq.client.impl.FindBrokerResult;
-import com.alibaba.rocketmq.client.impl.factory.MQClientFactory;
+import com.alibaba.rocketmq.client.impl.factory.MQClientInstance;
 import com.alibaba.rocketmq.client.log.ClientLogger;
 import com.alibaba.rocketmq.common.MixAll;
 import com.alibaba.rocketmq.common.message.MessageQueue;
@@ -60,11 +60,11 @@ public abstract class RebalanceImpl {
     protected String consumerGroup;
     protected MessageModel messageModel;
     protected AllocateMessageQueueStrategy allocateMessageQueueStrategy;
-    protected MQClientFactory mQClientFactory;
+    protected MQClientInstance mQClientFactory;
 
 
     public RebalanceImpl(String consumerGroup, MessageModel messageModel,
-            AllocateMessageQueueStrategy allocateMessageQueueStrategy, MQClientFactory mQClientFactory) {
+            AllocateMessageQueueStrategy allocateMessageQueueStrategy, MQClientInstance mQClientFactory) {
         this.consumerGroup = consumerGroup;
         this.messageModel = messageModel;
         this.allocateMessageQueueStrategy = allocateMessageQueueStrategy;
@@ -84,6 +84,10 @@ public abstract class RebalanceImpl {
             try {
                 this.mQClientFactory.getMQClientAPIImpl().unlockBatchMQ(findBrokerResult.getBrokerAddr(),
                     requestBody, 1000, oneway);
+                log.warn("unlock messageQueue. group:{}, clientId:{}, mq:{}",//
+                    this.consumerGroup, //
+                    this.mQClientFactory.getClientId(), //
+                    mq);
             }
             catch (Exception e) {
                 log.error("unlockBatchMQ exception, " + mq, e);
@@ -306,10 +310,15 @@ public abstract class RebalanceImpl {
                 // 执行分配算法
                 List<MessageQueue> allocateResult = null;
                 try {
-                    allocateResult = strategy.allocate(this.mQClientFactory.getClientId(), mqAll, cidAll);
+                    allocateResult = strategy.allocate(//
+                        this.consumerGroup, //
+                        this.mQClientFactory.getClientId(), //
+                        mqAll,//
+                        cidAll);
                 }
                 catch (Throwable e) {
                     log.error("AllocateMessageQueueStrategy.allocate Exception", e);
+                    return;
                 }
 
                 Set<MessageQueue> allocateResultSet = new HashSet<MessageQueue>();
@@ -320,8 +329,8 @@ public abstract class RebalanceImpl {
                 // 更新本地队列
                 boolean changed = this.updateProcessQueueTableInRebalance(topic, allocateResultSet);
                 if (changed) {
-                    log.info("reblance result is [{}], ConsumerId is [{}], mqAll is[{}], cidAll is [{}]",
-                        allocateResult, this.mQClientFactory.getClientId(), mqAll, cidAll);
+                    log.info("rebalanced result changed. mqSet={}, ConsumerId={}, mqSize={}, cidSize={}",
+                        allocateResult, this.mQClientFactory.getClientId(), mqAll.size(), cidAll.size());
 
                     this.messageQueueChanged(topic, mqSet, allocateResultSet);
                     log.info("messageQueueChanged {} {} {} {}",//
@@ -346,19 +355,45 @@ public abstract class RebalanceImpl {
             final Set<MessageQueue> mqDivided);
 
 
+    public void removeProcessQueue(final MessageQueue mq) {
+        ProcessQueue prev = this.processQueueTable.remove(mq);
+        if (prev != null) {
+            boolean droped = prev.isDroped();
+            prev.setDroped(true);
+            this.removeUnnecessaryMessageQueue(mq, prev);
+            log.info("Fix Offset, {}, remove unnecessary mq, {} Droped: {}", consumerGroup, mq, droped);
+        }
+    }
+
+
     private boolean updateProcessQueueTableInRebalance(final String topic, final Set<MessageQueue> mqSet) {
         boolean changed = false;
 
         // 将多余的队列删除
-        for (MessageQueue mq : this.processQueueTable.keySet()) {
+        Iterator<Entry<MessageQueue, ProcessQueue>> it = this.processQueueTable.entrySet().iterator();
+        while (it.hasNext()) {
+            Entry<MessageQueue, ProcessQueue> next = it.next();
+            MessageQueue mq = next.getKey();
+            ProcessQueue pq = next.getValue();
+
             if (mq.getTopic().equals(topic)) {
                 if (!mqSet.contains(mq)) {
-                    changed = true;
-                    ProcessQueue pq = this.processQueueTable.remove(mq);
-                    if (pq != null) {
-                        pq.setDroped(true);
+                    pq.setDroped(true);
+                    if (this.removeUnnecessaryMessageQueue(mq, pq)) {
+                        it.remove();
+                        changed = true;
                         log.info("doRebalance, {}, remove unnecessary mq, {}", consumerGroup, mq);
-                        this.removeUnnecessaryMessageQueue(mq, pq);
+                    }
+                }
+                // 超过2分钟没有拉取动作了，删除它
+                else if (pq.isPullExpired()) {
+                    pq.setDroped(true);
+                    if (this.removeUnnecessaryMessageQueue(mq, pq)) {
+                        it.remove();
+                        changed = true;
+                        log.error(
+                            "[BUG]doRebalance, {}, remove unnecessary mq, {}, because pull is pause, so try to fixed it",
+                            consumerGroup, mq);
                     }
                 }
             }
@@ -395,7 +430,7 @@ public abstract class RebalanceImpl {
     }
 
 
-    public abstract void removeUnnecessaryMessageQueue(final MessageQueue mq, final ProcessQueue pq);
+    public abstract boolean removeUnnecessaryMessageQueue(final MessageQueue mq, final ProcessQueue pq);
 
 
     public abstract void dispatchPullRequest(final List<PullRequest> pullRequestList);
@@ -465,12 +500,12 @@ public abstract class RebalanceImpl {
     }
 
 
-    public MQClientFactory getmQClientFactory() {
+    public MQClientInstance getmQClientFactory() {
         return mQClientFactory;
     }
 
 
-    public void setmQClientFactory(MQClientFactory mQClientFactory) {
+    public void setmQClientFactory(MQClientInstance mQClientFactory) {
         this.mQClientFactory = mQClientFactory;
     }
 }
