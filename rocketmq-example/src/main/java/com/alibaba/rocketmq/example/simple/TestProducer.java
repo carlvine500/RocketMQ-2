@@ -15,13 +15,15 @@
  */
 package com.alibaba.rocketmq.example.simple;
 
+import com.alibaba.rocketmq.client.QueryResult;
 import com.alibaba.rocketmq.client.exception.MQClientException;
 import com.alibaba.rocketmq.client.producer.DefaultMQProducer;
 import com.alibaba.rocketmq.client.producer.SendResult;
 import com.alibaba.rocketmq.common.message.Message;
+import com.alibaba.rocketmq.common.message.MessageExt;
 
 
-public class Producer {
+public class TestProducer {
     public static void main(String[] args) throws MQClientException, InterruptedException {
         /**
          * 一个应用创建一个Producer，由应用来维护此对象，可以设置为全局对象或者单例<br>
@@ -48,10 +50,17 @@ public class Producer {
                 {
                     Message msg = new Message("TopicTest1",// topic
                         "TagA",// tag
-                        "OrderID188",// key
+                        "key113",// key
                         ("Hello MetaQ").getBytes());// body
                     SendResult sendResult = producer.send(msg);
                     System.out.println(sendResult);
+
+                    QueryResult queryMessage =
+                            producer.queryMessage("TopicTest1", "key113", 10, 0,
+                                System.currentTimeMillis());
+                    for (MessageExt m : queryMessage.getMessageList()) {
+                        System.out.println(m);
+                    }
                 }
 
             }
