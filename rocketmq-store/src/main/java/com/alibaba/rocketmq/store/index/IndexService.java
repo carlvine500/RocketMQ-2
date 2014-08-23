@@ -206,7 +206,7 @@ public class IndexService extends ServiceThread {
                     }
 
                     // 再往前遍历时间更不符合
-                    if (f.getBeginTimestamp() > end) {
+                    if (f.getBeginTimestamp() < begin) {
                         break;
                     }
 
