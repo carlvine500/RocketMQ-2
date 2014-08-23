@@ -90,6 +90,7 @@ public class QueryMsgByOffsetSubCommand implements SubCommand {
             mq.setQueueId(Integer.parseInt(queueId));
 
             defaultMQPullConsumer.start();
+            defaultMQAdminExt.start();
 
             PullResult pullResult = defaultMQPullConsumer.pull(mq, "*", Long.parseLong(offset), 1);
             if (pullResult != null) {
