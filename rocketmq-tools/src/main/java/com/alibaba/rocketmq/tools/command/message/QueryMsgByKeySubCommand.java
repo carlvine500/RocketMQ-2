@@ -65,7 +65,7 @@ public class QueryMsgByKeySubCommand implements SubCommand {
             throws MQClientException, InterruptedException {
         admin.start();
 
-        QueryResult queryResult = admin.queryMessage(topic, key, 32, 0, Long.MAX_VALUE);
+        QueryResult queryResult = admin.queryMessage(topic, key, 64, 0, Long.MAX_VALUE);
         System.out.printf("%-50s %-4s  %s\n",//
             "#Message ID",//
             "#QID",//
