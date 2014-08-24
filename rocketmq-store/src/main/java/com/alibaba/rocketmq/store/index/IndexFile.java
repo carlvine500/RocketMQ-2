@@ -120,7 +120,7 @@ public class IndexFile {
 
             try {
                 // TODO 是否是读写锁
-                fileLock = this.fileChannel.lock(absSlotPos, HASH_SLOT_SIZE, false);
+//                fileLock = this.fileChannel.lock(absSlotPos, HASH_SLOT_SIZE, false);
                 int slotValue = this.mappedByteBuffer.getInt(absSlotPos);
                 if (slotValue <= INVALID_INDEX || slotValue > this.indexHeader.getIndexCount()) {
                     slotValue = INVALID_INDEX;
@@ -247,14 +247,14 @@ public class IndexFile {
             FileLock fileLock = null;
             try {
                 if (lock) {
-                    fileLock = this.fileChannel.lock(absSlotPos, HASH_SLOT_SIZE, true);
+                    //fileLock = this.fileChannel.lock(absSlotPos, HASH_SLOT_SIZE, true);
                 }
 
                 int slotValue = this.mappedByteBuffer.getInt(absSlotPos);
-                if (fileLock != null) {
-                    fileLock.release();
-                    fileLock = null;
-                }
+//                if (fileLock != null) {
+//                    fileLock.release();
+//                    fileLock = null;
+//                }
 
                 if (slotValue <= INVALID_INDEX || slotValue > this.indexHeader.getIndexCount()
                         || this.indexHeader.getIndexCount() <= 1) {
