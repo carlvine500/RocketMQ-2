@@ -2148,11 +2148,12 @@ public class MQClientAPIImpl {
      * 通过调用Broker，从Consumer内存获取相应数据结构
      */
     public ConsumerRunningInfo getConsumerRunningInfo(final String addr, String consumerGroup,
-            String clientId, final long timeoutMillis) throws RemotingException, MQClientException,
-            InterruptedException {
+            String clientId, boolean jstack, final long timeoutMillis) throws RemotingException,
+            MQClientException, InterruptedException {
         GetConsumerRunningInfoRequestHeader requestHeader = new GetConsumerRunningInfoRequestHeader();
         requestHeader.setConsumerGroup(consumerGroup);
         requestHeader.setClientId(clientId);
+        requestHeader.setJstackEnable(jstack);
 
         RemotingCommand request =
                 RemotingCommand.createRequestCommand(RequestCode.GET_CONSUMER_RUNNING_INFO, requestHeader);
