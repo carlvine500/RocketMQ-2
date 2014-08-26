@@ -15,22 +15,6 @@
  */
 package com.alibaba.rocketmq.namesrv.routeinfo;
 
-import io.netty.channel.Channel;
-
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map.Entry;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.alibaba.rocketmq.common.DataVersion;
 import com.alibaba.rocketmq.common.MixAll;
 import com.alibaba.rocketmq.common.TopicConfig;
@@ -43,7 +27,17 @@ import com.alibaba.rocketmq.common.protocol.body.TopicList;
 import com.alibaba.rocketmq.common.protocol.route.BrokerData;
 import com.alibaba.rocketmq.common.protocol.route.QueueData;
 import com.alibaba.rocketmq.common.protocol.route.TopicRouteData;
+import com.alibaba.rocketmq.common.sysflag.TopicSysFlag;
 import com.alibaba.rocketmq.remoting.common.RemotingUtil;
+import io.netty.channel.Channel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 
 /**
@@ -277,6 +271,7 @@ public class RouteInfoManager {
         queueData.setWriteQueueNums(topicConfig.getWriteQueueNums());
         queueData.setReadQueueNums(topicConfig.getReadQueueNums());
         queueData.setPerm(topicConfig.getPerm());
+        queueData.setTopicSynFlag(topicConfig.getTopicSysFlag());
 
         List<QueueData> queueDataList = this.topicQueueTable.get(topicConfig.getTopicName());
         if (null == queueDataList) {
@@ -754,6 +749,109 @@ public class RouteInfoManager {
                                 break;
                             }
                         }
+                    }
+                }
+            }
+            finally {
+                this.lock.readLock().unlock();
+            }
+        }
+        catch (Exception e) {
+            log.error("getAllTopicList Exception", e);
+        }
+
+        return topicList.encode();
+    }
+
+
+    /**
+     * 获取单元逻辑下的所有 topic 列表
+     * 
+     * @return
+     */
+    public byte[] getUnitTopics() {
+        TopicList topicList = new TopicList();
+        try {
+            try {
+                this.lock.readLock().lockInterruptibly();
+                Iterator<Entry<String, List<QueueData>>> topicTableIt =
+                        this.topicQueueTable.entrySet().iterator();
+                while (topicTableIt.hasNext()) {
+                    Entry<String, List<QueueData>> topicEntry = topicTableIt.next();
+                    String topic = topicEntry.getKey();
+                    List<QueueData> queueDatas = topicEntry.getValue();
+                    if (queueDatas != null && queueDatas.size() > 0
+                            && TopicSysFlag.hasUnitFlag(queueDatas.get(0).getTopicSynFlag())) {
+                        topicList.getTopicList().add(topic);
+                    }
+                }
+            }
+            finally {
+                this.lock.readLock().unlock();
+            }
+        }
+        catch (Exception e) {
+            log.error("getAllTopicList Exception", e);
+        }
+
+        return topicList.encode();
+    }
+
+
+    /**
+     * 获取中心向单元同步的所有 topic 列表
+     * 
+     * @return
+     */
+    public byte[] getHasUnitSubTopicList() {
+        TopicList topicList = new TopicList();
+        try {
+            try {
+                this.lock.readLock().lockInterruptibly();
+                Iterator<Entry<String, List<QueueData>>> topicTableIt =
+                        this.topicQueueTable.entrySet().iterator();
+                while (topicTableIt.hasNext()) {
+                    Entry<String, List<QueueData>> topicEntry = topicTableIt.next();
+                    String topic = topicEntry.getKey();
+                    List<QueueData> queueDatas = topicEntry.getValue();
+                    if (queueDatas != null && queueDatas.size() > 0
+                            && TopicSysFlag.hasUnitSubFlag(queueDatas.get(0).getTopicSynFlag())) {
+                        topicList.getTopicList().add(topic);
+                    }
+                }
+            }
+            finally {
+                this.lock.readLock().unlock();
+            }
+        }
+        catch (Exception e) {
+            log.error("getAllTopicList Exception", e);
+        }
+
+        return topicList.encode();
+    }
+
+
+    /**
+     * 获取含有单元化订阅组的非单元化 Topic 列表
+     * 
+     * @return
+     */
+    public byte[] getHasUnitSubUnUnitTopicList() {
+        TopicList topicList = new TopicList();
+        try {
+            try {
+                this.lock.readLock().lockInterruptibly();
+                Iterator<Entry<String, List<QueueData>>> topicTableIt =
+                        this.topicQueueTable.entrySet().iterator();
+                while (topicTableIt.hasNext()) {
+                    Entry<String, List<QueueData>> topicEntry = topicTableIt.next();
+                    String topic = topicEntry.getKey();
+                    List<QueueData> queueDatas = topicEntry.getValue();
+                    if (queueDatas != null && queueDatas.size() > 0
+                            && !TopicSysFlag.hasUnitFlag(queueDatas.get(0).getTopicSynFlag())
+                            && TopicSysFlag.hasUnitSubFlag(queueDatas.get(0).getTopicSynFlag())) {
+                        topicList.getTopicList().add(topic);
                     }
                 }
             }

@@ -164,7 +164,7 @@ public class TopicConfigManager extends ConfigManager {
      * 发消息时，如果Topic不存在，尝试创建
      */
     public TopicConfig createTopicInSendMessageMethod(final String topic, final String defaultTopic,
-            final String remoteAddress, final int clientDefaultTopicQueueNums) {
+            final String remoteAddress, final int clientDefaultTopicQueueNums, final int topicSysFlag) {
         TopicConfig topicConfig = null;
         boolean createNew = false;
 
@@ -239,8 +239,8 @@ public class TopicConfigManager extends ConfigManager {
     public TopicConfig createTopicInSendMessageBackMethod(//
             final String topic, //
             final int clientDefaultTopicQueueNums,//
-            final int perm//
-    ) {
+            final int perm,//
+            final int topicSysFlag) {
         TopicConfig topicConfig = this.topicConfigTable.get(topic);
         if (topicConfig != null)
             return topicConfig;
@@ -258,6 +258,7 @@ public class TopicConfigManager extends ConfigManager {
                     topicConfig.setReadQueueNums(clientDefaultTopicQueueNums);
                     topicConfig.setWriteQueueNums(clientDefaultTopicQueueNums);
                     topicConfig.setPerm(perm);
+                    topicConfig.setTopicSysFlag(topicSysFlag);
 
                     log.info("create new topic {}", topicConfig);
                     this.topicConfigTable.put(topic, topicConfig);

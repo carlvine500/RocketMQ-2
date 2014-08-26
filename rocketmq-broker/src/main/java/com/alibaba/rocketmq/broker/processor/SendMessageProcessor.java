@@ -15,18 +15,6 @@
  */
 package com.alibaba.rocketmq.broker.processor;
 
-import io.netty.channel.ChannelHandlerContext;
-
-import java.net.InetSocketAddress;
-import java.net.SocketAddress;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.alibaba.rocketmq.broker.BrokerController;
 import com.alibaba.rocketmq.broker.mqtrace.ConsumeMessageContext;
 import com.alibaba.rocketmq.broker.mqtrace.ConsumeMessageHook;
@@ -52,6 +40,7 @@ import com.alibaba.rocketmq.common.protocol.header.SendMessageRequestHeaderV2;
 import com.alibaba.rocketmq.common.protocol.header.SendMessageResponseHeader;
 import com.alibaba.rocketmq.common.subscription.SubscriptionGroupConfig;
 import com.alibaba.rocketmq.common.sysflag.MessageSysFlag;
+import com.alibaba.rocketmq.common.sysflag.TopicSysFlag;
 import com.alibaba.rocketmq.remoting.common.RemotingHelper;
 import com.alibaba.rocketmq.remoting.exception.RemotingCommandException;
 import com.alibaba.rocketmq.remoting.netty.NettyRequestProcessor;
@@ -59,6 +48,16 @@ import com.alibaba.rocketmq.remoting.protocol.RemotingCommand;
 import com.alibaba.rocketmq.store.MessageExtBrokerInner;
 import com.alibaba.rocketmq.store.PutMessageResult;
 import com.alibaba.rocketmq.store.config.StorePathConfigHelper;
+import io.netty.channel.ChannelHandlerContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
 
 
 /**
@@ -179,12 +178,18 @@ public class SendMessageProcessor implements NettyRequestProcessor {
         int queueIdInt =
                 Math.abs(this.random.nextInt() % 99999999) % subscriptionGroupConfig.getRetryQueueNums();
 
+        // 如果是单元化模式，则对 topic 进行设置
+        int topicSysFlag = 0;
+        if (requestHeader.isUnitMode()) {
+            topicSysFlag = TopicSysFlag.buildSysFlag(false, true);
+        }
+
         // 检查topic是否存在
         TopicConfig topicConfig =
                 this.brokerController.getTopicConfigManager().createTopicInSendMessageBackMethod(//
                     newTopic,//
                     subscriptionGroupConfig.getRetryQueueNums(), //
-                    PermName.PERM_WRITE | PermName.PERM_READ);
+                    PermName.PERM_WRITE | PermName.PERM_READ, topicSysFlag);
         if (null == topicConfig) {
             response.setCode(ResponseCode.SYSTEM_ERROR);
             response.setRemark("topic[" + newTopic + "] not exist");
@@ -228,7 +233,8 @@ public class SendMessageProcessor implements NettyRequestProcessor {
                     this.brokerController.getTopicConfigManager().createTopicInSendMessageBackMethod(
                         newTopic, //
                         DLQ_NUMS_PER_GROUP,//
-                        PermName.PERM_WRITE);
+                        PermName.PERM_WRITE, 0 // 死信消息不需要同步，不需要较正。
+                        );
             if (null == topicConfig) {
                 response.setCode(ResponseCode.SYSTEM_ERROR);
                 response.setRemark("topic[" + newTopic + "] not exist");
@@ -356,20 +362,32 @@ public class SendMessageProcessor implements NettyRequestProcessor {
         TopicConfig topicConfig =
                 this.brokerController.getTopicConfigManager().selectTopicConfig(requestHeader.getTopic());
         if (null == topicConfig) {
+            // 如果是单元化模式，则对 topic 进行设置
+            int topicSysFlag = 0;
+            if (requestHeader.isUnitMode()) {
+                if (topicConfig.getTopicName().startsWith(MixAll.RETRY_GROUP_TOPIC_PREFIX)) {
+                    topicSysFlag = TopicSysFlag.buildSysFlag(false, true);
+                }
+                else {
+                    topicSysFlag = TopicSysFlag.buildSysFlag(true, false);
+                }
+            }
+
             log.warn("the topic " + requestHeader.getTopic() + " not exist, producer: "
                     + ctx.channel().remoteAddress());
             topicConfig = this.brokerController.getTopicConfigManager().createTopicInSendMessageMethod(//
                 requestHeader.getTopic(), //
                 requestHeader.getDefaultTopic(), //
                 RemotingHelper.parseChannelRemoteAddr(ctx.channel()), //
-                requestHeader.getDefaultTopicQueueNums());
+                requestHeader.getDefaultTopicQueueNums(), topicSysFlag);
 
             // 尝试看下是否是失败消息发回
             if (null == topicConfig) {
                 if (requestHeader.getTopic().startsWith(MixAll.RETRY_GROUP_TOPIC_PREFIX)) {
                     topicConfig =
                             this.brokerController.getTopicConfigManager().createTopicInSendMessageBackMethod(
-                                requestHeader.getTopic(), 1, PermName.PERM_WRITE | PermName.PERM_READ);
+                                requestHeader.getTopic(), 1, PermName.PERM_WRITE | PermName.PERM_READ,
+                                topicSysFlag);
                 }
             }
 

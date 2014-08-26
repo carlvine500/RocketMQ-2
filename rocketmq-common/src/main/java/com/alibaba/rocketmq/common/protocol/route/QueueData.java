@@ -8,6 +8,7 @@ public class QueueData implements Comparable<QueueData> {
     private int readQueueNums;
     private int writeQueueNums;
     private int perm;
+    private int topicSynFlag;
 
 
     public String getBrokerName() {
@@ -50,6 +51,16 @@ public class QueueData implements Comparable<QueueData> {
     }
 
 
+    public int getTopicSynFlag() {
+        return topicSynFlag;
+    }
+
+
+    public void setTopicSynFlag(int topicSynFlag) {
+        this.topicSynFlag = topicSynFlag;
+    }
+
+
     @Override
     public int hashCode() {
         final int prime = 31;
@@ -58,6 +69,7 @@ public class QueueData implements Comparable<QueueData> {
         result = prime * result + perm;
         result = prime * result + readQueueNums;
         result = prime * result + writeQueueNums;
+        result = prime * result + topicSynFlag;
         return result;
     }
 
@@ -83,6 +95,8 @@ public class QueueData implements Comparable<QueueData> {
             return false;
         if (writeQueueNums != other.writeQueueNums)
             return false;
+        if (topicSynFlag != other.topicSynFlag)
+            return false;
         return true;
     }
 
@@ -90,7 +104,8 @@ public class QueueData implements Comparable<QueueData> {
     @Override
     public String toString() {
         return "QueueData [brokerName=" + brokerName + ", readQueueNums=" + readQueueNums
-                + ", writeQueueNums=" + writeQueueNums + ", perm=" + perm + "]";
+                + ", writeQueueNums=" + writeQueueNums + ", perm=" + perm + ", topicSynFlag=" + topicSynFlag
+                + "]";
     }
 
 

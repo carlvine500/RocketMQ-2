@@ -25,6 +25,7 @@ public class CreateTopicRequestHeader implements CommandCustomHeader {
     private Integer perm;
     @CFNotNull
     private String topicFilterType;
+    private Integer topicSysFlag;
 
 
     @Override
@@ -100,5 +101,15 @@ public class CreateTopicRequestHeader implements CommandCustomHeader {
 
     public void setTopicFilterType(String topicFilterType) {
         this.topicFilterType = topicFilterType;
+    }
+
+
+    public Integer getTopicSysFlag() {
+        return topicSysFlag;
+    }
+
+
+    public void setTopicSysFlag(Integer topicSysFlag) {
+        this.topicSysFlag = topicSysFlag;
     }
 }
