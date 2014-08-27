@@ -365,7 +365,7 @@ public class SendMessageProcessor implements NettyRequestProcessor {
             // 如果是单元化模式，则对 topic 进行设置
             int topicSysFlag = 0;
             if (requestHeader.isUnitMode()) {
-                if (topicConfig.getTopicName().startsWith(MixAll.RETRY_GROUP_TOPIC_PREFIX)) {
+                if (requestHeader.getTopic().startsWith(MixAll.RETRY_GROUP_TOPIC_PREFIX)) {
                     topicSysFlag = TopicSysFlag.buildSysFlag(false, true);
                 }
                 else {

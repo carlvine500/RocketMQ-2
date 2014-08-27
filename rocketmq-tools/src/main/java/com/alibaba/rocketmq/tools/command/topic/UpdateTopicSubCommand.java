@@ -119,7 +119,7 @@ public class UpdateTopicSubCommand implements SubCommand {
 
             boolean isUnit = false;
             if (commandLine.hasOption('u')) {
-                isUnit = Boolean.parseBoolean(commandLine.getOptionValue('o').trim());
+                isUnit = Boolean.parseBoolean(commandLine.getOptionValue('u').trim());
             }
 
             boolean isCenterSync = false;

@@ -15,18 +15,6 @@
  */
 package com.alibaba.rocketmq.broker.topic;
 
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Map.Entry;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.alibaba.rocketmq.broker.BrokerController;
 import com.alibaba.rocketmq.broker.BrokerPathConfigHelper;
 import com.alibaba.rocketmq.common.ConfigManager;
@@ -36,6 +24,17 @@ import com.alibaba.rocketmq.common.TopicConfig;
 import com.alibaba.rocketmq.common.constant.LoggerName;
 import com.alibaba.rocketmq.common.constant.PermName;
 import com.alibaba.rocketmq.common.protocol.body.TopicConfigSerializeWrapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 
 /**
@@ -192,8 +191,9 @@ public class TopicConfigManager extends ConfigManager {
                             topicConfig.setWriteQueueNums(queueNums);
                             int perm = defaultTopicConfig.getPerm();
                             perm &= ~PermName.PERM_INHERIT;
-                            topicConfig.setPerm(perm);
-                            topicConfig.setTopicFilterType(defaultTopicConfig.getTopicFilterType());
+	                        topicConfig.setPerm(perm);
+	                        topicConfig.setTopicSysFlag(topicSysFlag);
+	                        topicConfig.setTopicFilterType(defaultTopicConfig.getTopicFilterType());
                         }
                         else {
                             log.warn("create new topic failed, because the default topic[" + defaultTopic
