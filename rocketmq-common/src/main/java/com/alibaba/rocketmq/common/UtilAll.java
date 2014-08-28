@@ -446,7 +446,6 @@ public class UtilAll {
                 Map.Entry<Thread, StackTraceElement[]> entry = ite.next();
                 StackTraceElement[] elements = entry.getValue();
                 Thread thread = entry.getKey();
-
                 if (elements != null && elements.length > 0) {
                     String threadName = entry.getKey().getName();
                     result.append(String.format("%-40sTID: %d STATE: %s\n", threadName, thread.getId(),
