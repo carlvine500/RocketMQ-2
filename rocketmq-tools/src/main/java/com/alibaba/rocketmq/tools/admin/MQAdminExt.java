@@ -558,8 +558,8 @@ public interface MQAdminExt extends MQAdmin {
      * @throws MQClientException
      * @throws RemotingException
      */
-    public ConsumerRunningInfo getConsumerRunningInfo(final String consumerGroup, final String clientId)
-            throws RemotingException, MQClientException, InterruptedException;
+    public ConsumerRunningInfo getConsumerRunningInfo(final String consumerGroup, final String clientId,
+            final boolean jstack) throws RemotingException, MQClientException, InterruptedException;
 
 
     /**

@@ -158,7 +158,7 @@ public class QueryMsgByIdSubCommand implements SubCommand {
         try {
             List<MessageTrack> mtdList = admin.messageTrackDetail(msg);
             if (mtdList.isEmpty()) {
-                System.out.println("No Consumer");
+                System.out.println("\n\nWARN: No Consumer");
             }
             else {
                 System.out.println("\n\n");

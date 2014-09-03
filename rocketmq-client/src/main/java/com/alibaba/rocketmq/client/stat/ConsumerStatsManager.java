@@ -15,7 +15,7 @@ public class ConsumerStatsManager {
     private static final Logger log = LoggerFactory.getLogger(LoggerName.ClientLoggerName);
 
     private static final String TOPIC_AND_GROUP_CONSUME_OK_TPS = "CONSUME_OK_TPS";
-    private static final String TOPIC_AND_GROUP_CONSUME_FAILED_TPS = "CONSUME_OK_TPS";
+    private static final String TOPIC_AND_GROUP_CONSUME_FAILED_TPS = "CONSUME_FAILED_TPS";
     private static final String TOPIC_AND_GROUP_CONSUME_RT = "CONSUME_RT";
     private static final String TOPIC_AND_GROUP_PULL_TPS = "PULL_TPS";
     private static final String TOPIC_AND_GROUP_PULL_RT = "PULL_RT";

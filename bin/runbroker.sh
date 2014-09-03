@@ -4,10 +4,15 @@
 # $Id: runbroker.sh 1831 2013-05-16 01:39:51Z shijia.wxr $
 #
 
+function_error_exit ()
+{
+    echo "ERROR: $1 !!"
+    exit 1
+}
+
 if [ $# -lt 1 ];
 then
-  echo "USAGE: $0 classname opts"
-  exit 1
+  function_error_exit "USAGE: $0 classname opts"
 fi
 
 BASE_DIR=$(dirname $0)/..
@@ -26,6 +31,8 @@ if [ -z "$JAVA_HOME" ]; then
 fi
 
 JAVA="$JAVA_HOME/bin/java"
+
+[ ! -e "$JAVA" ] && function_error_exit "Please set the JAVA_HOME variable in your environment, We need java!"
 
 numactl --interleave=all pwd > /dev/null 2>&1
 if [ $? -eq 0 ]

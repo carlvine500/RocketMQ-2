@@ -377,7 +377,8 @@ public class MQAdminImpl {
                                 messageList.add(msgExt);
                             }
                             else {
-                                log.warn("queryMessage, client find not matched message {}",
+                                log.warn(
+                                    "queryMessage, find message key not matched, maybe hash duplicate {}",
                                     msgExt.toString());
                             }
                         }
