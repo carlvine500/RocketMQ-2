@@ -395,9 +395,9 @@ public class DefaultMQAdminExt extends ClientConfig implements MQAdminExt {
 
 
     @Override
-    public ConsumerRunningInfo getConsumerRunningInfo(String consumerGroup, String clientId)
+    public ConsumerRunningInfo getConsumerRunningInfo(String consumerGroup, String clientId, boolean jstack)
             throws RemotingException, MQClientException, InterruptedException {
-        return defaultMQAdminExtImpl.getConsumerRunningInfo(consumerGroup, clientId);
+        return defaultMQAdminExtImpl.getConsumerRunningInfo(consumerGroup, clientId, jstack);
     }
 
 

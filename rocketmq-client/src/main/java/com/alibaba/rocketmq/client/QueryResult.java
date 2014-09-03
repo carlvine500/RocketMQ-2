@@ -45,4 +45,11 @@ public class QueryResult {
     public List<MessageExt> getMessageList() {
         return messageList;
     }
+
+
+    @Override
+    public String toString() {
+        return "QueryResult [indexLastUpdateTimestamp=" + indexLastUpdateTimestamp + ", messageList="
+                + messageList + "]";
+    }
 }

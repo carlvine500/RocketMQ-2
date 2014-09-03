@@ -64,6 +64,10 @@ public class ConsumerStatusSubCommand implements SubCommand {
         opt.setRequired(false);
         options.addOption(opt);
 
+        opt = new Option("s", "jstack", false, "Run jstack command in the consumer progress");
+        opt.setRequired(false);
+        options.addOption(opt);
+
         return options;
     }
 
@@ -81,6 +85,8 @@ public class ConsumerStatusSubCommand implements SubCommand {
 
             ConsumerConnection cc = defaultMQAdminExt.examineConsumerConnectionInfo(group);
 
+            boolean jstack = commandLine.hasOption('s');
+
             if (!commandLine.hasOption('i')) {
                 // 打印连接
                 int i = 1;
@@ -90,7 +96,7 @@ public class ConsumerStatusSubCommand implements SubCommand {
                 for (Connection conn : cc.getConnectionSet()) {
                     try {
                         ConsumerRunningInfo consumerRunningInfo =
-                                defaultMQAdminExt.getConsumerRunningInfo(group, conn.getClientId());
+                                defaultMQAdminExt.getConsumerRunningInfo(group, conn.getClientId(), jstack);
                         if (consumerRunningInfo != null) {
                             criTable.put(conn.getClientId(), consumerRunningInfo);
                             String filePath = now + "/" + conn.getClientId();
@@ -136,7 +142,7 @@ public class ConsumerStatusSubCommand implements SubCommand {
             else {
                 String clientId = commandLine.getOptionValue('i').trim();
                 ConsumerRunningInfo consumerRunningInfo =
-                        defaultMQAdminExt.getConsumerRunningInfo(group, clientId);
+                        defaultMQAdminExt.getConsumerRunningInfo(group, clientId, jstack);
                 if (consumerRunningInfo != null) {
                     System.out.println(consumerRunningInfo.formatString());
                 }

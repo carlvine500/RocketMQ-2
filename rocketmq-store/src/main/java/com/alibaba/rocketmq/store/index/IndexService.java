@@ -194,7 +194,7 @@ public class IndexService extends ServiceThread {
             if (!this.indexFileList.isEmpty()) {
                 for (int i = this.indexFileList.size(); i > 0; i--) {
                     IndexFile f = this.indexFileList.get(i - 1);
-                    boolean lastFile = i == this.indexFileList.size();
+                    boolean lastFile = (i == this.indexFileList.size());
                     if (lastFile) {
                         indexLastUpdateTimestamp = f.getEndTimestamp();
                         indexLastUpdatePhyoffset = f.getEndPhyOffset();
@@ -206,7 +206,7 @@ public class IndexService extends ServiceThread {
                     }
 
                     // 再往前遍历时间更不符合
-                    if (f.getBeginTimestamp() > end) {
+                    if (f.getBeginTimestamp() < begin) {
                         break;
                     }
 

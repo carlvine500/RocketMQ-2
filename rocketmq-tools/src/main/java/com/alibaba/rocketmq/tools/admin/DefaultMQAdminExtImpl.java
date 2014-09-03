@@ -683,7 +683,7 @@ public class DefaultMQAdminExtImpl implements MQAdminExt, MQAdminExtInner {
 
 
     @Override
-    public ConsumerRunningInfo getConsumerRunningInfo(String consumerGroup, String clientId)
+    public ConsumerRunningInfo getConsumerRunningInfo(String consumerGroup, String clientId, boolean jstack)
             throws RemotingException, MQClientException, InterruptedException {
         String topic = MixAll.RETRY_GROUP_TOPIC_PREFIX + consumerGroup;
         TopicRouteData topicRouteData = this.examineTopicRouteInfo(topic);
@@ -693,7 +693,7 @@ public class DefaultMQAdminExtImpl implements MQAdminExt, MQAdminExtInner {
                 String addr = brokerData.selectBrokerAddr();
                 if (addr != null) {
                     return this.mqClientInstance.getMQClientAPIImpl().getConsumerRunningInfo(addr,
-                        consumerGroup, clientId, 12000);
+                        consumerGroup, clientId, jstack, 12000);
                 }
             }
         }

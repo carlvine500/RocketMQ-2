@@ -26,6 +26,7 @@ import org.slf4j.Logger;
 import com.alibaba.rocketmq.client.impl.factory.MQClientInstance;
 import com.alibaba.rocketmq.client.impl.producer.MQProducerInner;
 import com.alibaba.rocketmq.client.log.ClientLogger;
+import com.alibaba.rocketmq.common.UtilAll;
 import com.alibaba.rocketmq.common.message.MessageConst;
 import com.alibaba.rocketmq.common.message.MessageDecoder;
 import com.alibaba.rocketmq.common.message.MessageExt;
@@ -126,6 +127,11 @@ public class ClientRemotingProcessor implements NettyRequestProcessor {
         ConsumerRunningInfo consumerRunningInfo =
                 this.mqClientFactory.consumerRunningInfo(requestHeader.getConsumerGroup());
         if (null != consumerRunningInfo) {
+            if (requestHeader.isJstackEnable()) {
+                String jstack = UtilAll.jstack();
+                consumerRunningInfo.setJstack(jstack);
+            }
+
             response.setCode(ResponseCode.SUCCESS);
             response.setBody(consumerRunningInfo.encode());
         }
