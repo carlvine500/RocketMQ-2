@@ -1227,11 +1227,11 @@ public class AdminBrokerProcessor implements NettyRequestProcessor {
 
         Map<Integer, Long> correctionOffset =
                 this.brokerController.getConsumerOffsetManager().queryMinOffsetInAllGroup(
-                    requestHeader.getTopic());
+                    requestHeader.getTopic(), requestHeader.getFilterGroups());
 
         Map<Integer, Long> compareOffset =
                 this.brokerController.getConsumerOffsetManager().queryOffset(requestHeader.getTopic(),
-                    requestHeader.getGroup());
+                    requestHeader.getCompareGroup());
 
         if (compareOffset != null && !compareOffset.isEmpty()) {
             for (Integer queueId : compareOffset.keySet()) {
