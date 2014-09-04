@@ -15,12 +15,12 @@
  */
 package com.alibaba.rocketmq.client.hook;
 
-import java.util.Properties;
-
 import com.alibaba.rocketmq.client.impl.CommunicationMode;
 import com.alibaba.rocketmq.client.producer.SendResult;
 import com.alibaba.rocketmq.common.message.Message;
 import com.alibaba.rocketmq.common.message.MessageQueue;
+
+import java.util.Map;
 
 
 public class SendMessageContext {
@@ -33,7 +33,7 @@ public class SendMessageContext {
     private SendResult sendResult;
     private Exception exception;
     private Object mqTraceContext;
-    private Properties properties;
+    private Map<String, String> props;
 
 
     public String getProducerGroup() {
@@ -116,18 +116,13 @@ public class SendMessageContext {
     }
 
 
-    public Properties getProperties() {
-        return properties;
+    public Map<String, String> getProps() {
+        return props;
     }
 
 
-    public void setProperties(Properties properties) {
-        this.properties = properties;
-    }
-
-
-    public void clearProperty() {
-        this.properties.clear();
+    public void setProps(Map<String, String> props) {
+        this.props = props;
     }
 
 

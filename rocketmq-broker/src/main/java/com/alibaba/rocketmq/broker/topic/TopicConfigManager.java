@@ -24,6 +24,7 @@ import com.alibaba.rocketmq.common.TopicConfig;
 import com.alibaba.rocketmq.common.constant.LoggerName;
 import com.alibaba.rocketmq.common.constant.PermName;
 import com.alibaba.rocketmq.common.protocol.body.TopicConfigSerializeWrapper;
+import com.alibaba.rocketmq.common.sysflag.TopicSysFlag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -191,9 +192,9 @@ public class TopicConfigManager extends ConfigManager {
                             topicConfig.setWriteQueueNums(queueNums);
                             int perm = defaultTopicConfig.getPerm();
                             perm &= ~PermName.PERM_INHERIT;
-	                        topicConfig.setPerm(perm);
-	                        topicConfig.setTopicSysFlag(topicSysFlag);
-	                        topicConfig.setTopicFilterType(defaultTopicConfig.getTopicFilterType());
+                            topicConfig.setPerm(perm);
+                            topicConfig.setTopicSysFlag(topicSysFlag);
+                            topicConfig.setTopicFilterType(defaultTopicConfig.getTopicFilterType());
                         }
                         else {
                             log.warn("create new topic failed, because the default topic[" + defaultTopic
@@ -280,6 +281,58 @@ public class TopicConfigManager extends ConfigManager {
         }
 
         return topicConfig;
+    }
+
+
+    /**
+     * 更新 topic 的单元化标识
+     */
+    public void updateTopicUnitFlag(final String topic, final boolean unit) {
+
+        TopicConfig topicConfig = this.topicConfigTable.get(topic);
+        if (topicConfig != null) {
+            int oldTopicSysFlag = topicConfig.getTopicSysFlag();
+            if (unit) {
+                topicConfig.setTopicSysFlag(TopicSysFlag.setUnitFlag(oldTopicSysFlag));
+            }
+            else {
+                topicConfig.setTopicSysFlag(TopicSysFlag.clearUnitFlag(oldTopicSysFlag));
+            }
+
+            log.info("update topic sys flag. oldTopicSysFlag={}, newTopicSysFlag", oldTopicSysFlag,
+                topicConfig.getTopicSysFlag());
+
+            this.topicConfigTable.put(topic, topicConfig);
+
+            this.dataVersion.nextVersion();
+
+            this.persist();
+            this.brokerController.registerBrokerAll();
+        }
+    }
+
+
+    /**
+     * 更新 topic 是否有单元化订阅组
+     */
+    public void updateTopicUnitSubFlag(final String topic, final boolean hasUnitSub) {
+        TopicConfig topicConfig = this.topicConfigTable.get(topic);
+        if (topicConfig != null) {
+            int oldTopicSysFlag = topicConfig.getTopicSysFlag();
+            if (hasUnitSub) {
+                topicConfig.setTopicSysFlag(TopicSysFlag.setUnitSubFlag(oldTopicSysFlag));
+            }
+
+            log.info("update topic sys flag. oldTopicSysFlag={}, newTopicSysFlag", oldTopicSysFlag,
+                topicConfig.getTopicSysFlag());
+
+            this.topicConfigTable.put(topic, topicConfig);
+
+            this.dataVersion.nextVersion();
+
+            this.persist();
+            this.brokerController.registerBrokerAll();
+        }
     }
 
 

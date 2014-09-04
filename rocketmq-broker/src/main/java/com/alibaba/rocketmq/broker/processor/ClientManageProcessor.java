@@ -27,6 +27,7 @@ import com.alibaba.rocketmq.common.protocol.header.*;
 import com.alibaba.rocketmq.common.protocol.heartbeat.ConsumerData;
 import com.alibaba.rocketmq.common.protocol.heartbeat.HeartbeatData;
 import com.alibaba.rocketmq.common.protocol.heartbeat.ProducerData;
+import com.alibaba.rocketmq.common.protocol.heartbeat.SubscriptionData;
 import com.alibaba.rocketmq.common.subscription.SubscriptionGroupConfig;
 import com.alibaba.rocketmq.common.sysflag.TopicSysFlag;
 import com.alibaba.rocketmq.remoting.common.RemotingHelper;
@@ -192,6 +193,11 @@ public class ClientManageProcessor implements NettyRequestProcessor {
                     data.toString(),//
                     RemotingHelper.parseChannelRemoteAddr(ctx.channel())//
                 );
+
+                for (SubscriptionData subscriptionData : data.getSubscriptionDataSet()) {
+                    this.brokerController.getTopicConfigManager().updateTopicUnitSubFlag(
+                        subscriptionData.getTopic(), data.isUnitMode());
+                }
             }
         }
 

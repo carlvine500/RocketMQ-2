@@ -15,8 +15,9 @@ import com.alibaba.rocketmq.remoting.exception.RemotingCommandException;
  * @since: 14-08-06
  */
 public class QueryCorrectionOffsetHeader implements CommandCustomHeader {
+    private String filterGroups;
     @CFNotNull
-    private String group;
+    private String compareGroup;
     @CFNotNull
     private String topic;
 
@@ -27,6 +28,26 @@ public class QueryCorrectionOffsetHeader implements CommandCustomHeader {
     }
 
 
+    public String getFilterGroups() {
+        return filterGroups;
+    }
+
+
+    public void setFilterGroups(String filterGroups) {
+        this.filterGroups = filterGroups;
+    }
+
+
+    public String getCompareGroup() {
+        return compareGroup;
+    }
+
+
+    public void setCompareGroup(String compareGroup) {
+        this.compareGroup = compareGroup;
+    }
+
+
     public String getTopic() {
         return topic;
     }
@@ -34,15 +55,5 @@ public class QueryCorrectionOffsetHeader implements CommandCustomHeader {
 
     public void setTopic(String topic) {
         this.topic = topic;
-    }
-
-
-    public String getGroup() {
-        return group;
-    }
-
-
-    public void setGroup(String group) {
-        this.group = group;
     }
 }

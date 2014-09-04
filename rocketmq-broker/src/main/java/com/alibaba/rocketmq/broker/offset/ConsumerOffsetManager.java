@@ -15,22 +15,18 @@
  */
 package com.alibaba.rocketmq.broker.offset;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.alibaba.rocketmq.broker.BrokerController;
 import com.alibaba.rocketmq.broker.BrokerPathConfigHelper;
 import com.alibaba.rocketmq.common.ConfigManager;
+import com.alibaba.rocketmq.common.UtilAll;
 import com.alibaba.rocketmq.common.constant.LoggerName;
 import com.alibaba.rocketmq.remoting.protocol.RemotingSerializable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentHashMap;
 
 
 /**
@@ -191,10 +187,20 @@ public class ConsumerOffsetManager extends ConfigManager {
     }
 
 
-    public Map<Integer, Long> queryMinOffsetInAllGroup(final String topic) {
+    public Map<Integer, Long> queryMinOffsetInAllGroup(final String topic, final String filterGroups) {
 
         Map<Integer, Long> queueMinOffset = new HashMap<Integer, Long>();
         Set<String> topicGroups = this.offsetTable.keySet();
+        if (!UtilAll.isBlank(filterGroups)) {
+            for (String group : filterGroups.split(",")) {
+                Iterator<String> it = topicGroups.iterator();
+                while (it.hasNext()) {
+                    if (group.equals(it.next().split(TOPIC_GROUP_SEPARATOR)[1])) {
+                        it.remove();
+                    }
+                }
+            }
+        }
         for (String topicGroup : topicGroups) {
             String[] topicGroupArr = topicGroup.split(TOPIC_GROUP_SEPARATOR);
             if (topic.equals(topicGroupArr[0])) {
