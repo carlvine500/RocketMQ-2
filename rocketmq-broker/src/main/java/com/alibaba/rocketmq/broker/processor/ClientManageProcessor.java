@@ -38,7 +38,9 @@ import com.alibaba.rocketmq.common.protocol.header.UnregisterClientResponseHeade
 import com.alibaba.rocketmq.common.protocol.heartbeat.ConsumerData;
 import com.alibaba.rocketmq.common.protocol.heartbeat.HeartbeatData;
 import com.alibaba.rocketmq.common.protocol.heartbeat.ProducerData;
+import com.alibaba.rocketmq.common.protocol.heartbeat.SubscriptionData;
 import com.alibaba.rocketmq.common.subscription.SubscriptionGroupConfig;
+import com.alibaba.rocketmq.common.sysflag.TopicSysFlag;
 import com.alibaba.rocketmq.remoting.common.RemotingHelper;
 import com.alibaba.rocketmq.remoting.exception.RemotingCommandException;
 import com.alibaba.rocketmq.remoting.netty.NettyRequestProcessor;
@@ -171,11 +173,18 @@ public class ClientManageProcessor implements NettyRequestProcessor {
                     this.brokerController.getSubscriptionGroupManager().findSubscriptionGroupConfig(
                         data.getGroupName());
             if (null != subscriptionGroupConfig) {
+                // 如果是单元化模式，则对 topic 进行设置
+                int topicSysFlag = 0;
+                if (data.isUnitMode()) {
+                    topicSysFlag = TopicSysFlag.buildSysFlag(false, true);
+                }
+
                 String newTopic = MixAll.getRetryTopic(data.getGroupName());
                 this.brokerController.getTopicConfigManager().createTopicInSendMessageBackMethod(//
                     newTopic,//
                     subscriptionGroupConfig.getRetryQueueNums(), //
-                    PermName.PERM_WRITE | PermName.PERM_READ);
+
+                    PermName.PERM_WRITE | PermName.PERM_READ, topicSysFlag);
             }
 
             boolean changed = this.brokerController.getConsumerManager().registerConsumer(//
@@ -192,6 +201,12 @@ public class ClientManageProcessor implements NettyRequestProcessor {
                     data.toString(),//
                     RemotingHelper.parseChannelRemoteAddr(ctx.channel())//
                 );
+
+                for (SubscriptionData subscriptionData : data.getSubscriptionDataSet()) {
+                    this.brokerController.getTopicConfigManager().updateTopicUnitSubFlag(
+                        subscriptionData.getTopic(), data.isUnitMode());
+                }
+
             }
         }
 

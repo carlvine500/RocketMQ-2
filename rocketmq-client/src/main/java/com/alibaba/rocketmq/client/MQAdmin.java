@@ -45,6 +45,23 @@ public interface MQAdmin {
 
 
     /**
+     * 创建topic
+     * 
+     * @param key
+     *            请向运维人员申请
+     * @param newTopic
+     *            要创建的新topic
+     * @param queueNum
+     *            新topic队列数
+     * @param topicSysFlag
+     *            新 topic 配置标识
+     * @throws MQClientException
+     */
+    public void createTopic(String key, String newTopic, int queueNum, int topicSysFlag)
+            throws MQClientException;
+
+
+    /**
      * 根据时间查询对应的offset，精确到毫秒<br>
      * P.S. 当前接口有较多IO开销，请勿频繁调用
      * 

@@ -272,7 +272,14 @@ public class DefaultMQAdminExtImpl implements MQAdminExt, MQAdminExtInner {
 
     @Override
     public void createTopic(String key, String newTopic, int queueNum) throws MQClientException {
-        this.mqClientInstance.getMQAdminImpl().createTopic(key, newTopic, queueNum);
+        createTopic(key, newTopic, queueNum, 0);
+    }
+
+
+    @Override
+    public void createTopic(String key, String newTopic, int queueNum, int topicSysFlag)
+            throws MQClientException {
+        this.mqClientInstance.getMQAdminImpl().createTopic(key, newTopic, queueNum, topicSysFlag);
     }
 
 
@@ -698,7 +705,7 @@ public class DefaultMQAdminExtImpl implements MQAdminExt, MQAdminExtInner {
 
 
     @Override
-    public ConsumerRunningInfo getConsumerRunningInfo(String consumerGroup, String clientId)
+    public ConsumerRunningInfo getConsumerRunningInfo(String consumerGroup, String clientId, boolean jstack)
             throws RemotingException, MQClientException, InterruptedException {
         String topic = MixAll.RETRY_GROUP_TOPIC_PREFIX + consumerGroup;
         TopicRouteData topicRouteData = this.examineTopicRouteInfo(topic);
@@ -708,7 +715,7 @@ public class DefaultMQAdminExtImpl implements MQAdminExt, MQAdminExtInner {
                 String addr = brokerData.selectBrokerAddr();
                 if (addr != null) {
                     return this.mqClientInstance.getMQClientAPIImpl().getConsumerRunningInfo(addr,
-                        consumerGroup, clientId, 12000);
+                        consumerGroup, clientId, jstack, 12000);
                 }
             }
         }
@@ -813,4 +820,22 @@ public class DefaultMQAdminExtImpl implements MQAdminExt, MQAdminExtInner {
 
         return result;
     }
+
+
+    @Override
+    public void cloneGroupOffset(String srcGroup, String destGroup, String topic, boolean isOffline)
+            throws RemotingException, MQClientException, InterruptedException, MQBrokerException {
+        String retryTopic = MixAll.getRetryTopic(srcGroup);
+        TopicRouteData topicRouteData = this.examineTopicRouteInfo(retryTopic);
+
+        for (BrokerData bd : topicRouteData.getBrokerDatas()) {
+            String addr = bd.selectBrokerAddr();
+            if (addr != null) {
+                // 由于查询时间戳会产生IO操作，可能会耗时较长，所以超时时间设置为15s
+                this.mqClientInstance.getMQClientAPIImpl().cloneGroupOffset(addr, srcGroup, destGroup, topic,
+                    isOffline, 15000);
+            }
+        }
+    }
+
 }

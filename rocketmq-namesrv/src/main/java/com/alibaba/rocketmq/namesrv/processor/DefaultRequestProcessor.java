@@ -119,6 +119,12 @@ public class DefaultRequestProcessor implements NettyRequestProcessor {
             return this.getTopicsByCluster(ctx, request);
         case RequestCode.GET_SYSTEM_TOPIC_LIST_FROM_NS:
             return this.getSystemTopicListFromNs(ctx, request);
+        case RequestCode.GET_UNIT_TOPIC_LIST:
+            return this.getUnitTopicList(ctx, request);
+        case RequestCode.GET_HAS_UNIT_SUB_TOPIC_LIST:
+            return this.getHasUnitSubTopicList(ctx, request);
+        case RequestCode.GET_HAS_UNIT_SUB_UNUNIT_TOPIC_LIST:
+            return this.getHasUnitSubUnUnitTopicList(ctx, request);
         default:
             break;
         }
@@ -160,6 +166,12 @@ public class DefaultRequestProcessor implements NettyRequestProcessor {
 
         responseHeader.setHaServerAddr(result.getHaServerAddr());
         responseHeader.setMasterAddr(result.getMasterAddr());
+
+        // 获取顺序消息 topic 列表
+        byte[] jsonValue =
+                this.namesrvController.getKvConfigManager().getKVListByNamespace(
+                    NamesrvUtil.NAMESPACE_ORDER_TOPIC_CONFIG);
+        response.setBody(jsonValue);
 
         response.setCode(ResponseCode.SUCCESS);
         response.setRemark(null);
@@ -393,6 +405,11 @@ public class DefaultRequestProcessor implements NettyRequestProcessor {
         responseHeader.setHaServerAddr(result.getHaServerAddr());
         responseHeader.setMasterAddr(result.getMasterAddr());
 
+        // 获取顺序消息 topic 列表
+        byte[] jsonValue =
+                this.namesrvController.getKvConfigManager().getKVListByNamespace(
+                    NamesrvUtil.NAMESPACE_ORDER_TOPIC_CONFIG);
+        response.setBody(jsonValue);
         response.setCode(ResponseCode.SUCCESS);
         response.setRemark(null);
         return response;
@@ -501,6 +518,69 @@ public class DefaultRequestProcessor implements NettyRequestProcessor {
         final RemotingCommand response = RemotingCommand.createResponseCommand(null);
 
         byte[] body = this.namesrvController.getRouteInfoManager().getSystemTopicList();
+
+        response.setBody(body);
+        response.setCode(ResponseCode.SUCCESS);
+        response.setRemark(null);
+        return response;
+    }
+
+
+    /**
+     * 获取单元化逻辑 Topic 列表
+     * 
+     * @param ctx
+     * @param request
+     * @return
+     * @throws RemotingCommandException
+     */
+    private RemotingCommand getUnitTopicList(ChannelHandlerContext ctx, RemotingCommand request)
+            throws RemotingCommandException {
+        final RemotingCommand response = RemotingCommand.createResponseCommand(null);
+
+        byte[] body = this.namesrvController.getRouteInfoManager().getUnitTopics();
+
+        response.setBody(body);
+        response.setCode(ResponseCode.SUCCESS);
+        response.setRemark(null);
+        return response;
+    }
+
+
+    /**
+     * 获取含有单元化订阅组的 Topic 列表
+     * 
+     * @param ctx
+     * @param request
+     * @return
+     * @throws RemotingCommandException
+     */
+    private RemotingCommand getHasUnitSubTopicList(ChannelHandlerContext ctx, RemotingCommand request)
+            throws RemotingCommandException {
+        final RemotingCommand response = RemotingCommand.createResponseCommand(null);
+
+        byte[] body = this.namesrvController.getRouteInfoManager().getHasUnitSubTopicList();
+
+        response.setBody(body);
+        response.setCode(ResponseCode.SUCCESS);
+        response.setRemark(null);
+        return response;
+    }
+
+
+    /**
+     * 获取含有单元化订阅组的非单元化 Topic 列表
+     * 
+     * @param ctx
+     * @param request
+     * @return
+     * @throws RemotingCommandException
+     */
+    private RemotingCommand getHasUnitSubUnUnitTopicList(ChannelHandlerContext ctx, RemotingCommand request)
+            throws RemotingCommandException {
+        final RemotingCommand response = RemotingCommand.createResponseCommand(null);
+
+        byte[] body = this.namesrvController.getRouteInfoManager().getHasUnitSubUnUnitTopicList();
 
         response.setBody(body);
         response.setCode(ResponseCode.SUCCESS);

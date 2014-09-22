@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -40,6 +41,7 @@ import com.alibaba.rocketmq.common.SystemClock;
 import com.alibaba.rocketmq.common.ThreadFactoryImpl;
 import com.alibaba.rocketmq.common.UtilAll;
 import com.alibaba.rocketmq.common.constant.LoggerName;
+import com.alibaba.rocketmq.common.message.MessageConst;
 import com.alibaba.rocketmq.common.message.MessageDecoder;
 import com.alibaba.rocketmq.common.message.MessageExt;
 import com.alibaba.rocketmq.common.protocol.heartbeat.SubscriptionData;
@@ -821,19 +823,71 @@ public class DefaultMessageStore implements MessageStore {
 
     @Override
     public QueryMessageResult queryMessage(String topic, String key, int maxNum, long begin, long end) {
-        QueryOffsetResult queryOffsetResult = this.indexService.queryOffset(topic, key, maxNum, begin, end);
+
         QueryMessageResult queryMessageResult = new QueryMessageResult();
 
-        queryMessageResult.setIndexLastUpdatePhyoffset(queryOffsetResult.getIndexLastUpdatePhyoffset());
-        queryMessageResult.setIndexLastUpdateTimestamp(queryOffsetResult.getIndexLastUpdateTimestamp());
+        long lastQueryMsgTime = end;
 
-        for (Long offset : queryOffsetResult.getPhyOffsets()) {
-            SelectMapedBufferResult result = this.commitLog.getData(offset, false);
-            if (result != null) {
-                int size = result.getByteBuffer().getInt(0);
-                result.getByteBuffer().limit(size);
-                result.setSize(size);
-                queryMessageResult.addMessage(result);
+        for (int i = 0; i < 3; i++) {
+            QueryOffsetResult queryOffsetResult =
+                    this.indexService.queryOffset(topic, key, maxNum, begin, lastQueryMsgTime);
+            if (queryOffsetResult.getPhyOffsets().isEmpty()) {
+                break;
+            }
+
+            // 从小到达排序
+            Collections.sort(queryOffsetResult.getPhyOffsets());
+
+            queryMessageResult.setIndexLastUpdatePhyoffset(queryOffsetResult.getIndexLastUpdatePhyoffset());
+            queryMessageResult.setIndexLastUpdateTimestamp(queryOffsetResult.getIndexLastUpdateTimestamp());
+
+            for (int m = 0; m < queryOffsetResult.getPhyOffsets().size(); m++) {
+                long offset = queryOffsetResult.getPhyOffsets().get(m);
+
+                try {
+                    // 在服务器检验Hash冲突
+                    boolean match = true;
+                    MessageExt msg = this.lookMessageByOffset(offset);
+                    if (0 == m) {
+                        lastQueryMsgTime = msg.getStoreTimestamp();
+                    }
+
+                    String[] keyArray = msg.getKeys().split(MessageConst.KEY_SEPARATOR);
+                    if (topic.equals(msg.getTopic())) {
+                        for (String k : keyArray) {
+                            if (k.equals(key)) {
+                                match = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (match) {
+                        SelectMapedBufferResult result = this.commitLog.getData(offset, false);
+                        if (result != null) {
+                            int size = result.getByteBuffer().getInt(0);
+                            result.getByteBuffer().limit(size);
+                            result.setSize(size);
+                            queryMessageResult.addMessage(result);
+                        }
+                    }
+                    else {
+                        log.warn("queryMessage hash duplicate, {} {}", topic, key);
+                    }
+                }
+                catch (Exception e) {
+                    log.error("queryMessage exception", e);
+                }
+            }
+
+            // 只要查到记录就返回
+            if (queryMessageResult.getBufferTotalSize() > 0) {
+                break;
+            }
+
+            // 都遍历完了， 但是没有找到消息
+            if (lastQueryMsgTime < begin) {
+                break;
             }
         }
 

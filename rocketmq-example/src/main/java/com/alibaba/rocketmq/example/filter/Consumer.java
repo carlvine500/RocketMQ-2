@@ -29,7 +29,6 @@ public class Consumer {
 
     public static void main(String[] args) throws InterruptedException, MQClientException {
         DefaultMQPushConsumer consumer = new DefaultMQPushConsumer("ConsumerGroupNamecc4");
-        consumer.setNamesrvAddr("10.235.170.7:9877");
         /**
          * 使用Java代码，在服务器做消息过滤
          */

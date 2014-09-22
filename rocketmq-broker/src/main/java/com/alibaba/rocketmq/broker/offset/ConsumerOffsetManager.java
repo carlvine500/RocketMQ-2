@@ -29,6 +29,7 @@ import org.slf4j.LoggerFactory;
 import com.alibaba.rocketmq.broker.BrokerController;
 import com.alibaba.rocketmq.broker.BrokerPathConfigHelper;
 import com.alibaba.rocketmq.common.ConfigManager;
+import com.alibaba.rocketmq.common.UtilAll;
 import com.alibaba.rocketmq.common.constant.LoggerName;
 import com.alibaba.rocketmq.remoting.protocol.RemotingSerializable;
 
@@ -191,10 +192,20 @@ public class ConsumerOffsetManager extends ConfigManager {
     }
 
 
-    public Map<Integer, Long> queryMinOffsetInAllGroup(final String topic) {
+    public Map<Integer, Long> queryMinOffsetInAllGroup(final String topic, final String filterGroups) {
 
         Map<Integer, Long> queueMinOffset = new HashMap<Integer, Long>();
         Set<String> topicGroups = this.offsetTable.keySet();
+        if (!UtilAll.isBlank(filterGroups)) {
+            for (String group : filterGroups.split(",")) {
+                Iterator<String> it = topicGroups.iterator();
+                while (it.hasNext()) {
+                    if (group.equals(it.next().split(TOPIC_GROUP_SEPARATOR)[1])) {
+                        it.remove();
+                    }
+                }
+            }
+        }
         for (String topicGroup : topicGroups) {
             String[] topicGroupArr = topicGroup.split(TOPIC_GROUP_SEPARATOR);
             if (topic.equals(topicGroupArr[0])) {
@@ -223,4 +234,13 @@ public class ConsumerOffsetManager extends ConfigManager {
         String key = topic + TOPIC_GROUP_SEPARATOR + group;
         return this.offsetTable.get(key);
     }
+
+    public void cloneOffset(final String srcGroup, final String destGroup, final String topic) {
+        ConcurrentHashMap<Integer, Long> offsets =
+                this.offsetTable.get(topic + TOPIC_GROUP_SEPARATOR + srcGroup);
+        if (offsets != null) {
+            this.offsetTable.put(topic + TOPIC_GROUP_SEPARATOR + destGroup, offsets);
+        }
+    }
+
 }

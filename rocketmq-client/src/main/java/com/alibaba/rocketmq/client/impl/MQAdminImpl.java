@@ -70,6 +70,12 @@ public class MQAdminImpl {
 
 
     public void createTopic(String key, String newTopic, int queueNum) throws MQClientException {
+        createTopic(key, newTopic, queueNum, 0);
+    }
+
+
+    public void createTopic(String key, String newTopic, int queueNum, int topicSysFlag)
+            throws MQClientException {
         try {
             TopicRouteData topicRouteData =
                     this.mQClientFactory.getMQClientAPIImpl().getTopicRouteInfoFromNameServer(key, 1000 * 3);
@@ -89,6 +95,7 @@ public class MQAdminImpl {
                         TopicConfig topicConfig = new TopicConfig(newTopic);
                         topicConfig.setReadQueueNums(queueNum);
                         topicConfig.setWriteQueueNums(queueNum);
+                        topicConfig.setTopicSysFlag(topicSysFlag);
                         try {
                             this.mQClientFactory.getMQClientAPIImpl().createTopic(addr, key, topicConfig,
                                 1000 * 3);
@@ -375,7 +382,9 @@ public class MQAdminImpl {
                                 messageList.add(msgExt);
                             }
                             else {
-                                log.warn("queryMessage, client find not matched message {}",
+
+                                log.warn(
+                                    "queryMessage, find message key not matched, maybe hash duplicate {}",
                                     msgExt.toString());
                             }
                         }

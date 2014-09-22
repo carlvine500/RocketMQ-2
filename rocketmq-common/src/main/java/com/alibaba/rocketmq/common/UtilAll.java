@@ -26,9 +26,13 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.zip.CRC32;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.InflaterInputStream;
+
+import com.alibaba.rocketmq.remoting.common.RemotingHelper;
 
 
 /**
@@ -431,4 +435,32 @@ public class UtilAll {
         }
         return true;
     }
+
+    public static String jstack() {
+        StringBuilder result = new StringBuilder();
+        try {
+            Map<Thread, StackTraceElement[]> map = Thread.getAllStackTraces();
+            Iterator<Map.Entry<Thread, StackTraceElement[]>> ite = map.entrySet().iterator();
+            while (ite.hasNext()) {
+                Map.Entry<Thread, StackTraceElement[]> entry = ite.next();
+                StackTraceElement[] elements = entry.getValue();
+                Thread thread = entry.getKey();
+                if (elements != null && elements.length > 0) {
+                    String threadName = entry.getKey().getName();
+                    result.append(String.format("%-40sTID: %d STATE: %s\n", threadName, thread.getId(),
+                        thread.getState()));
+                    for (StackTraceElement el : elements) {
+                        result.append(String.format("%-40s%s\n", threadName, el.toString()));
+                    }
+                    result.append("\n");
+                }
+            }
+        }
+        catch (Throwable e) {
+            result.append(RemotingHelper.exceptionSimpleDesc(e));
+        }
+
+        return result.toString();
+    }
+
 }

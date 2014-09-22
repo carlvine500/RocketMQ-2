@@ -35,7 +35,7 @@ public class TopicConfigManagerTest {
 
         TopicConfig topicConfig =
                 topicConfigManager.createTopicInSendMessageMethod("TestTopic_SEND", MixAll.DEFAULT_TOPIC,
-                    null, 4);
+                    null, 4, 0);
         assertTrue(topicConfig != null);
 
         System.out.println(topicConfig);
@@ -43,7 +43,8 @@ public class TopicConfigManagerTest {
         for (int i = 0; i < 10; i++) {
             String topic = "UNITTEST-" + i;
             topicConfig =
-                    topicConfigManager.createTopicInSendMessageMethod(topic, MixAll.DEFAULT_TOPIC, null, 4);
+                    topicConfigManager
+                        .createTopicInSendMessageMethod(topic, MixAll.DEFAULT_TOPIC, null, 4, 0);
             assertTrue(topicConfig != null);
         }
 

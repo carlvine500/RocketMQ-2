@@ -158,4 +158,13 @@ public class RequestCode {
     // Broker 发送消息，优化网络数据包
     public static final int SEND_MESSAGE_V2 = 310;
 
+    // 单元化相关 topic
+    public static final int GET_UNIT_TOPIC_LIST = 311;
+    // 获取含有单元化订阅组的 Topic 列表
+    public static final int GET_HAS_UNIT_SUB_TOPIC_LIST = 312;
+    // 获取含有单元化订阅组的非单元化 Topic 列表
+    public static final int GET_HAS_UNIT_SUB_UNUNIT_TOPIC_LIST = 313;
+    // 克隆某一个组的消费进度到新的组
+    public static final int CLONE_GROUP_OFFSET = 314;
+
 }

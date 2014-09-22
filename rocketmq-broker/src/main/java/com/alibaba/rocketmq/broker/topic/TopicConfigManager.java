@@ -35,7 +35,10 @@ import com.alibaba.rocketmq.common.MixAll;
 import com.alibaba.rocketmq.common.TopicConfig;
 import com.alibaba.rocketmq.common.constant.LoggerName;
 import com.alibaba.rocketmq.common.constant.PermName;
+import com.alibaba.rocketmq.common.protocol.body.KVTable;
 import com.alibaba.rocketmq.common.protocol.body.TopicConfigSerializeWrapper;
+import com.alibaba.rocketmq.common.sysflag.TopicSysFlag;
+
 
 
 /**
@@ -164,7 +167,7 @@ public class TopicConfigManager extends ConfigManager {
      * 发消息时，如果Topic不存在，尝试创建
      */
     public TopicConfig createTopicInSendMessageMethod(final String topic, final String defaultTopic,
-            final String remoteAddress, final int clientDefaultTopicQueueNums) {
+            final String remoteAddress, final int clientDefaultTopicQueueNums, final int topicSysFlag) {
         TopicConfig topicConfig = null;
         boolean createNew = false;
 
@@ -193,6 +196,7 @@ public class TopicConfigManager extends ConfigManager {
                             int perm = defaultTopicConfig.getPerm();
                             perm &= ~PermName.PERM_INHERIT;
                             topicConfig.setPerm(perm);
+                            topicConfig.setTopicSysFlag(topicSysFlag);
                             topicConfig.setTopicFilterType(defaultTopicConfig.getTopicFilterType());
                         }
                         else {
@@ -229,7 +233,7 @@ public class TopicConfigManager extends ConfigManager {
         }
 
         if (createNew) {
-            this.brokerController.registerBrokerAll();
+            this.brokerController.registerBrokerAll(false);
         }
 
         return topicConfig;
@@ -239,8 +243,8 @@ public class TopicConfigManager extends ConfigManager {
     public TopicConfig createTopicInSendMessageBackMethod(//
             final String topic, //
             final int clientDefaultTopicQueueNums,//
-            final int perm//
-    ) {
+            final int perm,//
+            final int topicSysFlag) {
         TopicConfig topicConfig = this.topicConfigTable.get(topic);
         if (topicConfig != null)
             return topicConfig;
@@ -258,6 +262,7 @@ public class TopicConfigManager extends ConfigManager {
                     topicConfig.setReadQueueNums(clientDefaultTopicQueueNums);
                     topicConfig.setWriteQueueNums(clientDefaultTopicQueueNums);
                     topicConfig.setPerm(perm);
+                    topicConfig.setTopicSysFlag(topicSysFlag);
 
                     log.info("create new topic {}", topicConfig);
                     this.topicConfigTable.put(topic, topicConfig);
@@ -275,10 +280,62 @@ public class TopicConfigManager extends ConfigManager {
         }
 
         if (createNew) {
-            this.brokerController.registerBrokerAll();
+            this.brokerController.registerBrokerAll(false);
         }
 
         return topicConfig;
+    }
+
+
+    /**
+     * 更新 topic 的单元化标识
+     */
+    public void updateTopicUnitFlag(final String topic, final boolean unit) {
+
+        TopicConfig topicConfig = this.topicConfigTable.get(topic);
+        if (topicConfig != null) {
+            int oldTopicSysFlag = topicConfig.getTopicSysFlag();
+            if (unit) {
+                topicConfig.setTopicSysFlag(TopicSysFlag.setUnitFlag(oldTopicSysFlag));
+            }
+            else {
+                topicConfig.setTopicSysFlag(TopicSysFlag.clearUnitFlag(oldTopicSysFlag));
+            }
+
+            log.info("update topic sys flag. oldTopicSysFlag={}, newTopicSysFlag", oldTopicSysFlag,
+                topicConfig.getTopicSysFlag());
+
+            this.topicConfigTable.put(topic, topicConfig);
+
+            this.dataVersion.nextVersion();
+
+            this.persist();
+            this.brokerController.registerBrokerAll(false);
+        }
+    }
+
+
+    /**
+     * 更新 topic 是否有单元化订阅组
+     */
+    public void updateTopicUnitSubFlag(final String topic, final boolean hasUnitSub) {
+        TopicConfig topicConfig = this.topicConfigTable.get(topic);
+        if (topicConfig != null) {
+            int oldTopicSysFlag = topicConfig.getTopicSysFlag();
+            if (hasUnitSub) {
+                topicConfig.setTopicSysFlag(TopicSysFlag.setUnitSubFlag(oldTopicSysFlag));
+            }
+
+            log.info("update topic sys flag. oldTopicSysFlag={}, newTopicSysFlag", oldTopicSysFlag,
+                topicConfig.getTopicSysFlag());
+
+            this.topicConfigTable.put(topic, topicConfig);
+
+            this.dataVersion.nextVersion();
+
+            this.persist();
+            this.brokerController.registerBrokerAll(false);
+        }
     }
 
 
@@ -293,9 +350,50 @@ public class TopicConfigManager extends ConfigManager {
 
         this.dataVersion.nextVersion();
 
-        this.brokerController.registerBrokerAll();
+        this.brokerController.registerBrokerAll(false);
 
         this.persist();
+    }
+
+    public void updateOrderTopicConfig(final KVTable orderKVTableFromNs) {
+        // 根据 nameserver 上的 topic 配置同步检查更新 topic config 的顺序消息配置
+        if (orderKVTableFromNs != null && orderKVTableFromNs.getTable() != null) {
+            boolean isChange = false;
+            Set<String> orderTopics = orderKVTableFromNs.getTable().keySet();
+            for (String topic : orderTopics) {
+                TopicConfig topicConfig = this.topicConfigTable.get(topic);
+                if (topicConfig != null && !topicConfig.isOrder()) {
+                    topicConfig.setOrder(true);
+                    isChange = true;
+                    log.info("update order topic config, topic={}, order={}", topic, true);
+                }
+            }
+            for (String topic : this.topicConfigTable.keySet()) {
+                if (!orderTopics.contains(topic)) {
+                    TopicConfig topicConfig = this.topicConfigTable.get(topic);
+                    if (topicConfig.isOrder()) {
+                        topicConfig.setOrder(false);
+                        isChange = true;
+                        log.info("update order topic config, topic={}, order={}", topic, false);
+                    }
+                }
+            }
+            if (isChange) {
+                this.dataVersion.nextVersion();
+                this.persist();
+            }
+        }
+    }
+
+
+    public boolean isOrderTopic(final String topic) {
+        TopicConfig topicConfig = this.topicConfigTable.get(topic);
+        if (topicConfig == null) {
+            return false;
+        }
+        else {
+            return topicConfig.isOrder();
+        }
     }
 
 

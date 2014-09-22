@@ -112,18 +112,16 @@ public class IndexFile {
      */
     public boolean putKey(final String key, final long phyOffset, final long storeTimestamp) {
         if (this.indexHeader.getIndexCount() < this.indexNum) {
-            int keyHash = key.hashCode();
-            // Math.abs计算结果依旧为负
-            if (Integer.MIN_VALUE == keyHash)
-                keyHash = 0;
-            int slotPos = Math.abs(keyHash) % this.hashSlotNum;
+            int keyHash = indexKeyHashMethod(key);
+            int slotPos = keyHash % this.hashSlotNum;
             int absSlotPos = IndexHeader.INDEX_HEADER_SIZE + slotPos * HASH_SLOT_SIZE;
 
             FileLock fileLock = null;
 
             try {
                 // TODO 是否是读写锁
-                fileLock = this.fileChannel.lock(absSlotPos, HASH_SLOT_SIZE, false);
+                // fileLock = this.fileChannel.lock(absSlotPos, HASH_SLOT_SIZE,
+                // false);
                 int slotValue = this.mappedByteBuffer.getInt(absSlotPos);
                 if (slotValue <= INVALID_INDEX || slotValue > this.indexHeader.getIndexCount()) {
                     slotValue = INVALID_INDEX;
@@ -227,29 +225,38 @@ public class IndexFile {
     }
 
 
+    // 返回值是大于0
+    public int indexKeyHashMethod(final String key) {
+        int keyHash = key.hashCode();
+        int keyHashPositive = Math.abs(keyHash);
+        if (keyHashPositive < 0)
+            keyHashPositive = 0;
+        return keyHashPositive;
+    }
+
+
     /**
      * 前提：入参时间区间在调用前已经匹配了当前索引文件的起始结束时间
      */
     public void selectPhyOffset(final List<Long> phyOffsets, final String key, final int maxNum,
             final long begin, final long end, boolean lock) {
         if (this.mapedFile.hold()) {
-            int keyHash = key.hashCode();
-            if (Integer.MIN_VALUE == keyHash)
-                keyHash = 0;
-            int slotPos = Math.abs(keyHash) % this.hashSlotNum;
+            int keyHash = indexKeyHashMethod(key);
+            int slotPos = keyHash % this.hashSlotNum;
             int absSlotPos = IndexHeader.INDEX_HEADER_SIZE + slotPos * HASH_SLOT_SIZE;
 
             FileLock fileLock = null;
             try {
                 if (lock) {
-                    fileLock = this.fileChannel.lock(absSlotPos, HASH_SLOT_SIZE, true);
+                    // fileLock = this.fileChannel.lock(absSlotPos,
+                    // HASH_SLOT_SIZE, true);
                 }
 
                 int slotValue = this.mappedByteBuffer.getInt(absSlotPos);
-                if (fileLock != null) {
-                    fileLock.release();
-                    fileLock = null;
-                }
+                // if (fileLock != null) {
+                // fileLock.release();
+                // fileLock = null;
+                // }
 
                 if (slotValue <= INVALID_INDEX || slotValue > this.indexHeader.getIndexCount()
                         || this.indexHeader.getIndexCount() <= 1) {

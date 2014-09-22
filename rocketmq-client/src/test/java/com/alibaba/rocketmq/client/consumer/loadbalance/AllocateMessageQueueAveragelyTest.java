@@ -13,6 +13,7 @@ import org.junit.Test;
 
 import com.alibaba.rocketmq.client.consumer.AllocateMessageQueueStrategy;
 import com.alibaba.rocketmq.client.consumer.rebalance.AllocateMessageQueueAveragely;
+import com.alibaba.rocketmq.client.consumer.rebalance.AllocateMessageQueueAveragelyByCircle;
 import com.alibaba.rocketmq.common.message.MessageQueue;
 
 
@@ -247,4 +248,29 @@ public class AllocateMessageQueueAveragelyTest {
             System.out.println("rs[" + currentCID + i + "]:" + rs.toString());
         }
     }
+    @Test
+    public void testAllocateByCircle() {
+        AllocateMessageQueueAveragelyByCircle circle = new AllocateMessageQueueAveragelyByCircle();
+        String topic = "topic_test";
+        String currentCID = "CID";
+        int consumerSize = 3;
+        int queueSize = 13;
+        List<MessageQueue> mqAll = new ArrayList<MessageQueue>();
+        for (int i = 0; i < queueSize; i++) {
+            MessageQueue mq = new MessageQueue(topic, "brokerName", i);
+            mqAll.add(mq);
+        }
+
+        List<String> cidAll = new ArrayList<String>();
+        for (int j = 0; j < consumerSize; j++) {
+            cidAll.add("CID" + j);
+        }
+        System.out.println(mqAll.toString());
+        System.out.println(cidAll.toString());
+        for (int i = 0; i < consumerSize; i++) {
+            List<MessageQueue> rs = circle.allocate("", currentCID + i, mqAll, cidAll);
+            System.out.println("rs[" + currentCID + i + "]:" + rs.toString());
+        }
+    }
+
 }

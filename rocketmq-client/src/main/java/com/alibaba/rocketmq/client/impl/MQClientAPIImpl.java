@@ -20,6 +20,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -71,6 +72,7 @@ import com.alibaba.rocketmq.common.protocol.body.QueueTimeSpan;
 import com.alibaba.rocketmq.common.protocol.body.ResetOffsetBody;
 import com.alibaba.rocketmq.common.protocol.body.TopicList;
 import com.alibaba.rocketmq.common.protocol.body.UnlockBatchRequestBody;
+import com.alibaba.rocketmq.common.protocol.header.CloneGroupOffsetRequestHeader;
 import com.alibaba.rocketmq.common.protocol.header.ConsumeMessageDirectlyResultRequestHeader;
 import com.alibaba.rocketmq.common.protocol.header.ConsumerSendMsgBackRequestHeader;
 import com.alibaba.rocketmq.common.protocol.header.CreateTopicRequestHeader;
@@ -307,6 +309,8 @@ public class MQClientAPIImpl {
         requestHeader.setWriteQueueNums(topicConfig.getWriteQueueNums());
         requestHeader.setPerm(topicConfig.getPerm());
         requestHeader.setTopicFilterType(topicConfig.getTopicFilterType().name());
+        requestHeader.setTopicSysFlag(topicConfig.getTopicSysFlag());
+        requestHeader.setOrder(topicConfig.isOrder());
 
         RemotingCommand request =
                 RemotingCommand.createRequestCommand(RequestCode.UPDATE_AND_CREATE_TOPIC, requestHeader);
@@ -2148,11 +2152,12 @@ public class MQClientAPIImpl {
      * 通过调用Broker，从Consumer内存获取相应数据结构
      */
     public ConsumerRunningInfo getConsumerRunningInfo(final String addr, String consumerGroup,
-            String clientId, final long timeoutMillis) throws RemotingException, MQClientException,
-            InterruptedException {
+            String clientId, boolean jstack, final long timeoutMillis) throws RemotingException,
+            MQClientException, InterruptedException {
         GetConsumerRunningInfoRequestHeader requestHeader = new GetConsumerRunningInfoRequestHeader();
         requestHeader.setConsumerGroup(consumerGroup);
         requestHeader.setClientId(clientId);
+        requestHeader.setJstackEnable(jstack);
 
         RemotingCommand request =
                 RemotingCommand.createRequestCommand(RequestCode.GET_CONSUMER_RUNNING_INFO, requestHeader);
@@ -2216,12 +2221,23 @@ public class MQClientAPIImpl {
     }
 
 
-    public Map<Integer, Long> queryCorrectionOffset(final String addr, final String group,
-            final String topic, long timeoutMillis) throws MQClientException, RemotingConnectException,
-            RemotingSendRequestException, RemotingTimeoutException, InterruptedException {
+    public Map<Integer, Long> queryCorrectionOffset(final String addr, final String topic,
+            final String group, Set<String> filterGroup, long timeoutMillis) throws MQClientException,
+            RemotingConnectException, RemotingSendRequestException, RemotingTimeoutException,
+            InterruptedException {
         QueryCorrectionOffsetHeader requestHeader = new QueryCorrectionOffsetHeader();
-        requestHeader.setGroup(group);
+        requestHeader.setCompareGroup(group);
         requestHeader.setTopic(topic);
+        if (filterGroup != null) {
+            StringBuilder sb = new StringBuilder();
+            String splitor = "";
+            for (String s : filterGroup) {
+                sb.append(splitor).append(s);
+                splitor = ",";
+            }
+            requestHeader.setFilterGroups(sb.toString());
+        }
+
         RemotingCommand request =
                 RemotingCommand.createRequestCommand(RequestCode.QUERY_CORRECTION_OFFSET, requestHeader);
 
@@ -2234,6 +2250,156 @@ public class MQClientAPIImpl {
                         QueryCorrectionOffsetBody.decode(response.getBody(), QueryCorrectionOffsetBody.class);
                 return body.getCorrectionOffsets();
             }
+        }
+        default:
+            break;
+        }
+
+        throw new MQClientException(response.getCode(), response.getRemark());
+    }
+
+
+    /**
+     * 获取单元化逻辑 Topic 列表
+     */
+    public TopicList getUnitTopicList(final boolean containRetry, final long timeoutMillis)
+            throws RemotingException, MQClientException, InterruptedException {
+        RemotingCommand request = RemotingCommand.createRequestCommand(RequestCode.GET_UNIT_TOPIC_LIST, null);
+
+        RemotingCommand response = this.remotingClient.invokeSync(null, request, timeoutMillis);
+        assert response != null;
+        switch (response.getCode()) {
+        case ResponseCode.SUCCESS: {
+            byte[] body = response.getBody();
+            if (body != null) {
+                TopicList topicList = TopicList.decode(response.getBody(), TopicList.class);
+                if (!UtilAll.isBlank(projectGroupPrefix)) {
+                    HashSet<String> newTopicSet = new HashSet<String>();
+                    for (String topic : topicList.getTopicList()) {
+                        newTopicSet.add(VirtualEnvUtil.clearProjectGroup(topic, projectGroupPrefix));
+                    }
+                    topicList.setTopicList(newTopicSet);
+                }
+                if (!containRetry) {
+                    Iterator<String> it = topicList.getTopicList().iterator();
+                    while (it.hasNext()) {
+                        String topic = it.next();
+                        if (topic.startsWith(MixAll.RETRY_GROUP_TOPIC_PREFIX))
+                            it.remove();
+                    }
+                }
+
+                return topicList;
+            }
+        }
+        default:
+            break;
+        }
+
+        throw new MQClientException(response.getCode(), response.getRemark());
+    }
+
+
+    /**
+     * 获取含有单元化订阅组的 Topic 列表
+     */
+    public TopicList getHasUnitSubTopicList(final boolean containRetry, final long timeoutMillis)
+            throws RemotingException, MQClientException, InterruptedException {
+        RemotingCommand request =
+                RemotingCommand.createRequestCommand(RequestCode.GET_HAS_UNIT_SUB_TOPIC_LIST, null);
+
+        RemotingCommand response = this.remotingClient.invokeSync(null, request, timeoutMillis);
+        assert response != null;
+        switch (response.getCode()) {
+        case ResponseCode.SUCCESS: {
+            byte[] body = response.getBody();
+            if (body != null) {
+                TopicList topicList = TopicList.decode(response.getBody(), TopicList.class);
+                if (!UtilAll.isBlank(projectGroupPrefix)) {
+                    HashSet<String> newTopicSet = new HashSet<String>();
+                    for (String topic : topicList.getTopicList()) {
+                        newTopicSet.add(VirtualEnvUtil.clearProjectGroup(topic, projectGroupPrefix));
+                    }
+                    topicList.setTopicList(newTopicSet);
+                }
+                if (!containRetry) {
+                    Iterator<String> it = topicList.getTopicList().iterator();
+                    while (it.hasNext()) {
+                        String topic = it.next();
+                        if (topic.startsWith(MixAll.RETRY_GROUP_TOPIC_PREFIX))
+                            it.remove();
+                    }
+                }
+                return topicList;
+            }
+        }
+        default:
+            break;
+        }
+
+        throw new MQClientException(response.getCode(), response.getRemark());
+    }
+
+
+    /**
+     * 获取含有单元化订阅组的非单元化 Topic 列表
+     */
+    public TopicList getHasUnitSubUnUnitTopicList(final boolean containRetry, final long timeoutMillis)
+            throws RemotingException, MQClientException, InterruptedException {
+        RemotingCommand request =
+                RemotingCommand.createRequestCommand(RequestCode.GET_HAS_UNIT_SUB_UNUNIT_TOPIC_LIST, null);
+
+        RemotingCommand response = this.remotingClient.invokeSync(null, request, timeoutMillis);
+        assert response != null;
+        switch (response.getCode()) {
+        case ResponseCode.SUCCESS: {
+            byte[] body = response.getBody();
+            if (body != null) {
+                TopicList topicList = TopicList.decode(response.getBody(), TopicList.class);
+                if (!UtilAll.isBlank(projectGroupPrefix)) {
+                    HashSet<String> newTopicSet = new HashSet<String>();
+                    for (String topic : topicList.getTopicList()) {
+                        newTopicSet.add(VirtualEnvUtil.clearProjectGroup(topic, projectGroupPrefix));
+                    }
+                    topicList.setTopicList(newTopicSet);
+                }
+                if (!containRetry) {
+                    Iterator<String> it = topicList.getTopicList().iterator();
+                    while (it.hasNext()) {
+                        String topic = it.next();
+                        if (topic.startsWith(MixAll.RETRY_GROUP_TOPIC_PREFIX))
+                            it.remove();
+                    }
+                }
+                return topicList;
+            }
+        }
+        default:
+            break;
+        }
+
+        throw new MQClientException(response.getCode(), response.getRemark());
+    }
+
+
+    /**
+     * 克隆某一个组的消费进度到新的组
+     */
+    public void cloneGroupOffset(final String addr, final String srcGroup, final String destGroup,
+            final String topic, final boolean isOffline, final long timeoutMillis) throws RemotingException,
+            MQClientException, InterruptedException {
+        CloneGroupOffsetRequestHeader requestHeader = new CloneGroupOffsetRequestHeader();
+        requestHeader.setSrcGroup(srcGroup);
+        requestHeader.setDestGroup(destGroup);
+        requestHeader.setTopic(topic);
+        requestHeader.setOffline(isOffline);
+        RemotingCommand request = RemotingCommand.createRequestCommand(RequestCode.CLONE_GROUP_OFFSET, null);
+
+        RemotingCommand response = this.remotingClient.invokeSync(addr, request, timeoutMillis);
+        assert response != null;
+        switch (response.getCode()) {
+        case ResponseCode.SUCCESS: {
+            return;
         }
         default:
             break;

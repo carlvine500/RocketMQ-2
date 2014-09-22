@@ -58,7 +58,7 @@ public class NettyIdleTest {
 
         for (int i = 0; i < 10; i++) {
             RemotingCommand request = RemotingCommand.createRequestCommand(0, null);
-            RemotingCommand response = client.invokeSync("127.0.0.1:8888", request, 1000 * 3);
+            RemotingCommand response = client.invokeSync("localhost:8888", request, 1000 * 3);
             System.out.println(i + " invoke result = " + response);
             assertTrue(response != null);
 

@@ -82,7 +82,14 @@ public class DefaultMQAdminExt extends ClientConfig implements MQAdminExt {
 
     @Override
     public void createTopic(String key, String newTopic, int queueNum) throws MQClientException {
-        defaultMQAdminExtImpl.createTopic(key, newTopic, queueNum);
+        createTopic(key, newTopic, queueNum, 0);
+    }
+
+
+    @Override
+    public void createTopic(String key, String newTopic, int queueNum, int topicSysFlag)
+            throws MQClientException {
+        defaultMQAdminExtImpl.createTopic(key, newTopic, queueNum, topicSysFlag);
     }
 
 
@@ -400,9 +407,10 @@ public class DefaultMQAdminExt extends ClientConfig implements MQAdminExt {
 
 
     @Override
-    public ConsumerRunningInfo getConsumerRunningInfo(String consumerGroup, String clientId)
+    public ConsumerRunningInfo getConsumerRunningInfo(String consumerGroup, String clientId, boolean jstack)
             throws RemotingException, MQClientException, InterruptedException {
-        return defaultMQAdminExtImpl.getConsumerRunningInfo(consumerGroup, clientId);
+        return defaultMQAdminExtImpl.getConsumerRunningInfo(consumerGroup, clientId, jstack);
+
     }
 
 
@@ -418,6 +426,13 @@ public class DefaultMQAdminExt extends ClientConfig implements MQAdminExt {
     public List<MessageTrack> messageTrackDetail(MessageExt msg) throws RemotingException, MQClientException,
             InterruptedException, MQBrokerException {
         return this.defaultMQAdminExtImpl.messageTrackDetail(msg);
+    }
+
+
+    @Override
+    public void cloneGroupOffset(String srcGroup, String destGroup, String topic, boolean isOffline)
+            throws RemotingException, MQClientException, InterruptedException, MQBrokerException {
+        this.defaultMQAdminExtImpl.cloneGroupOffset(srcGroup, destGroup, topic, isOffline);
     }
 
 }

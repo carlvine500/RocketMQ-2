@@ -67,7 +67,7 @@ public class NettyRPCTest {
             requestHeader.setCount(i);
             requestHeader.setMessageTitle("HelloMessageTitle");
             RemotingCommand request = RemotingCommand.createRequestCommand(0, requestHeader);
-            RemotingCommand response = client.invokeSync("127.0.0.1:8888", request, 1000 * 3000);
+            RemotingCommand response = client.invokeSync("localhost:8888", request, 1000 * 3000);
             System.out.println("invoke result = " + response);
             assertTrue(response != null);
         }
@@ -87,7 +87,7 @@ public class NettyRPCTest {
         for (int i = 0; i < 100; i++) {
             RemotingCommand request = RemotingCommand.createRequestCommand(0, null);
             request.setRemark(String.valueOf(i));
-            client.invokeOneway("127.0.0.1:8888", request, 1000 * 3);
+            client.invokeOneway("localhost:8888", request, 1000 * 3);
         }
 
         client.shutdown();
@@ -105,7 +105,7 @@ public class NettyRPCTest {
         for (int i = 0; i < 100; i++) {
             RemotingCommand request = RemotingCommand.createRequestCommand(0, null);
             request.setRemark(String.valueOf(i));
-            client.invokeAsync("127.0.0.1:8888", request, 1000 * 3, new InvokeCallback() {
+            client.invokeAsync("localhost:8888", request, 1000 * 3, new InvokeCallback() {
                 @Override
                 public void operationComplete(ResponseFuture responseFuture) {
                     System.out.println(responseFuture.getResponseCommand());
@@ -158,7 +158,7 @@ public class NettyRPCTest {
 
         for (int i = 0; i < 3; i++) {
             RemotingCommand request = RemotingCommand.createRequestCommand(0, null);
-            RemotingCommand response = client.invokeSync("127.0.0.1:8888", request, 1000 * 3);
+            RemotingCommand response = client.invokeSync("localhost:8888", request, 1000 * 3);
             System.out.println("invoke result = " + response);
             assertTrue(response != null);
         }

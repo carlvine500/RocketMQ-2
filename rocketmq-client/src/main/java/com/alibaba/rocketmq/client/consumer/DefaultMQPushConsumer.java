@@ -69,7 +69,9 @@ public class DefaultMQPushConsumer extends ClientConfig implements MQPushConsume
     /**
      * 队列分配算法，应用可重写
      */
-    private AllocateMessageQueueStrategy allocateMessageQueueStrategy = new AllocateMessageQueueAveragely();
+
+    private AllocateMessageQueueStrategy allocateMessageQueueStrategy;
+
     /**
      * 订阅关系
      */
@@ -129,29 +131,42 @@ public class DefaultMQPushConsumer extends ClientConfig implements MQPushConsume
 
 
     public DefaultMQPushConsumer() {
-        this(MixAll.DEFAULT_CONSUMER_GROUP, null);
+
+        this(MixAll.DEFAULT_CONSUMER_GROUP, null, new AllocateMessageQueueAveragely());
+
     }
 
 
     public DefaultMQPushConsumer(RPCHook rpcHook) {
-        this(MixAll.DEFAULT_CONSUMER_GROUP, rpcHook);
+
+        this(MixAll.DEFAULT_CONSUMER_GROUP, rpcHook, new AllocateMessageQueueAveragely());
+
     }
 
 
     public DefaultMQPushConsumer(final String consumerGroup) {
-        this(consumerGroup, null);
+        this(consumerGroup, null, new AllocateMessageQueueAveragely());
     }
 
 
-    public DefaultMQPushConsumer(final String consumerGroup, RPCHook rpcHook) {
+    public DefaultMQPushConsumer(final String consumerGroup, RPCHook rpcHook,
+            AllocateMessageQueueStrategy allocateMessageQueueStrategy) {
         this.consumerGroup = consumerGroup;
+        this.allocateMessageQueueStrategy = allocateMessageQueueStrategy;
         defaultMQPushConsumerImpl = new DefaultMQPushConsumerImpl(this, rpcHook);
     }
 
 
     @Override
     public void createTopic(String key, String newTopic, int queueNum) throws MQClientException {
-        this.defaultMQPushConsumerImpl.createTopic(key, newTopic, queueNum);
+        createTopic(key, newTopic, queueNum, 0);
+    }
+
+
+    @Override
+    public void createTopic(String key, String newTopic, int queueNum, int topicSysFlag)
+            throws MQClientException {
+        this.defaultMQPushConsumerImpl.createTopic(key, newTopic, queueNum, topicSysFlag);
     }
 
 

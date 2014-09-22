@@ -43,6 +43,7 @@ import com.alibaba.rocketmq.common.protocol.body.TopicList;
 import com.alibaba.rocketmq.common.protocol.route.BrokerData;
 import com.alibaba.rocketmq.common.protocol.route.QueueData;
 import com.alibaba.rocketmq.common.protocol.route.TopicRouteData;
+import com.alibaba.rocketmq.common.sysflag.TopicSysFlag;
 import com.alibaba.rocketmq.remoting.common.RemotingUtil;
 
 
@@ -277,6 +278,7 @@ public class RouteInfoManager {
         queueData.setWriteQueueNums(topicConfig.getWriteQueueNums());
         queueData.setReadQueueNums(topicConfig.getReadQueueNums());
         queueData.setPerm(topicConfig.getPerm());
+        queueData.setTopicSynFlag(topicConfig.getTopicSysFlag());
 
         List<QueueData> queueDataList = this.topicQueueTable.get(topicConfig.getTopicName());
         if (null == queueDataList) {
@@ -767,6 +769,110 @@ public class RouteInfoManager {
 
         return topicList.encode();
     }
+
+
+    /**
+     * 获取单元逻辑下的所有 topic 列表
+     * 
+     * @return
+     */
+    public byte[] getUnitTopics() {
+        TopicList topicList = new TopicList();
+        try {
+            try {
+                this.lock.readLock().lockInterruptibly();
+                Iterator<Entry<String, List<QueueData>>> topicTableIt =
+                        this.topicQueueTable.entrySet().iterator();
+                while (topicTableIt.hasNext()) {
+                    Entry<String, List<QueueData>> topicEntry = topicTableIt.next();
+                    String topic = topicEntry.getKey();
+                    List<QueueData> queueDatas = topicEntry.getValue();
+                    if (queueDatas != null && queueDatas.size() > 0
+                            && TopicSysFlag.hasUnitFlag(queueDatas.get(0).getTopicSynFlag())) {
+                        topicList.getTopicList().add(topic);
+                    }
+                }
+            }
+            finally {
+                this.lock.readLock().unlock();
+            }
+        }
+        catch (Exception e) {
+            log.error("getAllTopicList Exception", e);
+        }
+
+        return topicList.encode();
+    }
+
+
+    /**
+     * 获取中心向单元同步的所有 topic 列表
+     * 
+     * @return
+     */
+    public byte[] getHasUnitSubTopicList() {
+        TopicList topicList = new TopicList();
+        try {
+            try {
+                this.lock.readLock().lockInterruptibly();
+                Iterator<Entry<String, List<QueueData>>> topicTableIt =
+                        this.topicQueueTable.entrySet().iterator();
+                while (topicTableIt.hasNext()) {
+                    Entry<String, List<QueueData>> topicEntry = topicTableIt.next();
+                    String topic = topicEntry.getKey();
+                    List<QueueData> queueDatas = topicEntry.getValue();
+                    if (queueDatas != null && queueDatas.size() > 0
+                            && TopicSysFlag.hasUnitSubFlag(queueDatas.get(0).getTopicSynFlag())) {
+                        topicList.getTopicList().add(topic);
+                    }
+                }
+            }
+            finally {
+                this.lock.readLock().unlock();
+            }
+        }
+        catch (Exception e) {
+            log.error("getAllTopicList Exception", e);
+        }
+
+        return topicList.encode();
+    }
+
+
+    /**
+     * 获取含有单元化订阅组的非单元化 Topic 列表
+     * 
+     * @return
+     */
+    public byte[] getHasUnitSubUnUnitTopicList() {
+        TopicList topicList = new TopicList();
+        try {
+            try {
+                this.lock.readLock().lockInterruptibly();
+                Iterator<Entry<String, List<QueueData>>> topicTableIt =
+                        this.topicQueueTable.entrySet().iterator();
+                while (topicTableIt.hasNext()) {
+                    Entry<String, List<QueueData>> topicEntry = topicTableIt.next();
+                    String topic = topicEntry.getKey();
+                    List<QueueData> queueDatas = topicEntry.getValue();
+                    if (queueDatas != null && queueDatas.size() > 0
+                            && !TopicSysFlag.hasUnitFlag(queueDatas.get(0).getTopicSynFlag())
+                            && TopicSysFlag.hasUnitSubFlag(queueDatas.get(0).getTopicSynFlag())) {
+                        topicList.getTopicList().add(topic);
+                    }
+                }
+            }
+            finally {
+                this.lock.readLock().unlock();
+            }
+        }
+        catch (Exception e) {
+            log.error("getAllTopicList Exception", e);
+        }
+
+        return topicList.encode();
+    }
+
 }
 
 

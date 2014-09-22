@@ -44,4 +44,13 @@ public interface AllocateMessageQueueStrategy {
             final List<MessageQueue> mqAll,//
             final List<String> cidAll//
     );
+
+
+    /**
+     * rebalance 算法的名字
+     * 
+     * @return
+     */
+    public String getName();
+
 }

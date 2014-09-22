@@ -31,6 +31,8 @@ public class ConsumerRunningInfo extends RemotingSerializable {
     private TreeMap<MessageQueue, ProcessQueueInfo> mqTable = new TreeMap<MessageQueue, ProcessQueueInfo>();
     // RT、TPS统计
     private TreeMap<String/* Topic */, ConsumeStatus> statusTable = new TreeMap<String, ConsumeStatus>();
+    // jstack的结果
+    private String jstack;
 
 
     public Properties getProperties() {
@@ -182,6 +184,12 @@ public class ConsumerRunningInfo extends RemotingSerializable {
             }
         }
 
+        // 6
+        if (this.jstack != null) {
+            sb.append("\n\n#Consumer jstack#\n");
+            sb.append(this.jstack);
+        }
+
         return sb.toString();
     }
 
@@ -302,4 +310,15 @@ public class ConsumerRunningInfo extends RemotingSerializable {
 
         return sb.toString();
     }
+
+
+    public String getJstack() {
+        return jstack;
+    }
+
+
+    public void setJstack(String jstack) {
+        this.jstack = jstack;
+    }
+
 }

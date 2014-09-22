@@ -317,7 +317,9 @@ public abstract class RebalanceImpl {
                         cidAll);
                 }
                 catch (Throwable e) {
-                    log.error("AllocateMessageQueueStrategy.allocate Exception", e);
+                    log.error(
+                        "AllocateMessageQueueStrategy.allocate Exception. allocateMessageQueueStrategyName={}",
+                        strategy.getName(), e);
                     return;
                 }
 
@@ -329,18 +331,15 @@ public abstract class RebalanceImpl {
                 // 更新本地队列
                 boolean changed = this.updateProcessQueueTableInRebalance(topic, allocateResultSet);
                 if (changed) {
-                    log.info("rebalanced result changed. mqSet={}, ConsumerId={}, mqSize={}, cidSize={}",
-                        allocateResult, this.mQClientFactory.getClientId(), mqAll.size(), cidAll.size());
+                    log.info(
+                        "rebalanced allocate source. allocateMessageQueueStrategyName={}, group={}, topic={}, mqAllSize={}, cidAllSize={}, mqAll={}, cidAll={}",
+                        strategy.getName(), consumerGroup, topic, mqSet.size(), cidAll.size(), mqSet, cidAll);
+                    log.info(
+                        "rebalanced result changed. allocateMessageQueueStrategyName={}, group={}, topic={}, ConsumerId={}, rebalanceSize={}, rebalanceMqSet={}",
+                        strategy.getName(), consumerGroup, topic, this.mQClientFactory.getClientId(),
+                        allocateResultSet.size(), mqAll.size(), cidAll.size(), allocateResultSet);
 
                     this.messageQueueChanged(topic, mqSet, allocateResultSet);
-                    log.info("messageQueueChanged {} {} {} {}",//
-                        consumerGroup,//
-                        topic,//
-                        mqSet,//
-                        allocateResultSet);
-
-                    log.info("messageQueueChanged consumerIdList: {}",//
-                        cidAll);
                 }
             }
             break;

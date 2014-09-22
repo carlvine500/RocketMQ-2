@@ -174,7 +174,13 @@ public class DefaultMQPushConsumerImpl implements MQConsumerInner {
 
 
     public void createTopic(String key, String newTopic, int queueNum) throws MQClientException {
-        this.mQClientFactory.getMQAdminImpl().createTopic(key, newTopic, queueNum);
+        createTopic(key, newTopic, queueNum, 0);
+    }
+
+
+    public void createTopic(String key, String newTopic, int queueNum, int topicSysFlag)
+            throws MQClientException {
+        this.mQClientFactory.getMQAdminImpl().createTopic(key, newTopic, queueNum, topicSysFlag);
     }
 
 
@@ -400,31 +406,51 @@ public class DefaultMQPushConsumerImpl implements MQConsumerInner {
 
                     switch (pullResult.getPullStatus()) {
                     case FOUND:
-                        pullRequest.setNextOffset(pullResult.getNextBeginOffset());
 
+                        long prevRequestOffset = pullRequest.getNextOffset();
+                        pullRequest.setNextOffset(pullResult.getNextBeginOffset());
                         long pullRT = System.currentTimeMillis() - beginTimestamp;
-                        // 统计打点
-                        DefaultMQPushConsumerImpl.this.getConsumerStatsManager().incPullTPS(
-                            pullRequest.getConsumerGroup(), pullRequest.getMessageQueue().getTopic(),
-                            pullResult.getMsgFoundList().size());
                         DefaultMQPushConsumerImpl.this.getConsumerStatsManager().incPullRT(
                             pullRequest.getConsumerGroup(), pullRequest.getMessageQueue().getTopic(), pullRT);
 
-                        boolean dispathToConsume = processQueue.putMessage(pullResult.getMsgFoundList());
-                        DefaultMQPushConsumerImpl.this.consumeMessageService.submitConsumeRequest(//
-                            pullResult.getMsgFoundList(), //
-                            processQueue, //
-                            pullRequest.getMessageQueue(), //
-                            dispathToConsume);
-
-                        // 流控
-                        if (DefaultMQPushConsumerImpl.this.defaultMQPushConsumer.getPullInterval() > 0) {
-                            DefaultMQPushConsumerImpl.this.executePullRequestLater(pullRequest,
-                                DefaultMQPushConsumerImpl.this.defaultMQPushConsumer.getPullInterval());
-                        }
-                        // 立刻拉消息
-                        else {
+                        long firstMsgOffset = Long.MAX_VALUE;
+                        if (pullResult.getMsgFoundList() == null || pullResult.getMsgFoundList().isEmpty()) {
                             DefaultMQPushConsumerImpl.this.executePullRequestImmediately(pullRequest);
+                        }
+                        else {
+                            firstMsgOffset = pullResult.getMsgFoundList().get(0).getQueueOffset();
+
+                            // 统计打点
+                            DefaultMQPushConsumerImpl.this.getConsumerStatsManager().incPullTPS(
+                                pullRequest.getConsumerGroup(), pullRequest.getMessageQueue().getTopic(),
+                                pullResult.getMsgFoundList().size());
+
+                            boolean dispathToConsume = processQueue.putMessage(pullResult.getMsgFoundList());
+                            DefaultMQPushConsumerImpl.this.consumeMessageService.submitConsumeRequest(//
+                                pullResult.getMsgFoundList(), //
+                                processQueue, //
+                                pullRequest.getMessageQueue(), //
+                                dispathToConsume);
+
+                            // 流控
+                            if (DefaultMQPushConsumerImpl.this.defaultMQPushConsumer.getPullInterval() > 0) {
+                                DefaultMQPushConsumerImpl.this.executePullRequestLater(pullRequest,
+                                    DefaultMQPushConsumerImpl.this.defaultMQPushConsumer.getPullInterval());
+                            }
+                            // 立刻拉消息
+                            else {
+                                DefaultMQPushConsumerImpl.this.executePullRequestImmediately(pullRequest);
+                            }
+                        }
+
+                        // 收到的消息Offset比请求的小，则可能服务器数据有误
+                        if (pullResult.getNextBeginOffset() < prevRequestOffset//
+                                || firstMsgOffset < prevRequestOffset) {
+                            log.warn(
+                                "[BUG] pull message result maybe data wrong, nextBeginOffset: {} firstMsgOffset: {} prevRequestOffset: {}",//
+                                pullResult.getNextBeginOffset(),//
+                                firstMsgOffset,//
+                                prevRequestOffset);
                         }
 
                         break;

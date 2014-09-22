@@ -188,7 +188,14 @@ public class DefaultMQProducer extends ClientConfig implements MQProducer {
 
     @Override
     public void createTopic(String key, String newTopic, int queueNum) throws MQClientException {
-        this.defaultMQProducerImpl.createTopic(key, newTopic, queueNum);
+        createTopic(key, newTopic, queueNum, 0);
+    }
+
+
+    @Override
+    public void createTopic(String key, String newTopic, int queueNum, int topicSysFlag)
+            throws MQClientException {
+        this.defaultMQProducerImpl.createTopic(key, newTopic, queueNum, topicSysFlag);
     }
 
 

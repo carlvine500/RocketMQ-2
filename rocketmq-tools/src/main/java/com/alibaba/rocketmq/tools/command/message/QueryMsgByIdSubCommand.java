@@ -158,7 +158,7 @@ public class QueryMsgByIdSubCommand implements SubCommand {
         try {
             List<MessageTrack> mtdList = admin.messageTrackDetail(msg);
             if (mtdList.isEmpty()) {
-                System.out.println("No Consumer");
+                System.out.println("\n\nWARN: No Consumer");
             }
             else {
                 System.out.println("\n\n");
@@ -227,9 +227,9 @@ public class QueryMsgByIdSubCommand implements SubCommand {
 
     public static void main(String[] args) {
         MQAdminStartup.main(new String[] { new QueryMsgByIdSubCommand().commandName(), //
-                                          "-n", "10.235.169.73:9876", //
+                                          "-n", "127.0.0.1:9876", //
                                           "-g", "CID_110", //
-                                          "-d", "10.22.18.241@73376", //
+                                          "-d", "127.0.0.1@73376", //
                                           "-i", "0A654A3400002ABD00000011C3555205" //
         });
     }

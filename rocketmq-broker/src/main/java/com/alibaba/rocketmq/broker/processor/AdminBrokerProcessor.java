@@ -42,6 +42,7 @@ import com.alibaba.rocketmq.client.consumer.listener.ConsumeConcurrentlyStatus;
 import com.alibaba.rocketmq.common.MQVersion;
 import com.alibaba.rocketmq.common.MixAll;
 import com.alibaba.rocketmq.common.TopicConfig;
+import com.alibaba.rocketmq.common.UtilAll;
 import com.alibaba.rocketmq.common.admin.ConsumeStats;
 import com.alibaba.rocketmq.common.admin.OffsetWrapper;
 import com.alibaba.rocketmq.common.admin.TopicOffset;
@@ -64,6 +65,7 @@ import com.alibaba.rocketmq.common.protocol.body.QueryCorrectionOffsetBody;
 import com.alibaba.rocketmq.common.protocol.body.QueueTimeSpan;
 import com.alibaba.rocketmq.common.protocol.body.TopicList;
 import com.alibaba.rocketmq.common.protocol.body.UnlockBatchRequestBody;
+import com.alibaba.rocketmq.common.protocol.header.CloneGroupOffsetRequestHeader;
 import com.alibaba.rocketmq.common.protocol.header.ConsumeMessageDirectlyResultRequestHeader;
 import com.alibaba.rocketmq.common.protocol.header.CreateTopicRequestHeader;
 import com.alibaba.rocketmq.common.protocol.header.DeleteSubscriptionGroupRequestHeader;
@@ -232,6 +234,8 @@ public class AdminBrokerProcessor implements NettyRequestProcessor {
 
         case RequestCode.CONSUME_MESSAGE_DIRECTLY:
             return this.consumeMessageDirectly(ctx, request);
+        case RequestCode.CLONE_GROUP_OFFSET:
+            return this.cloneGroupOffset(ctx, request);
 
         default:
             break;
@@ -698,6 +702,9 @@ public class AdminBrokerProcessor implements NettyRequestProcessor {
         topicConfig.setWriteQueueNums(requestHeader.getWriteQueueNums());
         topicConfig.setTopicFilterType(requestHeader.getTopicFilterTypeEnum());
         topicConfig.setPerm(requestHeader.getPerm());
+
+        topicConfig.setTopicSysFlag(requestHeader.getTopicSysFlag() == null ? 0 : requestHeader
+            .getTopicSysFlag());
 
         this.brokerController.getTopicConfigManager().updateTopicConfig(topicConfig);
 
@@ -1271,11 +1278,11 @@ public class AdminBrokerProcessor implements NettyRequestProcessor {
 
         Map<Integer, Long> correctionOffset =
                 this.brokerController.getConsumerOffsetManager().queryMinOffsetInAllGroup(
-                    requestHeader.getTopic());
+                    requestHeader.getTopic(), requestHeader.getFilterGroups());
 
         Map<Integer, Long> compareOffset =
                 this.brokerController.getConsumerOffsetManager().queryOffset(requestHeader.getTopic(),
-                    requestHeader.getGroup());
+                    requestHeader.getCompareGroup());
 
         if (compareOffset != null && !compareOffset.isEmpty()) {
             for (Integer queueId : compareOffset.keySet()) {
@@ -1288,6 +1295,58 @@ public class AdminBrokerProcessor implements NettyRequestProcessor {
         QueryCorrectionOffsetBody body = new QueryCorrectionOffsetBody();
         body.setCorrectionOffsets(correctionOffset);
         response.setBody(body.encode());
+        response.setCode(ResponseCode.SUCCESS);
+        response.setRemark(null);
+        return response;
+    }
+
+
+    private RemotingCommand cloneGroupOffset(ChannelHandlerContext ctx, RemotingCommand request)
+            throws RemotingCommandException {
+        final RemotingCommand response = RemotingCommand.createResponseCommand(null);
+        CloneGroupOffsetRequestHeader requestHeader =
+                (CloneGroupOffsetRequestHeader) request
+                    .decodeCommandCustomHeader(CloneGroupOffsetRequestHeader.class);
+
+        Set<String> topics;
+        if (UtilAll.isBlank(requestHeader.getTopic())) {
+            topics =
+                    this.brokerController.getConsumerOffsetManager().whichTopicByConsumer(
+                        requestHeader.getSrcGroup());
+        }
+        else {
+            topics = new HashSet<String>();
+            topics.add(requestHeader.getTopic());
+        }
+
+        for (String topic : topics) {
+            TopicConfig topicConfig = this.brokerController.getTopicConfigManager().selectTopicConfig(topic);
+            if (null == topicConfig) {
+                log.warn("[cloneGroupOffset], topic config not exist, {}", topic);
+                continue;
+            }
+
+            /**
+             * Consumer不在线的时候，也允许查询消费进度
+             */
+            if (!requestHeader.isOffline()) {
+                // 如果Consumer在线，而且这个topic没有被订阅，那么就跳过
+                SubscriptionData findSubscriptionData =
+                        this.brokerController.getConsumerManager().findSubscriptionData(
+                            requestHeader.getSrcGroup(), topic);
+                if (this.brokerController.getConsumerManager().findSubscriptionDataCount(
+                    requestHeader.getSrcGroup()) > 0
+                        && findSubscriptionData == null) {
+                    log.warn("[cloneGroupOffset], the consumer group[{}], topic[{}] not exist",
+                        requestHeader.getSrcGroup(), topic);
+                    continue;
+                }
+            }
+
+            this.brokerController.getConsumerOffsetManager().cloneOffset(requestHeader.getSrcGroup(),
+                requestHeader.getDestGroup(), requestHeader.getTopic());
+        }
+
         response.setCode(ResponseCode.SUCCESS);
         response.setRemark(null);
         return response;

@@ -90,8 +90,14 @@ public class DefaultMQPullConsumerImpl implements MQConsumerInner {
 
 
     public void createTopic(String key, String newTopic, int queueNum) throws MQClientException {
+        createTopic(key, newTopic, queueNum, 0);
+    }
+
+
+    public void createTopic(String key, String newTopic, int queueNum, int topicSysFlag)
+            throws MQClientException {
         this.makeSureStateOK();
-        this.mQClientFactory.getMQAdminImpl().createTopic(key, newTopic, queueNum);
+        this.mQClientFactory.getMQAdminImpl().createTopic(key, newTopic, queueNum, topicSysFlag);
     }
 
 
@@ -698,4 +704,9 @@ public class DefaultMQPullConsumerImpl implements MQConsumerInner {
     public long getConsumerStartTimestamp() {
         return consumerStartTimestamp;
     }
+
+    public RebalanceImpl getRebalanceImpl() {
+        return rebalanceImpl;
+    }
+
 }

@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -58,8 +59,10 @@ import com.alibaba.rocketmq.common.BrokerConfig;
 import com.alibaba.rocketmq.common.DataVersion;
 import com.alibaba.rocketmq.common.MixAll;
 import com.alibaba.rocketmq.common.ThreadFactoryImpl;
+import com.alibaba.rocketmq.common.TopicConfig;
 import com.alibaba.rocketmq.common.UtilAll;
 import com.alibaba.rocketmq.common.constant.LoggerName;
+import com.alibaba.rocketmq.common.constant.PermName;
 import com.alibaba.rocketmq.common.namesrv.RegisterBrokerResult;
 import com.alibaba.rocketmq.common.protocol.RequestCode;
 import com.alibaba.rocketmq.common.protocol.body.TopicConfigSerializeWrapper;
@@ -571,7 +574,7 @@ public class BrokerController {
         }
 
         // 启动时，强制注册
-        this.registerBrokerAll();
+        this.registerBrokerAll(true);
 
         // 定时注册Broker到Name Server
         this.scheduledExecutorService.scheduleAtFixedRate(new Runnable() {
@@ -579,7 +582,7 @@ public class BrokerController {
             @Override
             public void run() {
                 try {
-                    BrokerController.this.registerBrokerAll();
+                    BrokerController.this.registerBrokerAll(true);
                 }
                 catch (Exception e) {
                     log.error("registerBrokerAll Exception", e);
@@ -596,9 +599,20 @@ public class BrokerController {
     }
 
 
-    public synchronized void registerBrokerAll() {
+    public synchronized void registerBrokerAll(final boolean checkOrderConfig) {
         TopicConfigSerializeWrapper topicConfigWrapper =
                 this.getTopicConfigManager().buildTopicConfigSerializeWrapper();
+
+        // 同步 Broker 读写权限
+        if (!PermName.isWriteable(this.getBrokerConfig().getBrokerPermission())
+                || !PermName.isReadable(this.getBrokerConfig().getBrokerPermission())) {
+            ConcurrentHashMap<String, TopicConfig> topicConfigTable =
+                    new ConcurrentHashMap<String, TopicConfig>(topicConfigWrapper.getTopicConfigTable());
+            for (TopicConfig topicConfig : topicConfigTable.values()) {
+                topicConfig.setPerm(this.getBrokerConfig().getBrokerPermission());
+            }
+            topicConfigWrapper.setTopicConfigTable(topicConfigTable);
+        }
 
         RegisterBrokerResult registerBrokerResult = this.brokerOuterAPI.registerBrokerAll(//
             this.brokerConfig.getBrokerClusterName(), //
@@ -616,6 +630,11 @@ public class BrokerController {
             }
 
             this.slaveSynchronize.setMasterAddr(registerBrokerResult.getMasterAddr());
+
+            // 检查 topic config 的顺序消息配置
+            if (checkOrderConfig) {
+                this.getTopicConfigManager().updateOrderTopicConfig(registerBrokerResult.getKvTable());
+            }
         }
     }
 

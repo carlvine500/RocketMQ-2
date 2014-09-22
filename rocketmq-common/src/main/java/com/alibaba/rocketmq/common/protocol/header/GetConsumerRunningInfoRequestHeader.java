@@ -2,6 +2,7 @@ package com.alibaba.rocketmq.common.protocol.header;
 
 import com.alibaba.rocketmq.remoting.CommandCustomHeader;
 import com.alibaba.rocketmq.remoting.annotation.CFNotNull;
+import com.alibaba.rocketmq.remoting.annotation.CFNullable;
 import com.alibaba.rocketmq.remoting.exception.RemotingCommandException;
 
 
@@ -13,6 +14,8 @@ public class GetConsumerRunningInfoRequestHeader implements CommandCustomHeader 
     private String consumerGroup;
     @CFNotNull
     private String clientId;
+    @CFNullable
+    private boolean jstackEnable;
 
 
     @Override
@@ -38,4 +41,15 @@ public class GetConsumerRunningInfoRequestHeader implements CommandCustomHeader 
     public void setClientId(String clientId) {
         this.clientId = clientId;
     }
+
+
+    public boolean isJstackEnable() {
+        return jstackEnable;
+    }
+
+
+    public void setJstackEnable(boolean jstackEnable) {
+        this.jstackEnable = jstackEnable;
+    }
+
 }

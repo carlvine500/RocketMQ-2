@@ -29,6 +29,7 @@ import com.alibaba.rocketmq.common.namesrv.TopAddressing;
 import com.alibaba.rocketmq.common.protocol.RequestCode;
 import com.alibaba.rocketmq.common.protocol.ResponseCode;
 import com.alibaba.rocketmq.common.protocol.body.ConsumerOffsetSerializeWrapper;
+import com.alibaba.rocketmq.common.protocol.body.KVTable;
 import com.alibaba.rocketmq.common.protocol.body.RegisterBrokerBody;
 import com.alibaba.rocketmq.common.protocol.body.SubscriptionGroupWrapper;
 import com.alibaba.rocketmq.common.protocol.body.TopicConfigSerializeWrapper;
@@ -148,6 +149,10 @@ public class BrokerOuterAPI {
             RegisterBrokerResult result = new RegisterBrokerResult();
             result.setMasterAddr(responseHeader.getMasterAddr());
             result.setHaServerAddr(responseHeader.getHaServerAddr());
+            result.setHaServerAddr(responseHeader.getHaServerAddr());
+            if (response.getBody() != null) {
+                result.setKvTable(KVTable.decode(response.getBody(), KVTable.class));
+            }
             return result;
         }
         default:

@@ -34,6 +34,12 @@ public class AllocateMessageQueueByMachineRoom implements AllocateMessageQueueSt
 
 
     @Override
+    public String getName() {
+        return "MACHINE_ROOM";
+    }
+
+
+    @Override
     public List<MessageQueue> allocate(String consumerGroup, String currentCID, List<MessageQueue> mqAll,
             List<String> cidAll) {
         List<MessageQueue> result = new ArrayList<MessageQueue>();

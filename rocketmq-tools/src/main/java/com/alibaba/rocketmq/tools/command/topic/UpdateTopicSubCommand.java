@@ -22,6 +22,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 
 import com.alibaba.rocketmq.common.TopicConfig;
+import com.alibaba.rocketmq.common.sysflag.TopicSysFlag;
 import com.alibaba.rocketmq.remoting.RPCHook;
 import com.alibaba.rocketmq.srvutil.ServerUtil;
 import com.alibaba.rocketmq.tools.admin.DefaultMQAdminExt;
@@ -71,11 +72,19 @@ public class UpdateTopicSubCommand implements SubCommand {
         opt.setRequired(false);
         options.addOption(opt);
 
-        opt = new Option("p", "perm", true, "set topic's permission(W|R|WR)");
+        opt = new Option("p", "perm", true, "set topic's permission(2|4|6), intro[2:R; 4:W; 6:RW]");
         opt.setRequired(false);
         options.addOption(opt);
 
         opt = new Option("o", "order", true, "set topic's order(true|false");
+        opt.setRequired(false);
+        options.addOption(opt);
+
+        opt = new Option("u", "unit", true, "is unit topic (true|false");
+        opt.setRequired(false);
+        options.addOption(opt);
+
+        opt = new Option("s", "hasUnitSub", true, "has unit sub (true|false");
         opt.setRequired(false);
         options.addOption(opt);
 
@@ -109,10 +118,25 @@ public class UpdateTopicSubCommand implements SubCommand {
                 topicConfig.setPerm(Integer.parseInt(commandLine.getOptionValue('p').trim()));
             }
 
+            boolean isUnit = false;
+            if (commandLine.hasOption('u')) {
+                isUnit = Boolean.parseBoolean(commandLine.getOptionValue('u').trim());
+            }
+
+            boolean isCenterSync = false;
+            if (commandLine.hasOption('s')) {
+                isCenterSync = Boolean.parseBoolean(commandLine.getOptionValue('s').trim());
+            }
+
+            int topicCenterSync = TopicSysFlag.buildSysFlag(isUnit, isCenterSync);
+            topicConfig.setTopicSysFlag(topicCenterSync);
+
             boolean isOrder = false;
             if (commandLine.hasOption('o')) {
                 isOrder = Boolean.parseBoolean(commandLine.getOptionValue('o').trim());
             }
+
+            topicConfig.setOrder(isOrder);
 
             if (commandLine.hasOption('b')) {
                 String addr = commandLine.getOptionValue('b').trim();

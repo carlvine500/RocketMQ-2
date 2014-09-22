@@ -99,7 +99,9 @@ public abstract class ServiceThread implements Runnable {
             }
 
             long beginTime = System.currentTimeMillis();
-            this.thread.join(this.getJointime());
+            if (!this.thread.isDaemon()) {
+                this.thread.join(this.getJointime());
+            }
             long eclipseTime = System.currentTimeMillis() - beginTime;
             stlog.info("join thread " + this.getServiceName() + " eclipse time(ms) " + eclipseTime + " "
                     + this.getJointime());

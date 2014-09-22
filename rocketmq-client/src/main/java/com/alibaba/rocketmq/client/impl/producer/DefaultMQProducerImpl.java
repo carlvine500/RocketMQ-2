@@ -425,11 +425,17 @@ public class DefaultMQProducerImpl implements MQProducerInner {
 
 
     public void createTopic(String key, String newTopic, int queueNum) throws MQClientException {
+        createTopic(key, newTopic, queueNum, 0);
+    }
+
+
+    public void createTopic(String key, String newTopic, int queueNum, int topicSysFlag)
+            throws MQClientException {
         this.makeSureStateOK();
         // topic 有效性检查
         Validators.checkTopic(newTopic);
 
-        this.mQClientFactory.getMQAdminImpl().createTopic(key, newTopic, queueNum);
+        this.mQClientFactory.getMQAdminImpl().createTopic(key, newTopic, queueNum, topicSysFlag);
     }
 
 
@@ -704,6 +710,8 @@ public class DefaultMQProducerImpl implements MQProducerInner {
                 requestHeader.setFlag(msg.getFlag());
                 requestHeader.setProperties(MessageDecoder.messageProperties2String(msg.getProperties()));
                 requestHeader.setReconsumeTimes(0);
+                requestHeader.setUnitMode(this.isUnitMode());
+
                 if (requestHeader.getTopic().startsWith(MixAll.RETRY_GROUP_TOPIC_PREFIX)) {
                     String reconsumeTimes = MessageAccessor.getReconsumeTime(msg);
                     if (reconsumeTimes != null) {

@@ -32,6 +32,12 @@ public class AllocateMessageQueueByConfig implements AllocateMessageQueueStrateg
 
 
     @Override
+    public String getName() {
+        return "CONFIG";
+    }
+
+
+    @Override
     public List<MessageQueue> allocate(String consumerGroup, String currentCID, List<MessageQueue> mqAll,
             List<String> cidAll) {
         return this.messageQueueList;
