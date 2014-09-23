@@ -154,6 +154,12 @@ public class DefaultRequestProcessor implements NettyRequestProcessor {
         responseHeader.setHaServerAddr(result.getHaServerAddr());
         responseHeader.setMasterAddr(result.getMasterAddr());
 
+        // 获取顺序消息 topic 列表
+        byte[] jsonValue =
+                this.namesrvController.getKvConfigManager().getKVListByNamespace(
+                    NamesrvUtil.NAMESPACE_ORDER_TOPIC_CONFIG);
+        response.setBody(jsonValue);
+
         response.setCode(ResponseCode.SUCCESS);
         response.setRemark(null);
         return response;
@@ -386,6 +392,11 @@ public class DefaultRequestProcessor implements NettyRequestProcessor {
         responseHeader.setHaServerAddr(result.getHaServerAddr());
         responseHeader.setMasterAddr(result.getMasterAddr());
 
+        // 获取顺序消息 topic 列表
+        byte[] jsonValue =
+                this.namesrvController.getKvConfigManager().getKVListByNamespace(
+                    NamesrvUtil.NAMESPACE_ORDER_TOPIC_CONFIG);
+        response.setBody(jsonValue);
         response.setCode(ResponseCode.SUCCESS);
         response.setRemark(null);
         return response;

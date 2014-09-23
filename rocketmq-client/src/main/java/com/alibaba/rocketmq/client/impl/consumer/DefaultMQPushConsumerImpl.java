@@ -394,15 +394,20 @@ public class DefaultMQPushConsumerImpl implements MQConsumerInner {
 
                     switch (pullResult.getPullStatus()) {
                     case FOUND:
+
+                        long prevRequestOffset = pullRequest.getNextOffset();
                         pullRequest.setNextOffset(pullResult.getNextBeginOffset());
                         long pullRT = System.currentTimeMillis() - beginTimestamp;
                         DefaultMQPushConsumerImpl.this.getConsumerStatsManager().incPullRT(
                             pullRequest.getConsumerGroup(), pullRequest.getMessageQueue().getTopic(), pullRT);
 
+                        long firstMsgOffset = Long.MAX_VALUE;
                         if (pullResult.getMsgFoundList() == null || pullResult.getMsgFoundList().isEmpty()) {
                             DefaultMQPushConsumerImpl.this.executePullRequestImmediately(pullRequest);
                         }
                         else {
+                            firstMsgOffset = pullResult.getMsgFoundList().get(0).getQueueOffset();
+
                             // 统计打点
                             DefaultMQPushConsumerImpl.this.getConsumerStatsManager().incPullTPS(
                                 pullRequest.getConsumerGroup(), pullRequest.getMessageQueue().getTopic(),
@@ -424,6 +429,16 @@ public class DefaultMQPushConsumerImpl implements MQConsumerInner {
                             else {
                                 DefaultMQPushConsumerImpl.this.executePullRequestImmediately(pullRequest);
                             }
+                        }
+
+                        // 收到的消息Offset比请求的小，则可能服务器数据有误
+                        if (pullResult.getNextBeginOffset() < prevRequestOffset//
+                                || firstMsgOffset < prevRequestOffset) {
+                            log.warn(
+                                "[BUG] pull message result maybe data wrong, nextBeginOffset: {} firstMsgOffset: {} prevRequestOffset: {}",//
+                                pullResult.getNextBeginOffset(),//
+                                firstMsgOffset,//
+                                prevRequestOffset);
                         }
 
                         break;

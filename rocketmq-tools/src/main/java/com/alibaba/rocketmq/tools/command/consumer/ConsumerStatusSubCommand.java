@@ -158,7 +158,7 @@ public class ConsumerStatusSubCommand implements SubCommand {
 
 
     public static void main(String[] args) {
-        System.setProperty(MixAll.NAMESRV_ADDR_PROPERTY, "10.235.169.73:9876");
+        System.setProperty(MixAll.NAMESRV_ADDR_PROPERTY, "127.0.0.1:9876");
         MQAdminStartup.main(new String[] { new ConsumerStatusSubCommand().commandName(), //
                                           "-g", "benchmark_consumer" //
         });

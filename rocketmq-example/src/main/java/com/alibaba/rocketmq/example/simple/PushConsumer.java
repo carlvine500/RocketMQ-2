@@ -38,8 +38,6 @@ public class PushConsumer {
          * 注意：ConsumerGroupName需要由应用来保证唯一
          */
         DefaultMQPushConsumer consumer = new DefaultMQPushConsumer("CID_001");
-        // consumer.setNamesrvAddr("10.235.169.72:9876");
-        // consumer.setNamesrvAddr("127.0.0.1:9876");
 
         /**
          * 订阅指定topic下tags分别等于TagA或TagC或TagD

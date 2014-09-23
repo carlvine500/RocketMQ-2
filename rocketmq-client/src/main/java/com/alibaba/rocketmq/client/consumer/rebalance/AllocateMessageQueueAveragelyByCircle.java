@@ -26,19 +26,18 @@ import com.alibaba.rocketmq.common.message.MessageQueue;
 
 
 /**
- * 平均分配队列算法（块状）
+ * 平均分配队列算法(环状）
  * 
- * @author fuchong<yubao.fyb@alibaba-inc.com>
- * @author manhong.yqd<manhong.yqd@taobao.com>
- * @since 2013-7-24
+ * @author manhong.yqd<jodie.yqd@gmail.com>
+ * @since 2014-09-10
  */
-public class AllocateMessageQueueAveragely implements AllocateMessageQueueStrategy {
+public class AllocateMessageQueueAveragelyByCircle implements AllocateMessageQueueStrategy {
     private final Logger log = ClientLogger.getLog();
 
 
     @Override
     public String getName() {
-        return "AVG";
+        return "AVG_BY_CIRCLE";
     }
 
 
@@ -65,14 +64,10 @@ public class AllocateMessageQueueAveragely implements AllocateMessageQueueStrate
         }
 
         int index = cidAll.indexOf(currentCID);
-        int mod = mqAll.size() % cidAll.size();
-        int averageSize =
-                mqAll.size() <= cidAll.size() ? 1 : (mod > 0 && index < mod ? mqAll.size() / cidAll.size()
-                        + 1 : mqAll.size() / cidAll.size());
-        int startIndex = (mod > 0 && index < mod) ? index * averageSize : index * averageSize + mod;
-        int range = Math.min(averageSize, mqAll.size() - startIndex);
-        for (int i = 0; i < range; i++) {
-            result.add(mqAll.get((startIndex + i) % mqAll.size()));
+        for (int i = index; i < mqAll.size(); i++) {
+            if (i % cidAll.size() == index) {
+                result.add(mqAll.get(i));
+            }
         }
         return result;
     }

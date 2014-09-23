@@ -53,7 +53,7 @@ public class DefaultMessageStoreTest {
     @BeforeClass
     public static void setUpBeforeClass() throws Exception {
         StoreHost = new InetSocketAddress(InetAddress.getLocalHost(), 8123);
-        BornHost = new InetSocketAddress(InetAddress.getByName("10.232.102.184"), 0);
+        BornHost = new InetSocketAddress(InetAddress.getByName("127.0.0.1"), 0);
 
     }
 

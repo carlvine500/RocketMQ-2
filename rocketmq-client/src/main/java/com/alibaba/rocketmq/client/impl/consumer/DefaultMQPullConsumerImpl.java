@@ -694,4 +694,9 @@ public class DefaultMQPullConsumerImpl implements MQConsumerInner {
     public long getConsumerStartTimestamp() {
         return consumerStartTimestamp;
     }
+
+    public RebalanceImpl getRebalanceImpl() {
+        return rebalanceImpl;
+    }
+
 }

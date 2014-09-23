@@ -592,4 +592,21 @@ public interface MQAdminExt extends MQAdmin {
      */
     public List<MessageTrack> messageTrackDetail(MessageExt msg) throws RemotingException, MQClientException,
             InterruptedException, MQBrokerException;
+
+
+    /**
+     * 克隆某一个组的消费进度到新的组
+     * 
+     * @param srcGroup
+     * @param destGroup
+     * @param topic
+     * @param isOffline
+     * @throws RemotingException
+     * @throws MQClientException
+     * @throws InterruptedException
+     * @throws MQBrokerException
+     */
+    public void cloneGroupOffset(String srcGroup, String destGroup, String topic, boolean isOffline)
+            throws RemotingException, MQClientException, InterruptedException, MQBrokerException;
+
 }

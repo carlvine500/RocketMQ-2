@@ -229,4 +229,13 @@ public class ConsumerOffsetManager extends ConfigManager {
         String key = topic + TOPIC_GROUP_SEPARATOR + group;
         return this.offsetTable.get(key);
     }
+
+    public void cloneOffset(final String srcGroup, final String destGroup, final String topic) {
+        ConcurrentHashMap<Integer, Long> offsets =
+                this.offsetTable.get(topic + TOPIC_GROUP_SEPARATOR + srcGroup);
+        if (offsets != null) {
+            this.offsetTable.put(topic + TOPIC_GROUP_SEPARATOR + destGroup, offsets);
+        }
+    }
+
 }

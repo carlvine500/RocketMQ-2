@@ -135,6 +135,8 @@ public class UpdateTopicSubCommand implements SubCommand {
                 isOrder = Boolean.parseBoolean(commandLine.getOptionValue('o').trim());
             }
 
+            topicConfig.setOrder(isOrder);
+
             if (commandLine.hasOption('b')) {
                 String addr = commandLine.getOptionValue('b').trim();
 

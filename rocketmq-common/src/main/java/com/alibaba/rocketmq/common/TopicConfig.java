@@ -35,6 +35,7 @@ public class TopicConfig {
     private int perm = PermName.PERM_READ | PermName.PERM_WRITE;
     private TopicFilterType topicFilterType = TopicFilterType.SINGLE_TAG;
     private int topicSysFlag = 0;
+    private boolean order = false;
 
 
     public TopicConfig() {
@@ -160,6 +161,15 @@ public class TopicConfig {
     }
 
 
+    public boolean isOrder() {
+        return order;
+    }
+
+
+    public void setOrder(boolean isOrder) {
+        this.order = isOrder;
+    }
+
     @Override
     public boolean equals(Object obj) {
         TopicConfig other = (TopicConfig) obj;
@@ -167,7 +177,7 @@ public class TopicConfig {
             return this.topicName.equals(other.topicName) && this.readQueueNums == other.readQueueNums
                     && this.writeQueueNums == other.writeQueueNums && this.perm == other.perm
                     && this.topicFilterType == other.topicFilterType
-                    && this.topicSysFlag == other.topicSysFlag;
+                    && this.topicSysFlag == other.topicSysFlag && this.order == other.order;
         }
 
         return false;
@@ -178,6 +188,7 @@ public class TopicConfig {
     public String toString() {
         return "TopicConfig [topicName=" + topicName + ", readQueueNums=" + readQueueNums
                 + ", writeQueueNums=" + writeQueueNums + ", perm=" + PermName.perm2String(perm)
-                + ", topicFilterType=" + topicFilterType + ", topicSysFlag=" + topicSysFlag + "]";
+                + ", topicFilterType=" + topicFilterType + ", topicSysFlag=" + topicSysFlag + ", order="
+                + order + "]";
     }
 }

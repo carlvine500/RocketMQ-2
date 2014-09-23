@@ -167,6 +167,15 @@ public class SendMessageProcessor implements NettyRequestProcessor {
             return response;
         }
 
+
+        // 检查Broker权限
+        if (!PermName.isWriteable(this.brokerController.getBrokerConfig().getBrokerPermission())) {
+            response.setCode(ResponseCode.NO_PERMISSION);
+            response.setRemark("the broker[" + this.brokerController.getBrokerConfig().getBrokerIP1()
+                    + "] sending message is forbidden");
+            return response;
+        }
+
         // 如果重试队列数目为0，则直接丢弃消息
         if (subscriptionGroupConfig.getRetryQueueNums() <= 0) {
             response.setCode(ResponseCode.SUCCESS);
@@ -338,8 +347,10 @@ public class SendMessageProcessor implements NettyRequestProcessor {
             log.debug("receive SendMessage request command, " + request);
         }
 
-        // 检查Broker权限
-        if (!PermName.isWriteable(this.brokerController.getBrokerConfig().getBrokerPermission())) {
+
+        // 检查Broker权限, 顺序消息禁写；非顺序消息通过 nameserver 通知客户端剔除禁写分区
+        if (!PermName.isWriteable(this.brokerController.getBrokerConfig().getBrokerPermission())
+                && this.brokerController.getTopicConfigManager().isOrderTopic(requestHeader.getTopic())) {
             response.setCode(ResponseCode.NO_PERMISSION);
             response.setRemark("the broker[" + this.brokerController.getBrokerConfig().getBrokerIP1()
                     + "] sending message is forbidden");

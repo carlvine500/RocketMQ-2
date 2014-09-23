@@ -436,7 +436,6 @@ public class UtilAll {
         return true;
     }
 
-
     public static String jstack() {
         StringBuilder result = new StringBuilder();
         try {

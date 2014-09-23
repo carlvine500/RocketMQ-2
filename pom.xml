@@ -14,11 +14,13 @@
     </parent>
 
 
+
     <modelVersion>4.0.0</modelVersion>
     <inceptionYear>2012</inceptionYear>
     <groupId>com.alibaba.rocketmq</groupId>
     <artifactId>rocketmq-all</artifactId>
-    <version>3.1.9-SNAPSHOT</version>
+    <version>3.1.9</version>
+
     <packaging>pom</packaging>
     <name>rocketmq-all ${project.version}</name>
     <url>https://github.com/alibaba/rocketmq</url>
@@ -30,7 +32,6 @@
         <module>rocketmq-common</module>
         <module>rocketmq-broker</module>
         <module>rocketmq-tools</module>
-        <module>rocketmq-research</module>
         <module>rocketmq-store</module>
         <module>rocketmq-namesrv</module>
         <module>rocketmq-remoting</module>

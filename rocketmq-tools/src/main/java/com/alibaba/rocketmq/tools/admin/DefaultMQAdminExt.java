@@ -415,4 +415,11 @@ public class DefaultMQAdminExt extends ClientConfig implements MQAdminExt {
         return this.defaultMQAdminExtImpl.messageTrackDetail(msg);
     }
 
+
+    @Override
+    public void cloneGroupOffset(String srcGroup, String destGroup, String topic, boolean isOffline)
+            throws RemotingException, MQClientException, InterruptedException, MQBrokerException {
+        this.defaultMQAdminExtImpl.cloneGroupOffset(srcGroup, destGroup, topic, isOffline);
+    }
+
 }

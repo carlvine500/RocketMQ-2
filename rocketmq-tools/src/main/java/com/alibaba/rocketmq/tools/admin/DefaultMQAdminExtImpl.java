@@ -798,4 +798,22 @@ public class DefaultMQAdminExtImpl implements MQAdminExt, MQAdminExtInner {
 
         return result;
     }
+
+
+    @Override
+    public void cloneGroupOffset(String srcGroup, String destGroup, String topic, boolean isOffline)
+            throws RemotingException, MQClientException, InterruptedException, MQBrokerException {
+        String retryTopic = MixAll.getRetryTopic(srcGroup);
+        TopicRouteData topicRouteData = this.examineTopicRouteInfo(retryTopic);
+
+        for (BrokerData bd : topicRouteData.getBrokerDatas()) {
+            String addr = bd.selectBrokerAddr();
+            if (addr != null) {
+                // 由于查询时间戳会产生IO操作，可能会耗时较长，所以超时时间设置为15s
+                this.mqClientInstance.getMQClientAPIImpl().cloneGroupOffset(addr, srcGroup, destGroup, topic,
+                    isOffline, 15000);
+            }
+        }
+    }
+
 }

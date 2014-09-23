@@ -1,5 +1,8 @@
 package com.alibaba.rocketmq.common.namesrv;
 
+import com.alibaba.rocketmq.common.protocol.body.KVTable;
+
+
 /**
  * @author shijia.wxr<vintage.wang@gmail.com>
  * @since 2013-7-8
@@ -7,6 +10,7 @@ package com.alibaba.rocketmq.common.namesrv;
 public class RegisterBrokerResult {
     private String haServerAddr;
     private String masterAddr;
+    private KVTable kvTable;
 
 
     public String getHaServerAddr() {
@@ -26,5 +30,15 @@ public class RegisterBrokerResult {
 
     public void setMasterAddr(String masterAddr) {
         this.masterAddr = masterAddr;
+    }
+
+
+    public KVTable getKvTable() {
+        return kvTable;
+    }
+
+
+    public void setKvTable(KVTable kvTable) {
+        this.kvTable = kvTable;
     }
 }

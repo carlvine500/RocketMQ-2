@@ -15,6 +15,8 @@
  */
 package com.alibaba.rocketmq.client.hook;
 
+import java.util.List;
+import java.util.Map;
 import com.alibaba.rocketmq.common.message.MessageExt;
 import com.alibaba.rocketmq.common.message.MessageQueue;
 

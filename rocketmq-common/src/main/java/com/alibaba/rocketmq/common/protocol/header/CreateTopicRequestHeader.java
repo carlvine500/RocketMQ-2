@@ -26,6 +26,8 @@ public class CreateTopicRequestHeader implements CommandCustomHeader {
     @CFNotNull
     private String topicFilterType;
     private Integer topicSysFlag;
+    @CFNotNull
+    private Boolean order = false;
 
 
     @Override
@@ -111,5 +113,15 @@ public class CreateTopicRequestHeader implements CommandCustomHeader {
 
     public void setTopicSysFlag(Integer topicSysFlag) {
         this.topicSysFlag = topicSysFlag;
+    }
+
+
+    public Boolean getOrder() {
+        return order;
+    }
+
+
+    public void setOrder(Boolean order) {
+        this.order = order;
     }
 }
