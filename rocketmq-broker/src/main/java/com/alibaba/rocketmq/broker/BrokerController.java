@@ -172,7 +172,7 @@ public class BrokerController {
 
         if (this.brokerConfig.getNamesrvAddr() != null) {
             this.brokerOuterAPI.updateNameServerAddressList(this.brokerConfig.getNamesrvAddr());
-            log.info("user specfied name server address: {}", this.brokerConfig.getNamesrvAddr());
+            log.info("user specified name server address: {}", this.brokerConfig.getNamesrvAddr());
         }
 
         this.slaveSynchronize = new SlaveSynchronize(this);

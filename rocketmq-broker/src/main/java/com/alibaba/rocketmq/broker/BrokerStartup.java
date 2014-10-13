@@ -165,10 +165,8 @@ public class BrokerStartup {
             if (null != namesrvAddr) {
                 try {
                     String[] addrArray = namesrvAddr.split(";");
-                    if (addrArray != null) {
-                        for (String addr : addrArray) {
-                            RemotingUtil.string2SocketAddress(addr);
-                        }
+                    for (String addr : addrArray) {
+                        RemotingUtil.string2SocketAddress(addr);
                     }
                 }
                 catch (Exception e) {
@@ -189,7 +187,7 @@ public class BrokerStartup {
                 break;
             case SLAVE:
                 if (brokerConfig.getBrokerId() <= 0) {
-                    System.out.println("Slave's brokerId must be > 0");
+                    System.err.println("Slave's brokerId must be > 0");
                     System.exit(-3);
                 }
 
@@ -238,9 +236,9 @@ public class BrokerStartup {
                         log.info("shutdown hook was invoked, " + this.shutdownTimes.incrementAndGet());
                         if (!this.hasShutdown) {
                             this.hasShutdown = true;
-                            long begineTime = System.currentTimeMillis();
+                            long beginTime = System.currentTimeMillis();
                             controller.shutdown();
-                            long consumingTimeTotal = System.currentTimeMillis() - begineTime;
+                            long consumingTimeTotal = System.currentTimeMillis() - beginTime;
                             log.info("shutdown hook over, consuming time total(ms): " + consumingTimeTotal);
                         }
                     }
