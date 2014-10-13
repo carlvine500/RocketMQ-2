@@ -39,7 +39,7 @@ public class Consumer {
          */
         consumer.setConsumeFromWhere(ConsumeFromWhere.CONSUME_FROM_FIRST_OFFSET);
 
-        consumer.subscribe("TopicTest", "*");
+        consumer.subscribe("TopicA", "*");
 
         consumer.registerMessageListener(new MessageListenerConcurrently() {
 

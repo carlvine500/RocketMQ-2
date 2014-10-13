@@ -33,7 +33,7 @@ public class Producer {
 
         for (int i = 0; i < 1000; i++) {
             try {
-                Message msg = new Message("TopicTest",// topic
+                Message msg = new Message("TopicA",// topic
                     "TagA",// tag
                     ("Hello RocketMQ " + i).getBytes()// body
                         );
