@@ -19,6 +19,7 @@ BASE_DIR=$(dirname $0)/..
 CLASSPATH=.:${BASE_DIR}/conf:${CLASSPATH}
 
 #JAVA_OPT="${JAVA_OPT} -server -Xms4g -Xmx4g -Xmn2g -XX:PermSize=128m -XX:MaxPermSize=320m"
+#Java 8 removes -XX:PermSize and -XX:MaxPermSize otpions
 JAVA_OPT="${JAVA_OPT} -server -Xms4g -Xmx4g -Xmn2g"
 JAVA_OPT="${JAVA_OPT} -XX:+UseConcMarkSweepGC -XX:+UseCMSCompactAtFullCollection -XX:CMSInitiatingOccupancyFraction=70 -XX:+CMSParallelRemarkEnabled -XX:SoftRefLRUPolicyMSPerMB=0 -XX:+CMSClassUnloadingEnabled -XX:SurvivorRatio=8 -XX:+DisableExplicitGC"
 JAVA_OPT="${JAVA_OPT} -verbose:gc -Xloggc:${HOME}/rmq_bk_gc.log -XX:+PrintGCDetails -XX:+PrintGCDateStamps"
