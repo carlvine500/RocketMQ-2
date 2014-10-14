@@ -386,12 +386,7 @@ public class TopicConfigManager extends ConfigManager {
 
     public boolean isOrderTopic(final String topic) {
         TopicConfig topicConfig = this.topicConfigTable.get(topic);
-        if (topicConfig == null) {
-            return false;
-        }
-        else {
-            return topicConfig.isOrder();
-        }
+        return topicConfig != null && topicConfig.isOrder();
     }
 
 
