@@ -15,22 +15,6 @@
  */
 package com.alibaba.rocketmq.broker;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Properties;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.alibaba.rocketmq.broker.client.ClientHousekeepingService;
 import com.alibaba.rocketmq.broker.client.ConsumerIdsChangeListener;
 import com.alibaba.rocketmq.broker.client.ConsumerManager;
@@ -76,6 +60,21 @@ import com.alibaba.rocketmq.store.DefaultMessageStore;
 import com.alibaba.rocketmq.store.MessageStore;
 import com.alibaba.rocketmq.store.config.BrokerRole;
 import com.alibaba.rocketmq.store.config.MessageStoreConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Properties;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 
 /**
@@ -191,7 +190,7 @@ public class BrokerController {
         boolean result = true;
 
         // 加载Topic配置
-        result = result && this.topicConfigManager.load();
+        result = this.topicConfigManager.load();
 
         // 加载Consumer Offset
         result = result && this.consumerOffsetManager.load();

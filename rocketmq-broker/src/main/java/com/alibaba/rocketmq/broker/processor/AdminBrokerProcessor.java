@@ -304,6 +304,7 @@ public class AdminBrokerProcessor implements NettyRequestProcessor {
             request.setBody(body);
         }
         catch (UnknownHostException e) {
+            e.printStackTrace();
         }
         finally {
             if (selectMappedBufferResult != null) {
@@ -464,9 +465,8 @@ public class AdminBrokerProcessor implements NettyRequestProcessor {
                 this.brokerController.getProducerManager().getGroupChannelTable()
                     .get(requestHeader.getProducerGroup());
         if (channelInfoHashMap != null) {
-            Iterator<Map.Entry<Channel, ClientChannelInfo>> it = channelInfoHashMap.entrySet().iterator();
-            while (it.hasNext()) {
-                ClientChannelInfo info = it.next().getValue();
+            for (Map.Entry<Channel, ClientChannelInfo> channelClientChannelInfoEntry : channelInfoHashMap.entrySet()) {
+                ClientChannelInfo info = channelClientChannelInfoEntry.getValue();
                 Connection connection = new Connection();
                 connection.setClientId(info.getClientId());
                 connection.setLanguage(info.getLanguage());
@@ -506,10 +506,8 @@ public class AdminBrokerProcessor implements NettyRequestProcessor {
             bodydata.setMessageModel(consumerGroupInfo.getMessageModel());
             bodydata.getSubscriptionTable().putAll(consumerGroupInfo.getSubscriptionTable());
 
-            Iterator<Map.Entry<Channel, ClientChannelInfo>> it =
-                    consumerGroupInfo.getChannelInfoTable().entrySet().iterator();
-            while (it.hasNext()) {
-                ClientChannelInfo info = it.next().getValue();
+            for (Map.Entry<Channel, ClientChannelInfo> channelClientChannelInfoEntry : consumerGroupInfo.getChannelInfoTable().entrySet()) {
+                ClientChannelInfo info = channelClientChannelInfoEntry.getValue();
                 Connection connection = new Connection();
                 connection.setClientId(info.getClientId());
                 connection.setLanguage(info.getLanguage());
