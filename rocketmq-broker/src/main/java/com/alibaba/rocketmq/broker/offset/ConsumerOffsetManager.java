@@ -63,7 +63,7 @@ public class ConsumerOffsetManager extends ConfigManager {
             Entry<String, ConcurrentHashMap<Integer, Long>> next = it.next();
             String topicAtGroup = next.getKey();
             String[] arrays = topicAtGroup.split(TOPIC_GROUP_SEPARATOR);
-            if (arrays != null && arrays.length == 2) {
+            if (arrays.length == 2) {
                 String topic = arrays[0];
                 String group = arrays[1];
                 // 当前订阅关系里面没有group-topic订阅关系（消费端当前是停机的状态）并且offset落后很多,则删除消费进度
@@ -98,12 +98,10 @@ public class ConsumerOffsetManager extends ConfigManager {
     public Set<String> whichTopicByConsumer(final String group) {
         Set<String> topics = new HashSet<String>();
 
-        Iterator<Entry<String, ConcurrentHashMap<Integer, Long>>> it = this.offsetTable.entrySet().iterator();
-        while (it.hasNext()) {
-            Entry<String, ConcurrentHashMap<Integer, Long>> next = it.next();
+        for (Entry<String, ConcurrentHashMap<Integer, Long>> next : this.offsetTable.entrySet()) {
             String topicAtGroup = next.getKey();
             String[] arrays = topicAtGroup.split(TOPIC_GROUP_SEPARATOR);
-            if (arrays != null && arrays.length == 2) {
+            if (arrays.length == 2) {
                 if (group.equals(arrays[1])) {
                     topics.add(arrays[0]);
                 }

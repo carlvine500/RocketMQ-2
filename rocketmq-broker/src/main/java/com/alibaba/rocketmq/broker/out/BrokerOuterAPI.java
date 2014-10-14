@@ -16,6 +16,7 @@
 package com.alibaba.rocketmq.broker.out;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -104,13 +105,9 @@ public class BrokerOuterAPI {
     public void updateNameServerAddressList(final String addrs) {
         List<String> lst = new ArrayList<String>();
         String[] addrArray = addrs.split(";");
-        if (addrArray != null) {
-            for (String addr : addrArray) {
-                lst.add(addr);
-            }
+        Collections.addAll(lst, addrArray);
 
-            this.remotingClient.updateNameServerAddressList(lst);
-        }
+        this.remotingClient.updateNameServerAddressList(lst);
     }
 
 
