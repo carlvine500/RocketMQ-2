@@ -15,13 +15,6 @@
  */
 package com.alibaba.rocketmq.broker.out;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.alibaba.rocketmq.client.exception.MQBrokerException;
 import com.alibaba.rocketmq.common.MixAll;
 import com.alibaba.rocketmq.common.constant.LoggerName;
@@ -46,11 +39,17 @@ import com.alibaba.rocketmq.remoting.exception.RemotingTimeoutException;
 import com.alibaba.rocketmq.remoting.netty.NettyClientConfig;
 import com.alibaba.rocketmq.remoting.netty.NettyRemotingClient;
 import com.alibaba.rocketmq.remoting.protocol.RemotingCommand;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 
 /**
  * Broker对外调用的API封装
- * 
+ *
  * @author shijia.wxr<vintage.wang@gmail.com>
  * @author manhong.yqd<manhong.yqd@taobao.com>
  * @since 2013-7-3
@@ -94,8 +93,7 @@ public class BrokerOuterAPI {
                     return nameSrvAddr;
                 }
             }
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             log.error("fetchNameServerAddr Exception", e);
         }
         return nameSrvAddr;
@@ -112,14 +110,14 @@ public class BrokerOuterAPI {
 
 
     private RegisterBrokerResult registerBroker(//
-            final String namesrvAddr,//
-            final String clusterName,// 1
-            final String brokerAddr,// 2
-            final String brokerName,// 3
-            final long brokerId,// 4
-            final String haServerAddr,// 5
-            final TopicConfigSerializeWrapper topicConfigWrapper, // 6
-            final List<String> filterServerList // 7
+                                                final String namesrvAddr,//
+                                                final String clusterName,// 1
+                                                final String brokerAddr,// 2
+                                                final String brokerName,// 3
+                                                final long brokerId,// 4
+                                                final String haServerAddr,// 5
+                                                final TopicConfigSerializeWrapper topicConfigWrapper, // 6
+                                                final List<String> filterServerList // 7
     ) throws RemotingCommandException, MQBrokerException, RemotingConnectException,
             RemotingSendRequestException, RemotingTimeoutException, InterruptedException {
         RegisterBrokerRequestHeader requestHeader = new RegisterBrokerRequestHeader();
@@ -139,21 +137,21 @@ public class BrokerOuterAPI {
         RemotingCommand response = this.remotingClient.invokeSync(namesrvAddr, request, 3000);
         assert response != null;
         switch (response.getCode()) {
-        case ResponseCode.SUCCESS: {
-            RegisterBrokerResponseHeader responseHeader =
-                    (RegisterBrokerResponseHeader) response
-                        .decodeCommandCustomHeader(RegisterBrokerResponseHeader.class);
-            RegisterBrokerResult result = new RegisterBrokerResult();
-            result.setMasterAddr(responseHeader.getMasterAddr());
-            result.setHaServerAddr(responseHeader.getHaServerAddr());
-            result.setHaServerAddr(responseHeader.getHaServerAddr());
-            if (response.getBody() != null) {
-                result.setKvTable(KVTable.decode(response.getBody(), KVTable.class));
+            case ResponseCode.SUCCESS: {
+                RegisterBrokerResponseHeader responseHeader =
+                        (RegisterBrokerResponseHeader) response
+                                .decodeCommandCustomHeader(RegisterBrokerResponseHeader.class);
+                RegisterBrokerResult result = new RegisterBrokerResult();
+                result.setMasterAddr(responseHeader.getMasterAddr());
+                result.setHaServerAddr(responseHeader.getHaServerAddr());
+                result.setHaServerAddr(responseHeader.getHaServerAddr());
+                if (response.getBody() != null) {
+                    result.setKvTable(KVTable.decode(response.getBody(), KVTable.class));
+                }
+                return result;
             }
-            return result;
-        }
-        default:
-            break;
+            default:
+                break;
         }
 
         throw new MQBrokerException(response.getCode(), response.getRemark());
@@ -161,13 +159,13 @@ public class BrokerOuterAPI {
 
 
     public RegisterBrokerResult registerBrokerAll(//
-            final String clusterName,// 1
-            final String brokerAddr,// 2
-            final String brokerName,// 3
-            final long brokerId,// 4
-            final String haServerAddr,// 5
-            final TopicConfigSerializeWrapper topicConfigWrapper,// 6
-            final List<String> filterServerList // 7
+                                                  final String clusterName,// 1
+                                                  final String brokerAddr,// 2
+                                                  final String brokerName,// 3
+                                                  final long brokerId,// 4
+                                                  final String haServerAddr,// 5
+                                                  final TopicConfigSerializeWrapper topicConfigWrapper,// 6
+                                                  final List<String> filterServerList // 7
     ) {
         RegisterBrokerResult registerBrokerResult = null;
 
@@ -177,14 +175,13 @@ public class BrokerOuterAPI {
                 try {
                     RegisterBrokerResult result =
                             this.registerBroker(namesrvAddr, clusterName, brokerAddr, brokerName, brokerId,
-                                haServerAddr, topicConfigWrapper, filterServerList);
+                                    haServerAddr, topicConfigWrapper, filterServerList);
                     if (result != null) {
                         registerBrokerResult = result;
                     }
 
                     log.info("register broker to name server {} OK", namesrvAddr);
-                }
-                catch (Exception e) {
+                } catch (Exception e) {
                     log.warn("registerBroker Exception, " + namesrvAddr, e);
                 }
             }
@@ -195,11 +192,11 @@ public class BrokerOuterAPI {
 
 
     public void unregisterBroker(//
-            final String namesrvAddr,//
-            final String clusterName,// 1
-            final String brokerAddr,// 2
-            final String brokerName,// 3
-            final long brokerId// 4
+                                 final String namesrvAddr,//
+                                 final String clusterName,// 1
+                                 final String brokerAddr,// 2
+                                 final String brokerName,// 3
+                                 final long brokerId// 4
     ) throws RemotingConnectException, RemotingSendRequestException, RemotingTimeoutException,
             InterruptedException, MQBrokerException {
         UnRegisterBrokerRequestHeader requestHeader = new UnRegisterBrokerRequestHeader();
@@ -213,11 +210,11 @@ public class BrokerOuterAPI {
         RemotingCommand response = this.remotingClient.invokeSync(namesrvAddr, request, 3000);
         assert response != null;
         switch (response.getCode()) {
-        case ResponseCode.SUCCESS: {
-            return;
-        }
-        default:
-            break;
+            case ResponseCode.SUCCESS: {
+                return;
+            }
+            default:
+                break;
         }
 
         throw new MQBrokerException(response.getCode(), response.getRemark());
@@ -225,10 +222,10 @@ public class BrokerOuterAPI {
 
 
     public void unregisterBrokerAll(//
-            final String clusterName,// 1
-            final String brokerAddr,// 2
-            final String brokerName,// 3
-            final long brokerId// 4
+                                    final String clusterName,// 1
+                                    final String brokerAddr,// 2
+                                    final String brokerName,// 3
+                                    final long brokerId// 4
     ) {
         List<String> nameServerAddressList = this.remotingClient.getNameServerAddressList();
         if (nameServerAddressList != null) {
@@ -236,8 +233,7 @@ public class BrokerOuterAPI {
                 try {
                     this.unregisterBroker(namesrvAddr, clusterName, brokerAddr, brokerName, brokerId);
                     log.info("unregisterBroker OK, NamesrvAddr: {}", namesrvAddr);
-                }
-                catch (Exception e) {
+                } catch (Exception e) {
                     log.warn("unregisterBroker Exception, " + namesrvAddr, e);
                 }
             }
@@ -253,11 +249,11 @@ public class BrokerOuterAPI {
         RemotingCommand response = this.remotingClient.invokeSync(addr, request, 3000);
         assert response != null;
         switch (response.getCode()) {
-        case ResponseCode.SUCCESS: {
-            return TopicConfigSerializeWrapper.decode(response.getBody(), TopicConfigSerializeWrapper.class);
-        }
-        default:
-            break;
+            case ResponseCode.SUCCESS: {
+                return TopicConfigSerializeWrapper.decode(response.getBody(), TopicConfigSerializeWrapper.class);
+            }
+            default:
+                break;
         }
 
         throw new MQBrokerException(response.getCode(), response.getRemark());
@@ -266,7 +262,7 @@ public class BrokerOuterAPI {
 
     /**
      * 获取所有Consumer Offset
-     * 
+     *
      * @param addr
      * @return
      */
@@ -278,12 +274,12 @@ public class BrokerOuterAPI {
         RemotingCommand response = this.remotingClient.invokeSync(addr, request, 3000);
         assert response != null;
         switch (response.getCode()) {
-        case ResponseCode.SUCCESS: {
-            return ConsumerOffsetSerializeWrapper.decode(response.getBody(),
-                ConsumerOffsetSerializeWrapper.class);
-        }
-        default:
-            break;
+            case ResponseCode.SUCCESS: {
+                return ConsumerOffsetSerializeWrapper.decode(response.getBody(),
+                        ConsumerOffsetSerializeWrapper.class);
+            }
+            default:
+                break;
         }
 
         throw new MQBrokerException(response.getCode(), response.getRemark());
@@ -292,7 +288,7 @@ public class BrokerOuterAPI {
 
     /**
      * 获取所有定时进度
-     * 
+     *
      * @param addr
      * @return
      */
@@ -303,11 +299,11 @@ public class BrokerOuterAPI {
         RemotingCommand response = this.remotingClient.invokeSync(addr, request, 3000);
         assert response != null;
         switch (response.getCode()) {
-        case ResponseCode.SUCCESS: {
-            return new String(response.getBody());
-        }
-        default:
-            break;
+            case ResponseCode.SUCCESS: {
+                return new String(response.getBody());
+            }
+            default:
+                break;
         }
 
         throw new MQBrokerException(response.getCode(), response.getRemark());
@@ -316,7 +312,7 @@ public class BrokerOuterAPI {
 
     /**
      * 获取订阅组配置
-     * 
+     *
      * @param addr
      * @return
      */
@@ -328,11 +324,11 @@ public class BrokerOuterAPI {
         RemotingCommand response = this.remotingClient.invokeSync(addr, request, 3000);
         assert response != null;
         switch (response.getCode()) {
-        case ResponseCode.SUCCESS: {
-            return SubscriptionGroupWrapper.decode(response.getBody(), SubscriptionGroupWrapper.class);
-        }
-        default:
-            break;
+            case ResponseCode.SUCCESS: {
+                return SubscriptionGroupWrapper.decode(response.getBody(), SubscriptionGroupWrapper.class);
+            }
+            default:
+                break;
         }
 
         throw new MQBrokerException(response.getCode(), response.getRemark());
