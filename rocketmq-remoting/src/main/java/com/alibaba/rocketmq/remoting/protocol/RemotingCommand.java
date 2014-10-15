@@ -15,17 +15,17 @@
  */
 package com.alibaba.rocketmq.remoting.protocol;
 
+import com.alibaba.fastjson.annotation.JSONField;
+import com.alibaba.rocketmq.remoting.CommandCustomHeader;
+import com.alibaba.rocketmq.remoting.annotation.CFNotNull;
+import com.alibaba.rocketmq.remoting.exception.RemotingCommandException;
+
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import com.alibaba.fastjson.annotation.JSONField;
-import com.alibaba.rocketmq.remoting.CommandCustomHeader;
-import com.alibaba.rocketmq.remoting.annotation.CFNotNull;
-import com.alibaba.rocketmq.remoting.exception.RemotingCommandException;
 
 
 /**
@@ -42,8 +42,8 @@ public class RemotingCommand {
     private static final int RPC_TYPE = 0; // 0, REQUEST_COMMAND
     // 1, RESPONSE_COMMAND
 
-    private static final int RPC_ONEWAY = 1; // 0, RPC
-    // 1, Oneway
+    private static final int RPC_ONE_WAY = 1; // 0, RPC
+    // 1, One way
 
     /**
      * Header 部分
@@ -151,8 +151,10 @@ public class RemotingCommand {
                             value = field.get(this.customHeader);
                         }
                         catch (IllegalArgumentException e) {
+                            e.printStackTrace();
                         }
                         catch (IllegalAccessException e) {
+                            e.printStackTrace();
                         }
 
                         if (value != null) {
@@ -249,6 +251,7 @@ public class RemotingCommand {
 
                         }
                         catch (Throwable e) {
+                            e.printStackTrace();
                         }
                     }
                 }
@@ -381,14 +384,14 @@ public class RemotingCommand {
 
 
     public void markOnewayRPC() {
-        int bits = 1 << RPC_ONEWAY;
+        int bits = 1 << RPC_ONE_WAY;
         this.flag |= bits;
     }
 
 
     @JSONField(serialize = false)
     public boolean isOnewayRPC() {
-        int bits = 1 << RPC_ONEWAY;
+        int bits = 1 << RPC_ONE_WAY;
         return (this.flag & bits) == bits;
     }
 
