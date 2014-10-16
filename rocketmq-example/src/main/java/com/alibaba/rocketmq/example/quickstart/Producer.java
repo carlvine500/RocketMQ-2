@@ -28,7 +28,7 @@ import com.alibaba.rocketmq.common.message.Message;
 public class Producer {
     public static void main(String[] args) throws MQClientException, InterruptedException {
         DefaultMQProducer producer = new DefaultMQProducer("please_rename_unique_group_name");
-        producer.setNamesrvAddr("127.0.0.1:9876");
+        producer.setNamesrvAddr("172.30.50.54:9876");
         producer.start();
 
         for (int i = 0; i < 1000; i++) {

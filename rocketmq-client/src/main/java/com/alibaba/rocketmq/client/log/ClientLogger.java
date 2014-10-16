@@ -15,14 +15,13 @@
  */
 package com.alibaba.rocketmq.client.log;
 
-import java.lang.reflect.Method;
-import java.net.URL;
-
+import com.alibaba.rocketmq.common.constant.LoggerName;
 import org.slf4j.ILoggerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.alibaba.rocketmq.common.constant.LoggerName;
+import java.lang.reflect.Method;
+import java.net.URL;
 
 
 /**
@@ -99,7 +98,7 @@ public class ClientLogger {
                 }
             }
             catch (Exception e) {
-                System.err.println(e);
+                e.printStackTrace();
             }
         }
         return LoggerFactory.getLogger(LoggerName.ClientLoggerName);

@@ -24,6 +24,7 @@ import com.alibaba.rocketmq.common.message.MessageExt;
 
 
 public class TestProducer {
+
     public static void main(String[] args) throws MQClientException, InterruptedException {
         /**
          * 一个应用创建一个Producer，由应用来维护此对象，可以设置为全局对象或者单例<br>
