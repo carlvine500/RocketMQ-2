@@ -31,6 +31,7 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.handler.ssl.SslContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -72,6 +73,8 @@ public abstract class NettyRemotingAbstract {
             new HashMap<Integer, Pair<NettyRequestProcessor, ExecutorService>>(64);
 
     protected final NettyEventExecutor nettyEventExecutor = new NettyEventExecutor();
+
+    protected SslContext sslContext;
 
 
     public abstract ChannelEventListener getChannelEventListener();

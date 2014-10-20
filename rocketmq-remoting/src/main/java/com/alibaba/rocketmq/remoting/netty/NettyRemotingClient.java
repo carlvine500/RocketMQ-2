@@ -285,13 +285,24 @@ public class NettyRemotingClient extends NettyRemotingAbstract implements Remoti
             .handler(new ChannelInitializer<SocketChannel>() {
                 @Override
                 public void initChannel(SocketChannel ch) throws Exception {
-                    ch.pipeline().addLast(//
-                        defaultEventExecutorGroup, //
-                        new NettyEncoder(), //
-                        new NettyDecoder(), //
-                        new IdleStateHandler(0, 0, nettyClientConfig.getClientChannelMaxIdleTimeSeconds()),//
-                        new NettyConnectManageHandler(), //
-                        new NettyClientHandler());
+                    if (null == sslContext) {
+                        ch.pipeline().addLast(//
+                            defaultEventExecutorGroup, //
+                            new NettyEncoder(), //
+                            new NettyDecoder(), //
+                            new IdleStateHandler(0, 0, nettyClientConfig.getClientChannelMaxIdleTimeSeconds()),//
+                            new NettyConnectManageHandler(), //
+                            new NettyClientHandler());
+                    } else {
+                        ch.pipeline().addLast(//
+                            defaultEventExecutorGroup, //
+                            sslContext.newHandler(ch.alloc()),
+                            new NettyEncoder(), //
+                            new NettyDecoder(), //
+                            new IdleStateHandler(0, 0, nettyClientConfig.getClientChannelMaxIdleTimeSeconds()),//
+                            new NettyConnectManageHandler(), //
+                            new NettyClientHandler());
+                    }
                 }
             });
 

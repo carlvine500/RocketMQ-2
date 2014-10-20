@@ -87,7 +87,7 @@ public class NettyRemotingServer extends NettyRemotingAbstract implements Remoti
 
     public NettyRemotingServer(final NettyServerConfig nettyServerConfig,
             final ChannelEventListener channelEventListener) {
-        super(nettyServerConfig.getServerOnewaySemaphoreValue(), nettyServerConfig
+        super(nettyServerConfig.getServerOneWaySemaphoreValue(), nettyServerConfig
             .getServerAsyncSemaphoreValue());
         this.serverBootstrap = new ServerBootstrap();
         this.nettyServerConfig = nettyServerConfig;
@@ -169,15 +169,24 @@ public class NettyRemotingServer extends NettyRemotingAbstract implements Remoti
                     .childHandler(new ChannelInitializer<SocketChannel>() {
                         @Override
                         public void initChannel(SocketChannel ch) throws Exception {
-                            ch.pipeline().addLast(
-                                //
-                                defaultEventExecutorGroup, //
-                                new NettyEncoder(), //
-                                new NettyDecoder(), //
-                                new IdleStateHandler(0, 0, nettyServerConfig
-                                    .getServerChannelMaxIdleTimeSeconds()),//
-                                new NettyConnectManageHandler(), //
-                                new NettyServerHandler());
+                            if (null == sslContext) {
+                                ch.pipeline().addLast(
+                                    defaultEventExecutorGroup, //
+                                    new NettyEncoder(), //
+                                    new NettyDecoder(), //
+                                    new IdleStateHandler(0, 0, nettyServerConfig.getServerChannelMaxIdleTimeSeconds()),//
+                                    new NettyConnectManageHandler(), //
+                                    new NettyServerHandler());
+                            } else {
+                                ch.pipeline().addLast(
+                                        defaultEventExecutorGroup, //
+                                        sslContext.newHandler(ch.alloc()),
+                                        new NettyEncoder(), //
+                                        new NettyDecoder(), //
+                                        new IdleStateHandler(0, 0, nettyServerConfig.getServerChannelMaxIdleTimeSeconds()),//
+                                        new NettyConnectManageHandler(), //
+                                        new NettyServerHandler());
+                            }
                         }
                     });
 

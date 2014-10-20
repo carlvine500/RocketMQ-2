@@ -38,6 +38,9 @@ public class NettyClientConfig {
     private boolean clientPooledByteBufAllocatorEnable = false;
 
 
+    private boolean ssl = false;
+
+
     public int getClientWorkerThreads() {
         return clientWorkerThreads;
     }
@@ -135,5 +138,13 @@ public class NettyClientConfig {
 
     public void setClientPooledByteBufAllocatorEnable(boolean clientPooledByteBufAllocatorEnable) {
         this.clientPooledByteBufAllocatorEnable = clientPooledByteBufAllocatorEnable;
+    }
+
+    public boolean isSsl() {
+        return ssl;
+    }
+
+    public void setSsl(boolean ssl) {
+        this.ssl = ssl;
     }
 }
