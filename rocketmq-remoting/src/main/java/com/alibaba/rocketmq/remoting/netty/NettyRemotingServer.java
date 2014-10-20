@@ -196,7 +196,7 @@ public class NettyRemotingServer extends NettyRemotingAbstract implements Remoti
         }
 
         if (this.channelEventListener != null) {
-            this.nettyEventExecuter.start();
+            this.nettyEventExecutor.start();
         }
 
         // 每隔1秒扫描下异步调用超时情况
@@ -269,8 +269,8 @@ public class NettyRemotingServer extends NettyRemotingAbstract implements Remoti
 
             this.eventLoopGroupWorker.shutdownGracefully();
 
-            if (this.nettyEventExecuter != null) {
-                this.nettyEventExecuter.shutdown();
+            if (this.nettyEventExecutor != null) {
+                this.nettyEventExecutor.shutdown();
             }
 
             if (this.defaultEventExecutorGroup != null) {
