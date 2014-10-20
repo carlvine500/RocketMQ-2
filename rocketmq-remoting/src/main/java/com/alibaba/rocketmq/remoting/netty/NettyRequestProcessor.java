@@ -27,6 +27,7 @@ import com.alibaba.rocketmq.remoting.protocol.RemotingCommand;
  * @since 2013-7-13
  */
 public interface NettyRequestProcessor {
+
     public RemotingCommand processRequest(ChannelHandlerContext ctx, RemotingCommand request)
             throws Exception;
 }

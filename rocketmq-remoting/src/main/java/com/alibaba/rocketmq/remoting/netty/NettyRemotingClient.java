@@ -133,7 +133,7 @@ public class NettyRemotingClient extends NettyRemotingAbstract implements Remoti
         }
     }
 
-    class NettyConnetManageHandler extends ChannelDuplexHandler {
+    class NettyConnectManageHandler extends ChannelDuplexHandler {
         @Override
         public void connect(ChannelHandlerContext ctx, SocketAddress remoteAddress,
                 SocketAddress localAddress, ChannelPromise promise) throws Exception {
@@ -290,7 +290,7 @@ public class NettyRemotingClient extends NettyRemotingAbstract implements Remoti
                         new NettyEncoder(), //
                         new NettyDecoder(), //
                         new IdleStateHandler(0, 0, nettyClientConfig.getClientChannelMaxIdleTimeSeconds()),//
-                        new NettyConnetManageHandler(), //
+                        new NettyConnectManageHandler(), //
                         new NettyClientHandler());
                 }
             });
@@ -666,7 +666,7 @@ public class NettyRemotingClient extends NettyRemotingAbstract implements Remoti
 
 
     @Override
-    public void invokeOneway(String addr, RemotingCommand request, long timeoutMillis)
+    public void invokeOneWay(String addr, RemotingCommand request, long timeoutMillis)
             throws InterruptedException, RemotingConnectException, RemotingTooMuchRequestException,
             RemotingTimeoutException, RemotingSendRequestException {
         final Channel channel = this.getAndCreateChannel(addr);
@@ -678,7 +678,7 @@ public class NettyRemotingClient extends NettyRemotingAbstract implements Remoti
                 this.invokeOnewayImpl(channel, request, timeoutMillis);
             }
             catch (RemotingSendRequestException e) {
-                log.warn("invokeOneway: send request exception, so close the channel[{}]", addr);
+                log.warn("invokeOneWay: send request exception, so close the channel[{}]", addr);
                 this.closeChannel(addr, channel);
                 throw e;
             }
