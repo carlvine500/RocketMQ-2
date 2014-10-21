@@ -901,7 +901,7 @@ public class DefaultMQProducerImpl implements MQProducerInner {
 
 
     public TransactionSendResult sendMessageInTransaction(final Message msg,
-                                                          final LocalTransactionExecuter tranExecuter, final Object arg) throws MQClientException {
+                                                          final LocalTransactionExecutor tranExecuter, final Object arg) throws MQClientException {
         // 有效性检查
         if (null == tranExecuter) {
             throw new MQClientException("tranExecutor is null", null);

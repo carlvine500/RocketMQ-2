@@ -23,7 +23,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.alibaba.rocketmq.client.exception.MQClientException;
-import com.alibaba.rocketmq.client.producer.LocalTransactionExecuter;
+import com.alibaba.rocketmq.client.producer.LocalTransactionExecutor;
 import com.alibaba.rocketmq.client.producer.LocalTransactionState;
 import com.alibaba.rocketmq.client.producer.SendResult;
 import com.alibaba.rocketmq.client.producer.TransactionCheckListener;
@@ -109,7 +109,7 @@ public class TransactionProducer {
         producer.setDefaultTopicQueueNums(1000);
         producer.start();
 
-        final TransactionExecuterBImpl tranExecuter = new TransactionExecuterBImpl(ischeck);
+        final TransactionExecutorBImpl tranExecuter = new TransactionExecutorBImpl(ischeck);
 
         for (int i = 0; i < threadCount; i++) {
             sendThreadPool.execute(new Runnable() {
@@ -165,12 +165,12 @@ public class TransactionProducer {
 }
 
 
-class TransactionExecuterBImpl implements LocalTransactionExecuter {
+class TransactionExecutorBImpl implements LocalTransactionExecutor {
 
     private boolean ischeck;
 
 
-    public TransactionExecuterBImpl(boolean ischeck) {
+    public TransactionExecutorBImpl(boolean ischeck) {
         this.ischeck = ischeck;
     }
 

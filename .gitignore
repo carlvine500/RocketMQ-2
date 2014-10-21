@@ -80,3 +80,4 @@ target-client/alibaba-rocketmq-client-java-3.1.1/alibaba-rocketmq-client-java/ro
 target-client/alibaba-rocketmq-client-java-3.1.1/alibaba-rocketmq-client-java/rocketmq-remoting-3.1.1.jar
 target-client/alibaba-rocketmq-client-java-3.1.1/alibaba-rocketmq-client-java/slf4j-api-1.7.5.jar
 */nohup.out
+conf/*.pem
