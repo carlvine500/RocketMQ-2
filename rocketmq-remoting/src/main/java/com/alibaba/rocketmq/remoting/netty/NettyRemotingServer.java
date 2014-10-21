@@ -39,6 +39,8 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.handler.ssl.SslContext;
+import io.netty.handler.ssl.util.SelfSignedCertificate;
 import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
 import io.netty.handler.timeout.IdleStateHandler;
@@ -46,7 +48,9 @@ import io.netty.util.concurrent.DefaultEventExecutorGroup;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.net.ssl.SSLException;
 import java.net.InetSocketAddress;
+import java.security.cert.CertificateException;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ExecutorService;
@@ -131,6 +135,20 @@ public class NettyRemotingServer extends NettyRemotingAbstract implements Remoti
                             this.threadIndex.incrementAndGet()));
                     }
                 });
+
+
+        if (nettyServerConfig.isSsl()) {
+            try {
+                SelfSignedCertificate ssc = new SelfSignedCertificate();
+                sslContext = SslContext.newServerContext(ssc.certificate(), ssc.privateKey());
+            } catch (SSLException e) {
+                log.error(e.getMessage());
+                e.printStackTrace();
+                System.exit(1);
+            } catch (CertificateException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
 

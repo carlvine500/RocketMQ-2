@@ -40,6 +40,8 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.handler.ssl.SslContext;
+import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
 import io.netty.handler.timeout.IdleStateHandler;
@@ -47,6 +49,7 @@ import io.netty.util.concurrent.DefaultEventExecutorGroup;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.net.ssl.SSLException;
 import java.net.SocketAddress;
 import java.util.Collections;
 import java.util.List;
@@ -254,6 +257,16 @@ public class NettyRemotingClient extends NettyRemotingAbstract implements Remoti
                     this.threadIndex.incrementAndGet()));
             }
         });
+
+        if (nettyClientConfig.isSsl()) {
+
+            try {
+                sslContext = SslContext.newClientContext(InsecureTrustManagerFactory.INSTANCE);
+            } catch (SSLException e) {
+                e.printStackTrace();
+            }
+
+        }
     }
 
 

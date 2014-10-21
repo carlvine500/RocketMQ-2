@@ -36,6 +36,16 @@ public class NettyServerConfig {
 
     private boolean ssl = false;
 
+    /**
+     * For now, it's not used yet.
+     */
+    private String serverKeyPath;
+
+    /**
+     * For now, it's not used yet.
+     */
+    private String serverCertPath;
+
     public int getListenPort() {
         return listenPort;
     }
@@ -141,5 +151,21 @@ public class NettyServerConfig {
 
     public void setSsl(boolean ssl) {
         this.ssl = ssl;
+    }
+
+    public String getServerKeyPath() {
+        return serverKeyPath;
+    }
+
+    public void setServerKeyPath(String serverKeyPath) {
+        this.serverKeyPath = serverKeyPath;
+    }
+
+    public String getServerCertPath() {
+        return serverCertPath;
+    }
+
+    public void setServerCertPath(String serverCertPath) {
+        this.serverCertPath = serverCertPath;
     }
 }
