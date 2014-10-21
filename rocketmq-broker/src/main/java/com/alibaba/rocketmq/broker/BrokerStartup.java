@@ -148,15 +148,9 @@ public class BrokerStartup {
 
                     System.out.println("load config properties file OK, " + file);
                 }
-
-                if("true".equals(System.getProperty("enable_ssl"))) {
-                    nettyServerConfig.setSsl(true);
-                }
-
-                if("true".equals(System.getenv("ROCKETMQ_ENABLE_SSL"))) {
-                    nettyServerConfig.setSsl(true);
-                }
             }
+
+            MixAll.updateSSL(nettyServerConfig);
 
             MixAll.properties2Object(ServerUtil.commandLine2Properties(commandLine), brokerConfig);
 
