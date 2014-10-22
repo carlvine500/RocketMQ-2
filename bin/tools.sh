@@ -15,6 +15,7 @@ CLASSPATH=.:${BASE_DIR}/conf:${CLASSPATH}
 
 JAVA_OPT="${JAVA_OPT} -Djava.ext.dirs=${BASE_DIR}/lib -cp ${CLASSPATH}"
 
+JAVA_OPT="${JAVA_OPT} -Denable_ssl=true"
 
 if [ -z "$JAVA_HOME" ]; then
   JAVA_HOME=/opt/taobao/java

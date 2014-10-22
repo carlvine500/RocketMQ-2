@@ -16,6 +16,7 @@
 package com.alibaba.rocketmq.common;
 
 import com.alibaba.rocketmq.common.annotation.ImportantField;
+import com.alibaba.rocketmq.remoting.netty.NettyClientConfig;
 import com.alibaba.rocketmq.remoting.netty.NettyServerConfig;
 import org.slf4j.Logger;
 
@@ -472,6 +473,14 @@ public class MixAll {
             nettyServerConfig.setSsl(true);
         } else if ("true".equals(System.getProperty("enable_ssl"))){
             nettyServerConfig.setSsl(true);
+        }
+    }
+
+    public static void updateSSL(NettyClientConfig nettyClientConfig) {
+        if ("true".equals(System.getenv("ROCKETMQ_ENABLE_SSL"))) {
+            nettyClientConfig.setSsl(true);
+        } else if ("true".equals(System.getProperty("enable_ssl"))){
+            nettyClientConfig.setSsl(true);
         }
     }
 }

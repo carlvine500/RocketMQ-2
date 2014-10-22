@@ -151,6 +151,7 @@ public class BrokerStartup {
             }
 
             MixAll.updateSSL(nettyServerConfig);
+            MixAll.updateSSL(nettyClientConfig);
 
             MixAll.properties2Object(ServerUtil.commandLine2Properties(commandLine), brokerConfig);
 

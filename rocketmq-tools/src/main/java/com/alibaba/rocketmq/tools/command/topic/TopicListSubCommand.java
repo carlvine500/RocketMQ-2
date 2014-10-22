@@ -15,14 +15,6 @@
  */
 package com.alibaba.rocketmq.tools.command.topic;
 
-import java.util.Iterator;
-import java.util.Map.Entry;
-import java.util.Set;
-
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.Options;
-
 import com.alibaba.rocketmq.client.exception.MQClientException;
 import com.alibaba.rocketmq.common.MixAll;
 import com.alibaba.rocketmq.common.UtilAll;
@@ -35,6 +27,12 @@ import com.alibaba.rocketmq.remoting.RPCHook;
 import com.alibaba.rocketmq.remoting.exception.RemotingException;
 import com.alibaba.rocketmq.tools.admin.DefaultMQAdminExt;
 import com.alibaba.rocketmq.tools.command.SubCommand;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
+
+import java.util.Map.Entry;
+import java.util.Set;
 
 
 /**
@@ -76,9 +74,7 @@ public class TopicListSubCommand implements SubCommand {
 
         String brokerName = brokerData.getBrokerName();
 
-        Iterator<Entry<String, Set<String>>> it = clusterInfo.getClusterAddrTable().entrySet().iterator();
-        while (it.hasNext()) {
-            Entry<String, Set<String>> next = it.next();
+        for (Entry<String, Set<String>> next : clusterInfo.getClusterAddrTable().entrySet()) {
             if (next.getValue().contains(brokerName)) {
                 return next.getKey();
             }
@@ -122,6 +118,7 @@ public class TopicListSubCommand implements SubCommand {
                         groupList = defaultMQAdminExt.queryTopicConsumeByWho(topic);
                     }
                     catch (Exception e) {
+                        e.printStackTrace();
                     }
 
                     if (null == groupList || groupList.getGroupList().isEmpty()) {

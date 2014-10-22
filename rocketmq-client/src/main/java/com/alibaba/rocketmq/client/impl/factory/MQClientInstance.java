@@ -15,27 +15,6 @@
  */
 package com.alibaba.rocketmq.client.impl.factory;
 
-import java.io.UnsupportedEncodingException;
-import java.net.DatagramSocket;
-import java.net.URL;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
-
-import org.slf4j.Logger;
-
 import com.alibaba.rocketmq.client.ClientConfig;
 import com.alibaba.rocketmq.client.admin.MQAdminExtInner;
 import com.alibaba.rocketmq.client.exception.MQBrokerException;
@@ -79,6 +58,26 @@ import com.alibaba.rocketmq.remoting.RPCHook;
 import com.alibaba.rocketmq.remoting.common.RemotingHelper;
 import com.alibaba.rocketmq.remoting.exception.RemotingException;
 import com.alibaba.rocketmq.remoting.netty.NettyClientConfig;
+import org.slf4j.Logger;
+
+import java.io.UnsupportedEncodingException;
+import java.net.DatagramSocket;
+import java.net.URL;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 
 /**
@@ -147,13 +146,14 @@ public class MQClientInstance {
         this.nettyClientConfig = new NettyClientConfig();
         this.nettyClientConfig.setClientCallbackExecutorThreads(clientConfig
             .getClientCallbackExecutorThreads());
+        MixAll.updateSSL(nettyClientConfig);
         this.clientRemotingProcessor = new ClientRemotingProcessor(this);
         this.mQClientAPIImpl =
                 new MQClientAPIImpl(this.nettyClientConfig, this.clientRemotingProcessor, rpcHook);
 
         if (this.clientConfig.getNamesrvAddr() != null) {
             this.mQClientAPIImpl.updateNameServerAddressList(this.clientConfig.getNamesrvAddr());
-            log.info("user specfied name server address: {}", this.clientConfig.getNamesrvAddr());
+            log.info("user specified name server address: {}", this.clientConfig.getNamesrvAddr());
         }
 
         this.clientId = clientId;
@@ -169,7 +169,7 @@ public class MQClientInstance {
 
         this.consumerStatsManager = new ConsumerStatsManager(this.scheduledExecutorService);
 
-        log.info("created a new client Instance, FactoryIndex: {} ClinetID: {} {} {}",//
+        log.info("created a new client Instance, FactoryIndex: {} ClientID: {} {} {}",//
             this.instanceIndex, //
             this.clientId, //
             this.clientConfig, //
@@ -243,7 +243,7 @@ public class MQClientInstance {
                     log.error("ScheduledTask updateTopicRouteInfoFromNameServer exception", e);
                 }
             }
-        }, 10, this.clientConfig.getPollNameServerInteval(), TimeUnit.MILLISECONDS);
+        }, 10, this.clientConfig.getPollNameServerInterval(), TimeUnit.MILLISECONDS);
 
         // 定时清理下线的Broker
         // 向所有Broker发送心跳信息（包含订阅关系等）
@@ -345,9 +345,7 @@ public class MQClientInstance {
 
 
     private boolean isBrokerAddrExistInTopicRouteTable(final String addr) {
-        Iterator<Entry<String, TopicRouteData>> it = this.topicRouteTable.entrySet().iterator();
-        while (it.hasNext()) {
-            Entry<String, TopicRouteData> entry = it.next();
+        for (Entry<String, TopicRouteData> entry : this.topicRouteTable.entrySet()) {
             TopicRouteData topicRouteData = entry.getValue();
             List<BrokerData> bds = topicRouteData.getBrokerDatas();
             for (BrokerData bd : bds) {
@@ -364,9 +362,7 @@ public class MQClientInstance {
 
 
     private void persistAllConsumerOffset() {
-        Iterator<Entry<String, MQConsumerInner>> it = this.consumerTable.entrySet().iterator();
-        while (it.hasNext()) {
-            Entry<String, MQConsumerInner> entry = it.next();
+        for (Entry<String, MQConsumerInner> entry : this.consumerTable.entrySet()) {
             MQConsumerInner impl = entry.getValue();
             impl.persistConsumerOffset();
         }
@@ -413,22 +409,18 @@ public class MQClientInstance {
         if (topicRouteData != null //
                 && topicRouteData.getFilterServerTable() != null
                 && !topicRouteData.getFilterServerTable().isEmpty()) {
-            Iterator<Entry<String, List<String>>> it =
-                    topicRouteData.getFilterServerTable().entrySet().iterator();
-            while (it.hasNext()) {
-                Entry<String, List<String>> next = it.next();
+            for (Entry<String, List<String>> next : topicRouteData.getFilterServerTable().entrySet()) {
                 List<String> value = next.getValue();
                 for (final String fsAddr : value) {
                     try {
                         this.mQClientAPIImpl.registerMessageFilterClass(fsAddr, consumerGroup, topic,
-                            className, classCRC, classBody, 5000);
+                                className, classCRC, classBody, 5000);
 
                         log.info(
-                            "register message class filter to {} OK, ConsumerGroup: {} Topic: {} ClassName: {} ClassFile: {}",
-                            fsAddr, consumerGroup, topic, className, classFile);
+                                "register message class filter to {} OK, ConsumerGroup: {} Topic: {} ClassName: {} ClassFile: {}",
+                                fsAddr, consumerGroup, topic, className, classFile);
 
-                    }
-                    catch (Exception e) {
+                    } catch (Exception e) {
                         log.error("uploadFilterClassToAllFilterServer Exception", e);
                     }
                 }
@@ -443,9 +435,7 @@ public class MQClientInstance {
 
 
     private void uploadFilterClassSource() {
-        Iterator<Entry<String, MQConsumerInner>> it = this.consumerTable.entrySet().iterator();
-        while (it.hasNext()) {
-            Entry<String, MQConsumerInner> next = it.next();
+        for (Entry<String, MQConsumerInner> next : this.consumerTable.entrySet()) {
             MQConsumerInner consumer = next.getValue();
             // 只支持PushConsumer
             if (ConsumeType.CONSUME_PASSIVELY == consumer.consumeType()) {
@@ -457,8 +447,7 @@ public class MQClientInstance {
                         final String topic = sub.getTopic();
                         try {
                             this.uploadFilterClassToAllFilterServer(consumerGroup, className, topic);
-                        }
-                        catch (Exception e) {
+                        } catch (Exception e) {
                             log.error("uploadFilterClassToAllFilterServer Exception", e);
                         }
                     }
@@ -477,9 +466,7 @@ public class MQClientInstance {
             return;
         }
 
-        Iterator<Entry<String, HashMap<Long, String>>> it = this.brokerAddrTable.entrySet().iterator();
-        while (it.hasNext()) {
-            Entry<String, HashMap<Long, String>> entry = it.next();
+        for (Entry<String, HashMap<Long, String>> entry : this.brokerAddrTable.entrySet()) {
             String brokerName = entry.getKey();
             HashMap<Long, String> oneTable = entry.getValue();
             if (oneTable != null) {
@@ -496,8 +483,7 @@ public class MQClientInstance {
                             this.mQClientAPIImpl.sendHearbeat(addr, heartbeatData, 3000);
                             log.info("send heart beat to broker[{} {} {}] success", brokerName, id, addr);
                             log.info(heartbeatData.toString());
-                        }
-                        catch (Exception e) {
+                        } catch (Exception e) {
                             log.error("send heart beat to broker exception", e);
                         }
                     }
@@ -549,9 +535,7 @@ public class MQClientInstance {
 
         // Consumer对象
         {
-            Iterator<Entry<String, MQConsumerInner>> it = this.consumerTable.entrySet().iterator();
-            while (it.hasNext()) {
-                Entry<String, MQConsumerInner> entry = it.next();
+            for (Entry<String, MQConsumerInner> entry : this.consumerTable.entrySet()) {
                 MQConsumerInner impl = entry.getValue();
                 if (impl != null) {
                     Set<SubscriptionData> subList = impl.subscriptions();
@@ -566,9 +550,7 @@ public class MQClientInstance {
 
         // Producer
         {
-            Iterator<Entry<String, MQProducerInner>> it = this.producerTable.entrySet().iterator();
-            while (it.hasNext()) {
-                Entry<String, MQProducerInner> entry = it.next();
+            for (Entry<String, MQProducerInner> entry : this.producerTable.entrySet()) {
                 MQProducerInner impl = entry.getValue();
                 if (impl != null) {
                     Set<String> lst = impl.getPublishTopicList();
