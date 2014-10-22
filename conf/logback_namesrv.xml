@@ -49,17 +49,17 @@
 	</appender>
 
 	<logger name="RocketmqNamesrv" additivity="false">
-		<level value="INFO" />
+		<level value="DEBUG" />
 		<appender-ref ref="RocketmqNamesrvAppender" />
 	</logger>
 
 	<logger name="RocketmqCommon" additivity="false">
-		<level value="INFO" />
+		<level value="DEBUG" />
 		<appender-ref ref="RocketmqNamesrvAppender" />
 	</logger>
 
 	<logger name="RocketmqRemoting" additivity="false">
-		<level value="INFO" />
+		<level value="DEBUG" />
 		<appender-ref ref="RocketmqNamesrvAppender" />
 	</logger>
 
