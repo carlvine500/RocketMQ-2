@@ -95,6 +95,20 @@ public class NettyRemotingServer extends NettyRemotingAbstract implements Remoti
             publicThreadNums = 4;
         }
 
+        if (nettyServerConfig.isSsl()) {
+            log.debug("Detected SSL enabled");
+            try {
+                SelfSignedCertificate ssc = new SelfSignedCertificate();
+                sslContext = SslContext.newServerContext(ssc.certificate(), ssc.privateKey());
+            } catch (SSLException e) {
+                log.error(e.getMessage());
+                e.printStackTrace();
+                System.exit(1);
+            } catch (CertificateException e) {
+                e.printStackTrace();
+            }
+        }
+
         this.publicExecutor = Executors.newFixedThreadPool(publicThreadNums, new ThreadFactory() {
             private AtomicInteger threadIndex = new AtomicInteger(0);
 
@@ -128,21 +142,6 @@ public class NettyRemotingServer extends NettyRemotingAbstract implements Remoti
                                 this.threadIndex.incrementAndGet()));
                     }
                 });
-
-
-        if (nettyServerConfig.isSsl()) {
-            log.debug("Detected SSL enabled");
-            try {
-                SelfSignedCertificate ssc = new SelfSignedCertificate();
-                sslContext = SslContext.newServerContext(ssc.certificate(), ssc.privateKey());
-            } catch (SSLException e) {
-                log.error(e.getMessage());
-                e.printStackTrace();
-                System.exit(1);
-            } catch (CertificateException e) {
-                e.printStackTrace();
-            }
-        }
     }
 
 
@@ -181,6 +180,7 @@ public class NettyRemotingServer extends NettyRemotingAbstract implements Remoti
                             @Override
                             public void initChannel(SocketChannel ch) throws Exception {
                                 if (null == sslContext) {
+                                    log.info("NETTY SERVER CONDUCTING INSECURE LISTENING");
                                     ch.pipeline().addLast(
                                             defaultEventExecutorGroup, //
                                             new NettyEncoder(), //
