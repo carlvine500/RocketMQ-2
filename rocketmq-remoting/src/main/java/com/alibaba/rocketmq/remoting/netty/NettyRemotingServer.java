@@ -28,14 +28,7 @@ import com.alibaba.rocketmq.remoting.exception.RemotingTooMuchRequestException;
 import com.alibaba.rocketmq.remoting.protocol.RemotingCommand;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.PooledByteBufAllocator;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelDuplexHandler;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.ChannelOption;
-import io.netty.channel.EventLoopGroup;
-import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
@@ -61,7 +54,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Remoting服务端实现
- * 
+ *
  * @author shijia.wxr<vintage.wang@gmail.com>
  * @since 2013-7-13
  */
@@ -90,9 +83,9 @@ public class NettyRemotingServer extends NettyRemotingAbstract implements Remoti
 
 
     public NettyRemotingServer(final NettyServerConfig nettyServerConfig,
-            final ChannelEventListener channelEventListener) {
+                               final ChannelEventListener channelEventListener) {
         super(nettyServerConfig.getServerOneWaySemaphoreValue(), nettyServerConfig
-            .getServerAsyncSemaphoreValue());
+                .getServerAsyncSemaphoreValue());
         this.serverBootstrap = new ServerBootstrap();
         this.nettyServerConfig = nettyServerConfig;
         this.channelEventListener = channelEventListener;
@@ -119,7 +112,7 @@ public class NettyRemotingServer extends NettyRemotingAbstract implements Remoti
             @Override
             public Thread newThread(Runnable r) {
                 return new Thread(r,
-                    String.format("NettyBossSelector_%d", this.threadIndex.incrementAndGet()));
+                        String.format("NettyBossSelector_%d", this.threadIndex.incrementAndGet()));
             }
         });
 
@@ -132,12 +125,13 @@ public class NettyRemotingServer extends NettyRemotingAbstract implements Remoti
                     @Override
                     public Thread newThread(Runnable r) {
                         return new Thread(r, String.format("NettyServerSelector_%d_%d", threadTotal,
-                            this.threadIndex.incrementAndGet()));
+                                this.threadIndex.incrementAndGet()));
                     }
                 });
 
 
         if (nettyServerConfig.isSsl()) {
+            log.debug("Detected SSL enabled");
             try {
                 SelfSignedCertificate ssc = new SelfSignedCertificate();
                 sslContext = SslContext.newServerContext(ssc.certificate(), ssc.privateKey());
@@ -155,58 +149,58 @@ public class NettyRemotingServer extends NettyRemotingAbstract implements Remoti
     @Override
     public void start() {
         this.defaultEventExecutorGroup = new DefaultEventExecutorGroup(//
-            nettyServerConfig.getServerWorkerThreads(), //
-            new ThreadFactory() {
+                nettyServerConfig.getServerWorkerThreads(), //
+                new ThreadFactory() {
 
-                private AtomicInteger threadIndex = new AtomicInteger(0);
+                    private AtomicInteger threadIndex = new AtomicInteger(0);
 
-
-                @Override
-                public Thread newThread(Runnable r) {
-                    return new Thread(r, "NettyServerWorkerThread_" + this.threadIndex.incrementAndGet());
-                }
-            });
+                    @Override
+                    public Thread newThread(Runnable r) {
+                        return new Thread(r, "NettyServerWorkerThread_" + this.threadIndex.incrementAndGet());
+                    }
+                });
 
         ServerBootstrap childHandler = //
                 this.serverBootstrap.group(this.eventLoopGroupBoss, this.eventLoopGroupWorker)
-                    .channel(NioServerSocketChannel.class)
-                    //
-                    .option(ChannelOption.SO_BACKLOG, 1024)
-                    //
-                    .option(ChannelOption.SO_REUSEADDR, true)
-                    //
-                    .option(ChannelOption.SO_KEEPALIVE, false)
-                    //
-                    .childOption(ChannelOption.TCP_NODELAY, true)
-                    //
-                    .option(ChannelOption.SO_SNDBUF, nettyServerConfig.getServerSocketSndBufSize())
-                    //
-                    .option(ChannelOption.SO_RCVBUF, nettyServerConfig.getServerSocketRcvBufSize())
-                    //
-                    .localAddress(new InetSocketAddress(this.nettyServerConfig.getListenPort()))
-                    .childHandler(new ChannelInitializer<SocketChannel>() {
-                        @Override
-                        public void initChannel(SocketChannel ch) throws Exception {
-                            if (null == sslContext) {
-                                ch.pipeline().addLast(
-                                    defaultEventExecutorGroup, //
-                                    new NettyEncoder(), //
-                                    new NettyDecoder(), //
-                                    new IdleStateHandler(0, 0, nettyServerConfig.getServerChannelMaxIdleTimeSeconds()),//
-                                    new NettyConnectManageHandler(), //
-                                    new NettyServerHandler());
-                            } else {
-                                ch.pipeline().addLast(
-                                        defaultEventExecutorGroup, //
-                                        sslContext.newHandler(ch.alloc()),
-                                        new NettyEncoder(), //
-                                        new NettyDecoder(), //
-                                        new IdleStateHandler(0, 0, nettyServerConfig.getServerChannelMaxIdleTimeSeconds()),//
-                                        new NettyConnectManageHandler(), //
-                                        new NettyServerHandler());
+                        .channel(NioServerSocketChannel.class)
+                                //
+                        .option(ChannelOption.SO_BACKLOG, 1024)
+                                //
+                        .option(ChannelOption.SO_REUSEADDR, true)
+                                //
+                        .option(ChannelOption.SO_KEEPALIVE, false)
+                                //
+                        .childOption(ChannelOption.TCP_NODELAY, true)
+                                //
+                        .option(ChannelOption.SO_SNDBUF, nettyServerConfig.getServerSocketSndBufSize())
+                                //
+                        .option(ChannelOption.SO_RCVBUF, nettyServerConfig.getServerSocketRcvBufSize())
+                                //
+                        .localAddress(new InetSocketAddress(this.nettyServerConfig.getListenPort()))
+                        .childHandler(new ChannelInitializer<SocketChannel>() {
+                            @Override
+                            public void initChannel(SocketChannel ch) throws Exception {
+                                if (null == sslContext) {
+                                    ch.pipeline().addLast(
+                                            defaultEventExecutorGroup, //
+                                            new NettyEncoder(), //
+                                            new NettyDecoder(), //
+                                            new IdleStateHandler(0, 0, nettyServerConfig.getServerChannelMaxIdleTimeSeconds()),//
+                                            new NettyConnectManageHandler(), //
+                                            new NettyServerHandler());
+                                } else {
+                                    log.info("NETTY SERVER CONDUCTING SSL LISTENING");
+                                    ch.pipeline().addLast(
+                                            defaultEventExecutorGroup, //
+                                            sslContext.newHandler(ch.alloc()),
+                                            new NettyEncoder(), //
+                                            new NettyDecoder(), //
+                                            new IdleStateHandler(0, 0, nettyServerConfig.getServerChannelMaxIdleTimeSeconds()),//
+                                            new NettyConnectManageHandler(), //
+                                            new NettyServerHandler());
+                                }
                             }
-                        }
-                    });
+                        });
 
         if (nettyServerConfig.isServerPooledByteBufAllocatorEnable()) {
             // 这个选项有可能会占用大量堆外内存，暂时不使用。
@@ -217,8 +211,7 @@ public class NettyRemotingServer extends NettyRemotingAbstract implements Remoti
             ChannelFuture sync = this.serverBootstrap.bind().sync();
             InetSocketAddress addr = (InetSocketAddress) sync.channel().localAddress();
             this.port = addr.getPort();
-        }
-        catch (InterruptedException e1) {
+        } catch (InterruptedException e1) {
             throw new RuntimeException("this.serverBootstrap.bind().sync() InterruptedException", e1);
         }
 
@@ -233,8 +226,7 @@ public class NettyRemotingServer extends NettyRemotingAbstract implements Remoti
             public void run() {
                 try {
                     NettyRemotingServer.this.scanResponseTable();
-                }
-                catch (Exception e) {
+                } catch (Exception e) {
                     log.error("scanResponseTable exception", e);
                 }
             }
@@ -263,7 +255,7 @@ public class NettyRemotingServer extends NettyRemotingAbstract implements Remoti
 
     @Override
     public RemotingCommand invokeSync(final Channel channel, final RemotingCommand request,
-            final long timeoutMillis) throws InterruptedException, RemotingSendRequestException,
+                                      final long timeoutMillis) throws InterruptedException, RemotingSendRequestException,
             RemotingTimeoutException {
         return this.invokeSyncImpl(channel, request, timeoutMillis);
     }
@@ -271,7 +263,7 @@ public class NettyRemotingServer extends NettyRemotingAbstract implements Remoti
 
     @Override
     public void invokeAsync(Channel channel, RemotingCommand request, long timeoutMillis,
-            InvokeCallback invokeCallback) throws InterruptedException, RemotingTooMuchRequestException,
+                            InvokeCallback invokeCallback) throws InterruptedException, RemotingTooMuchRequestException,
             RemotingTimeoutException, RemotingSendRequestException {
         this.invokeAsyncImpl(channel, request, timeoutMillis, invokeCallback);
     }
@@ -303,16 +295,14 @@ public class NettyRemotingServer extends NettyRemotingAbstract implements Remoti
             if (this.defaultEventExecutorGroup != null) {
                 this.defaultEventExecutorGroup.shutdownGracefully();
             }
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             log.error("NettyRemotingServer shutdown exception, ", e);
         }
 
         if (this.publicExecutor != null) {
             try {
                 this.publicExecutor.shutdown();
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 log.error("NettyRemotingServer shutdown exception, ", e);
             }
         }
