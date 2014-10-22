@@ -1,7 +1,7 @@
 #!/bin/sh
 
 function stop() {
-    if [ $# > 1 ]; then
+    if [ $# -gt 1 ]; then
         kill -15 $1;
     else
         for pid in `jps|awk '{if ($2 != "Jps") print $1}'`
