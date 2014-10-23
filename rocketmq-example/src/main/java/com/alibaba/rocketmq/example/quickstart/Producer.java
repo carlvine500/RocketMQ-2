@@ -31,7 +31,7 @@ public class Producer {
         producer.setNamesrvAddr("centos:9876");
         producer.start();
 
-        for (int i = 0; i < 1000; i++) {
+        for (int i = 0; i < 10; i++) {
             try {
                 Message msg = new Message("TopicA",// topic
                     "TagA",// tag

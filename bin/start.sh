@@ -10,9 +10,9 @@ function name_server() {
 
 function broker() {
   if [ $1 == "master" ]; then
-     nohup sh mqbroker -n centos:9876 -c ../conf/2m-2s-sync/broker-a.properties &
+     nohup sh mqbroker -n centos:9876;rocketmq:9876 -c ../conf/2m-2s-sync/broker-a.properties &
   elif [ $1 == "slave" ]; then
-     nohup sh mqbroker -n centos:9876 -c ../conf/2m-2s-sync/broker-a-s.properties &
+     nohup sh mqbroker -n centos:9876;rocketmq:9876 -c ../conf/2m-2s-sync/broker-a-s.properties &
   else
      echo "Please enter role, be it 'master' or 'slave'";
   fi
