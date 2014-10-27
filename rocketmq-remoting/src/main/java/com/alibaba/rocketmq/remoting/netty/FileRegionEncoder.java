@@ -1,7 +1,6 @@
 package com.alibaba.rocketmq.remoting.netty;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.FileRegion;
 import io.netty.handler.codec.MessageToByteEncoder;
@@ -24,15 +23,13 @@ public class FileRegionEncoder extends MessageToByteEncoder<FileRegion> {
      * @throws Exception is thrown if an error accour
      */
     @Override
-    protected void encode(ChannelHandlerContext ctx, FileRegion msg, ByteBuf out) throws Exception {
+    protected void encode(ChannelHandlerContext ctx, FileRegion msg, final ByteBuf out) throws Exception {
         System.out.println("Enter " + CLASS_NAME + "#encode");
-        final ByteBuf buf = Unpooled.directBuffer((int)msg.count());
         msg.transferTo(new WritableByteChannel() {
             @Override
             public int write(ByteBuffer src) throws IOException {
-                buf.writeBytes(src);
-                buf.resetReaderIndex();
-                return buf.capacity();
+                out.writeBytes(src);
+                return out.capacity();
             }
 
             @Override
