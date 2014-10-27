@@ -107,6 +107,7 @@ public class QueryMessageProcessor implements NettyRequestProcessor {
                 FileRegion fileRegion =
                         new QueryMessageTransfer(response.encodeHeader(queryMessageResult
                                 .getBufferTotalSize()), queryMessageResult);
+
                 ctx.channel().writeAndFlush(fileRegion).addListener(new ChannelFutureListener() {
                     @Override
                     public void operationComplete(ChannelFuture future) throws Exception {

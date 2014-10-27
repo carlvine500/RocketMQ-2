@@ -193,6 +193,7 @@ public class NettyRemotingServer extends NettyRemotingAbstract implements Remoti
                                     ch.pipeline().addLast(
                                             defaultEventExecutorGroup, //
                                             sslContext.newHandler(ch.alloc()),
+                                            new FileRegionEncoder(),
                                             new NettyEncoder(), //
                                             new NettyDecoder(), //
                                             new IdleStateHandler(0, 0, nettyServerConfig.getServerChannelMaxIdleTimeSeconds()),//
