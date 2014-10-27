@@ -257,7 +257,7 @@ public class MQAdminImpl {
         try {
             MessageId messageId = MessageDecoder.decodeMessageId(msgId);
             return this.mQClientFactory.getMQClientAPIImpl().viewMessage(
-                RemotingUtil.socketAddress2String(messageId.getAddress()), messageId.getOffset(), 1000 * 3);
+                RemotingUtil.socketAddress2String(messageId.getAddress()), messageId.getOffset(), 10000 * 3);
         }
         catch (UnknownHostException e) {
             throw new MQClientException("message id illegal", e);
