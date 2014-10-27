@@ -83,11 +83,6 @@ public class DefaultMQProducerImpl implements MQProducerInner {
      */
     private final RPCHook rpcHook;
 
-    /**
-     * Indicate the {@link #start(boolean)} method has been invoked.
-     */
-    private boolean started = false;
-
     public DefaultMQProducerImpl(final DefaultMQProducer defaultMQProducer, RPCHook rpcHook) {
         this.defaultMQProducer = defaultMQProducer;
         this.rpcHook = rpcHook;
@@ -179,14 +174,6 @@ public class DefaultMQProducerImpl implements MQProducerInner {
 
 
     public void start(final boolean startFactory) throws MQClientException {
-
-        //Make sure the start method is invoked only ONCE.
-        if (started) {
-            return;
-        } else {
-            started = true;
-        }
-
         switch (this.serviceState) {
             case CREATE_JUST:
                 this.serviceState = ServiceState.START_FAILED;

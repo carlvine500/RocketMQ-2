@@ -44,6 +44,8 @@ public class Consumer {
 
         consumer.subscribe("TopicA", "*");
 
+        consumer.setConsumerGroup("DefaultCluster");
+
         consumer.registerMessageListener(new MessageListenerConcurrently() {
 
             @Override
