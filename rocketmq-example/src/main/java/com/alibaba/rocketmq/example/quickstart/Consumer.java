@@ -42,7 +42,7 @@ public class Consumer {
          */
         consumer.setConsumeFromWhere(ConsumeFromWhere.CONSUME_FROM_FIRST_OFFSET);
 
-        consumer.subscribe("TopicA", "*");
+        consumer.subscribe("TopicA", "TagA");
 
         consumer.setConsumerGroup("DefaultCluster");
 

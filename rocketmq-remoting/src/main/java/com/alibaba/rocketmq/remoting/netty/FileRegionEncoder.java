@@ -25,7 +25,7 @@ public class FileRegionEncoder extends MessageToByteEncoder<FileRegion> {
     @Override
     protected void encode(ChannelHandlerContext ctx, FileRegion msg, final ByteBuf out) throws Exception {
         System.out.println("Enter " + CLASS_NAME + "#encode");
-        msg.transferTo(new WritableByteChannel() {
+        WritableByteChannel writableByteChannel = new WritableByteChannel() {
             @Override
             public int write(ByteBuffer src) throws IOException {
                 out.writeBytes(src);
@@ -40,6 +40,12 @@ public class FileRegionEncoder extends MessageToByteEncoder<FileRegion> {
             @Override
             public void close() throws IOException {
             }
-        }, 0);
+        };
+
+        while (true) {
+            if (msg.transferTo(writableByteChannel, 0) == 0) {
+                break;
+            }
+        }
     }
 }
