@@ -76,27 +76,36 @@ public class QueueData implements Comparable<QueueData> {
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj)
+        if (this == obj) {
             return true;
-        if (obj == null)
+        }
+
+        if (obj == null || ! (obj instanceof QueueData)) {
             return false;
-        if (getClass() != obj.getClass())
-            return false;
+        }
+
         QueueData other = (QueueData) obj;
+
         if (brokerName == null) {
             if (other.brokerName != null)
                 return false;
         }
         else if (!brokerName.equals(other.brokerName))
             return false;
+
         if (perm != other.perm)
             return false;
+
         if (readQueueNums != other.readQueueNums)
             return false;
+
         if (writeQueueNums != other.writeQueueNums)
             return false;
-        if (topicSynFlag != other.topicSynFlag)
+
+        if (topicSynFlag != other.topicSynFlag) {
             return false;
+        }
+
         return true;
     }
 

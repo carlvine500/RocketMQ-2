@@ -15,9 +15,9 @@
  */
 package com.alibaba.rocketmq.common;
 
-import java.util.concurrent.atomic.AtomicLong;
-
 import com.alibaba.rocketmq.remoting.protocol.RemotingSerializable;
+
+import java.util.concurrent.atomic.AtomicLong;
 
 
 /**
@@ -26,29 +26,30 @@ import com.alibaba.rocketmq.remoting.protocol.RemotingSerializable;
  * @author shijia.wxr<vintage.wang@gmail.com>
  */
 public class DataVersion extends RemotingSerializable {
-    private long timestatmp = System.currentTimeMillis();
+
+    private long timestamp = System.currentTimeMillis();
+
     private AtomicLong counter = new AtomicLong(0);
 
-
     public void assignNewOne(final DataVersion dataVersion) {
-        this.timestatmp = dataVersion.timestatmp;
+        this.timestamp = dataVersion.timestamp;
         this.counter.set(dataVersion.counter.get());
     }
 
 
     public void nextVersion() {
-        this.timestatmp = System.currentTimeMillis();
+        this.timestamp = System.currentTimeMillis();
         this.counter.incrementAndGet();
     }
 
 
-    public long getTimestatmp() {
-        return timestatmp;
+    public long getTimestamp() {
+        return timestamp;
     }
 
 
-    public void setTimestatmp(long timestatmp) {
-        this.timestatmp = timestatmp;
+    public void setTimestamp(long timestamp) {
+        this.timestamp = timestamp;
     }
 
 
@@ -64,7 +65,15 @@ public class DataVersion extends RemotingSerializable {
 
     @Override
     public boolean equals(Object obj) {
+        if (obj == this) {
+            return true;
+        }
+
+        if (! (obj instanceof DataVersion)) {
+            return false;
+        }
+
         DataVersion dv = (DataVersion) obj;
-        return this.timestatmp == dv.timestatmp && this.counter.get() == dv.counter.get();
+        return this.timestamp == dv.timestamp && this.counter.get() == dv.counter.get();
     }
 }

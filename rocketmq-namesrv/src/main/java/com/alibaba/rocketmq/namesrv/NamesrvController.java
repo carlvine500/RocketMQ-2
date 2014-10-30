@@ -92,7 +92,7 @@ public class NamesrvController {
 
             @Override
             public void run() {
-                NamesrvController.this.routeInfoManager.scanNotActiveBroker();
+                NamesrvController.this.routeInfoManager.scanInactiveBroker();
             }
         }, 5, 10, TimeUnit.SECONDS);
 
