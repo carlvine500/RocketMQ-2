@@ -38,7 +38,9 @@ import java.util.Enumeration;
  * @since 2013-7-13
  */
 public class RemotingUtil {
-    private static final Logger log = LoggerFactory.getLogger(RemotingHelper.RemotingLogName);
+
+    private static final Logger LOG = LoggerFactory.getLogger(RemotingHelper.RemotingLogName);
+
     public static final String OS_NAME = System.getProperty("os.name");
 
     private static boolean isLinuxPlatform = false;
@@ -223,8 +225,8 @@ public class RemotingUtil {
         channel.close().addListener(new ChannelFutureListener() {
             @Override
             public void operationComplete(ChannelFuture future) throws Exception {
-                log.info("closeChannel: close the connection to remote address[{}] result: {}", addrRemote,
-                    future.isSuccess());
+                LOG.info("closeChannel: close the connection to remote address[{}] result: {}", addrRemote,
+                        future.isSuccess());
             }
         });
     }

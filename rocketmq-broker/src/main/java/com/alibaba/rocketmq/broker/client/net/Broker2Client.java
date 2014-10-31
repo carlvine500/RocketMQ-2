@@ -66,7 +66,7 @@ public class Broker2Client {
 
 
     /**
-     * Broker主动回查Producer事务状态，Oneway
+     * Broker主动回查Producer事务状态，OneWay
      */
     public void checkProducerTransactionState(//
             final Channel channel,//
