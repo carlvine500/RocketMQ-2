@@ -70,7 +70,7 @@ public class SendMessageProcessor implements NettyRequestProcessor {
 
     private static final String CLASS_NAME = SendMessageProcessor.class.getName();
 
-    private static final Logger log = LoggerFactory.getLogger(LoggerName.BrokerLoggerName);
+    private static final Logger LOG = LoggerFactory.getLogger(LoggerName.BrokerLoggerName);
 
     private final static int DLQ_NUMS_PER_GROUP = 1;
     private final BrokerController brokerController;
@@ -346,8 +346,8 @@ public class SendMessageProcessor implements NettyRequestProcessor {
         // 由于有直接返回的逻辑，所以必须要设置
         response.setOpaque(request.getOpaque());
 
-        if (log.isDebugEnabled()) {
-            log.debug("receive SendMessage request command, " + request);
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("receive SendMessage request command, " + request);
         }
 
 
@@ -366,7 +366,7 @@ public class SendMessageProcessor implements NettyRequestProcessor {
         if (!this.brokerController.getTopicConfigManager().isTopicCanSendMessage(requestHeader.getTopic())) {
             String errorMsg =
                     "the topic[" + requestHeader.getTopic() + "] is conflict with system reserved words.";
-            log.warn(errorMsg);
+            LOG.warn(errorMsg);
             response.setCode(ResponseCode.SYSTEM_ERROR);
             response.setRemark(errorMsg);
             return response;
@@ -386,7 +386,7 @@ public class SendMessageProcessor implements NettyRequestProcessor {
                 }
             }
 
-            log.warn("the topic " + requestHeader.getTopic() + " not exist, producer: "
+            LOG.warn("the topic " + requestHeader.getTopic() + " not exist, producer: "
                     + ctx.channel().remoteAddress());
             topicConfig = this.brokerController.getTopicConfigManager().createTopicInSendMessageMethod(//
                     requestHeader.getTopic(), //
@@ -432,7 +432,7 @@ public class SendMessageProcessor implements NettyRequestProcessor {
                     topicConfig.toString(),//
                     RemotingHelper.parseChannelRemoteAddr(ctx.channel()));
 
-            log.warn(errorInfo);
+            LOG.warn(errorInfo);
             response.setCode(ResponseCode.SYSTEM_ERROR);
             response.setRemark(errorInfo);
 
@@ -544,9 +544,9 @@ public class SendMessageProcessor implements NettyRequestProcessor {
                     try {
                         ctx.writeAndFlush(response);
                     } catch (Throwable e) {
-                        log.error("SendMessageProcessor process request over, but response failed", e);
-                        log.error(request.toString());
-                        log.error(response.toString());
+                        LOG.error("SendMessageProcessor process request over, but response failed", e);
+                        LOG.error(request.toString());
+                        LOG.error(response.toString());
                     }
                 }
 

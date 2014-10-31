@@ -15,12 +15,11 @@
  */
 package com.alibaba.rocketmq.common;
 
-import java.io.IOException;
-
+import com.alibaba.rocketmq.common.constant.LoggerName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.alibaba.rocketmq.common.constant.LoggerName;
+import java.io.IOException;
 
 
 /**
@@ -30,7 +29,8 @@ import com.alibaba.rocketmq.common.constant.LoggerName;
  * @since 2013-6-18
  */
 public abstract class ConfigManager {
-    private static final Logger plog = LoggerFactory.getLogger(LoggerName.CommonLoggerName);
+
+    private static final Logger LOG = LoggerFactory.getLogger(LoggerName.CommonLoggerName);
 
 
     public abstract String encode();
@@ -56,12 +56,12 @@ public abstract class ConfigManager {
             }
             else {
                 this.decode(jsonString);
-                plog.info("load {} OK", fileName);
+                LOG.info("load {} OK", fileName);
                 return true;
             }
         }
         catch (Exception e) {
-            plog.error("load " + fileName + " Failed, and try to load backup file", e);
+            LOG.error("load " + fileName + " Failed, and try to load backup file", e);
             return this.loadBak();
         }
     }
@@ -74,12 +74,12 @@ public abstract class ConfigManager {
             String jsonString = MixAll.file2String(fileName + ".bak");
             if (jsonString != null && jsonString.length() > 0) {
                 this.decode(jsonString);
-                plog.info("load " + fileName + " OK");
+                LOG.info("load " + fileName + " OK");
                 return true;
             }
         }
         catch (Exception e) {
-            plog.error("load " + fileName + " Failed", e);
+            LOG.error("load " + fileName + " Failed", e);
             return false;
         }
 
@@ -95,7 +95,7 @@ public abstract class ConfigManager {
                 MixAll.string2File(jsonString, fileName);
             }
             catch (IOException e) {
-                plog.error("persist file Exception, " + fileName, e);
+                LOG.error("persist file Exception, " + fileName, e);
             }
         }
     }

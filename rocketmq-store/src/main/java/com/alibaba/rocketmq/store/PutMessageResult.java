@@ -22,9 +22,10 @@ package com.alibaba.rocketmq.store;
  * @since 2013-7-21
  */
 public class PutMessageResult {
-    private PutMessageStatus putMessageStatus;
-    private AppendMessageResult appendMessageResult;
 
+    private PutMessageStatus putMessageStatus;
+
+    private AppendMessageResult appendMessageResult;
 
     public PutMessageResult(PutMessageStatus putMessageStatus, AppendMessageResult appendMessageResult) {
         this.putMessageStatus = putMessageStatus;

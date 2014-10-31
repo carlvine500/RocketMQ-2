@@ -29,15 +29,18 @@ import com.alibaba.rocketmq.store.DefaultMessageStore;
  * @since 2013-10-23
  */
 public class BrokerStats {
-    private static final Logger log = LoggerFactory.getLogger(LoggerName.BrokerLoggerName);
+
+    private static final Logger LOG = LoggerFactory.getLogger(LoggerName.BrokerLoggerName);
 
     // 昨天凌晨00:00:00记录的put消息总数
     private volatile long msgPutTotalYesterdayMorning;
+
     // 今天凌晨00:00:00记录的put消息总数
     private volatile long msgPutTotalTodayMorning;
 
     // 昨天凌晨00:00:00记录的get消息总数
     private volatile long msgGetTotalYesterdayMorning;
+
     // 今天凌晨00:00:00记录的get消息总数
     private volatile long msgGetTotalTodayMorning;
 
@@ -61,8 +64,8 @@ public class BrokerStats {
         this.msgGetTotalTodayMorning =
                 this.defaultMessageStore.getStoreStatsService().getGetMessageTransferedMsgCount().get();
 
-        log.info("yesterday put message total: {}", msgPutTotalTodayMorning - msgPutTotalYesterdayMorning);
-        log.info("yesterday get message total: {}", msgGetTotalTodayMorning - msgGetTotalYesterdayMorning);
+        LOG.info("yesterday put message total: {}", msgPutTotalTodayMorning - msgPutTotalYesterdayMorning);
+        LOG.info("yesterday get message total: {}", msgGetTotalTodayMorning - msgGetTotalYesterdayMorning);
     }
 
 

@@ -56,12 +56,10 @@ public class QueryMessageProcessor implements NettyRequestProcessor {
         this.brokerController = brokerController;
     }
 
-
     @Override
     public RemotingCommand processRequest(ChannelHandlerContext ctx, RemotingCommand request)
             throws RemotingCommandException {
         log.debug("Enter {}", CLASS_NAME + "#processRequest");
-        System.out.println("Enter " + CLASS_NAME + "#processRequest");
 
         switch (request.getCode()) {
             case RequestCode.QUERY_MESSAGE:

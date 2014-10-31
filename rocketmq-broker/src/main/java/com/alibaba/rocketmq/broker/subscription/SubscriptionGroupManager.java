@@ -37,12 +37,15 @@ import java.util.concurrent.ConcurrentHashMap;
  * @since 2013-7-26
  */
 public class SubscriptionGroupManager extends ConfigManager {
-    private static final Logger log = LoggerFactory.getLogger(LoggerName.BrokerLoggerName);
+
+    private static final Logger LOG = LoggerFactory.getLogger(LoggerName.BrokerLoggerName);
+
     private transient BrokerController brokerController;
 
     // 订阅组
     private final ConcurrentHashMap<String, SubscriptionGroupConfig> subscriptionGroupTable =
             new ConcurrentHashMap<String, SubscriptionGroupConfig>(1024);
+
     private final DataVersion dataVersion = new DataVersion();
 
 
@@ -67,18 +70,18 @@ public class SubscriptionGroupManager extends ConfigManager {
 
 
     public SubscriptionGroupManager(BrokerController brokerController) {
+        this();
         this.brokerController = brokerController;
-        this.init();
     }
 
 
     public void updateSubscriptionGroupConfig(final SubscriptionGroupConfig config) {
         SubscriptionGroupConfig old = this.subscriptionGroupTable.put(config.getGroupName(), config);
         if (old != null) {
-            log.info("update subscription group config, old: " + old + " new: " + config);
+            LOG.info("update subscription group config, old: " + old + " new: " + config);
         }
         else {
-            log.info("create new subscription group, " + config);
+            LOG.info("create new subscription group, " + config);
         }
 
         this.dataVersion.nextVersion();
@@ -94,7 +97,7 @@ public class SubscriptionGroupManager extends ConfigManager {
                 subscriptionGroupConfig = new SubscriptionGroupConfig();
                 subscriptionGroupConfig.setGroupName(group);
                 this.subscriptionGroupTable.putIfAbsent(group, subscriptionGroupConfig);
-                log.info("auto create a subscription group, {}", subscriptionGroupConfig.toString());
+                LOG.info("auto create a subscription group, {}", subscriptionGroupConfig.toString());
                 this.dataVersion.nextVersion();
                 this.persist();
             }
@@ -131,7 +134,7 @@ public class SubscriptionGroupManager extends ConfigManager {
 
     private void printLoadDataWhenFirstBoot(final SubscriptionGroupManager sgm) {
         for (Entry<String, SubscriptionGroupConfig> next : sgm.getSubscriptionGroupTable().entrySet()) {
-            log.info("load exist subscription group, {}", next.getValue().toString());
+            LOG.info("load exist subscription group, {}", next.getValue().toString());
         }
     }
 
@@ -156,12 +159,12 @@ public class SubscriptionGroupManager extends ConfigManager {
     public void deleteSubscriptionGroupConfig(final String groupName) {
         SubscriptionGroupConfig old = this.subscriptionGroupTable.remove(groupName);
         if (old != null) {
-            log.info("delete subscription group OK, subscription group: " + old);
+            LOG.info("delete subscription group OK, subscription group: " + old);
             this.dataVersion.nextVersion();
             this.persist();
         }
         else {
-            log.warn("delete subscription group failed, subscription group, being null, does NOT exist");
+            LOG.warn("delete subscription group failed, subscription group, being null, does NOT exist");
         }
     }
 }

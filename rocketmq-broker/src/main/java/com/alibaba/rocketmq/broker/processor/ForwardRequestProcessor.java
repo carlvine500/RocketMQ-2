@@ -33,7 +33,8 @@ import com.alibaba.rocketmq.remoting.protocol.RemotingCommand;
  * @since 2013-7-26
  */
 public class ForwardRequestProcessor implements NettyRequestProcessor {
-    private static final Logger log = LoggerFactory.getLogger(LoggerName.BrokerLoggerName);
+
+    private static final Logger LOG = LoggerFactory.getLogger(LoggerName.BrokerLoggerName);
 
     private final BrokerController brokerController;
 
@@ -42,10 +43,9 @@ public class ForwardRequestProcessor implements NettyRequestProcessor {
         this.brokerController = brokerController;
     }
 
-
     @Override
     public RemotingCommand processRequest(ChannelHandlerContext ctx, RemotingCommand request) {
-        // TODO Auto-generated method stub
+        LOG.error("Not implemented yet");
         return null;
     }
 }

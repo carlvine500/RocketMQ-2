@@ -55,9 +55,13 @@ import java.util.List;
  * @since 2013-7-3
  */
 public class BrokerOuterAPI {
-    private static final Logger log = LoggerFactory.getLogger(LoggerName.BrokerLoggerName);
+
+    private static final Logger LOG = LoggerFactory.getLogger(LoggerName.BrokerLoggerName);
+
     private final RemotingClient remotingClient;
+
     private final TopAddressing topAddressing = new TopAddressing(MixAll.WS_ADDR);
+
     private String nameSrvAddr = null;
 
 
@@ -87,37 +91,37 @@ public class BrokerOuterAPI {
             String addrs = this.topAddressing.fetchNSAddr();
             if (addrs != null) {
                 if (!addrs.equals(this.nameSrvAddr)) {
-                    log.info("name server address changed, old: " + this.nameSrvAddr + " new: " + addrs);
+                    LOG.info("name server address changed, old: " + this.nameSrvAddr + " new: " + addrs);
                     this.updateNameServerAddressList(addrs);
                     this.nameSrvAddr = addrs;
                     return nameSrvAddr;
                 }
             }
         } catch (Exception e) {
-            log.error("fetchNameServerAddr Exception", e);
+            LOG.error("fetchNameServerAddr Exception", e);
         }
         return nameSrvAddr;
     }
 
 
     public void updateNameServerAddressList(final String addrs) {
-        List<String> lst = new ArrayList<String>();
+        List<String> list = new ArrayList<String>();
         String[] addrArray = addrs.split(";");
-        Collections.addAll(lst, addrArray);
+        Collections.addAll(list, addrArray);
 
-        this.remotingClient.updateNameServerAddressList(lst);
+        this.remotingClient.updateNameServerAddressList(list);
     }
 
 
-    private RegisterBrokerResult registerBroker(//
-                                                final String namesrvAddr,//
-                                                final String clusterName,// 1
-                                                final String brokerAddr,// 2
-                                                final String brokerName,// 3
-                                                final long brokerId,// 4
-                                                final String haServerAddr,// 5
-                                                final TopicConfigSerializeWrapper topicConfigWrapper, // 6
-                                                final List<String> filterServerList // 7
+    private RegisterBrokerResult registerBroker(
+                                                final String namesrvAddr,
+                                                final String clusterName,
+                                                final String brokerAddr,
+                                                final String brokerName,
+                                                final long brokerId,
+                                                final String haServerAddr,
+                                                final TopicConfigSerializeWrapper topicConfigWrapper,
+                                                final List<String> filterServerList
     ) throws RemotingCommandException, MQBrokerException, RemotingConnectException,
             RemotingSendRequestException, RemotingTimeoutException, InterruptedException {
         RegisterBrokerRequestHeader requestHeader = new RegisterBrokerRequestHeader();
@@ -158,14 +162,14 @@ public class BrokerOuterAPI {
     }
 
 
-    public RegisterBrokerResult registerBrokerAll(//
-                                                  final String clusterName,// 1
-                                                  final String brokerAddr,// 2
-                                                  final String brokerName,// 3
-                                                  final long brokerId,// 4
-                                                  final String haServerAddr,// 5
-                                                  final TopicConfigSerializeWrapper topicConfigWrapper,// 6
-                                                  final List<String> filterServerList // 7
+    public RegisterBrokerResult registerBrokerAll(
+                                                  final String clusterName,
+                                                  final String brokerAddr,
+                                                  final String brokerName,
+                                                  final long brokerId,
+                                                  final String haServerAddr,
+                                                  final TopicConfigSerializeWrapper topicConfigWrapper,
+                                                  final List<String> filterServerList
     ) {
         RegisterBrokerResult registerBrokerResult = null;
 
@@ -180,9 +184,9 @@ public class BrokerOuterAPI {
                         registerBrokerResult = result;
                     }
 
-                    log.info("register broker to name server {} OK", namesrvAddr);
+                    LOG.info("register broker to name server {} OK", namesrvAddr);
                 } catch (Exception e) {
-                    log.warn("registerBroker Exception, " + namesrvAddr, e);
+                    LOG.warn("registerBroker Exception, " + namesrvAddr, e);
                 }
             }
         }
@@ -191,12 +195,12 @@ public class BrokerOuterAPI {
     }
 
 
-    public void unregisterBroker(//
-                                 final String namesrvAddr,//
-                                 final String clusterName,// 1
-                                 final String brokerAddr,// 2
-                                 final String brokerName,// 3
-                                 final long brokerId// 4
+    public void unregisterBroker(
+                                 final String namesrvAddr,
+                                 final String clusterName,
+                                 final String brokerAddr,
+                                 final String brokerName,
+                                 final long brokerId
     ) throws RemotingConnectException, RemotingSendRequestException, RemotingTimeoutException,
             InterruptedException, MQBrokerException {
         UnRegisterBrokerRequestHeader requestHeader = new UnRegisterBrokerRequestHeader();
@@ -221,20 +225,20 @@ public class BrokerOuterAPI {
     }
 
 
-    public void unregisterBrokerAll(//
-                                    final String clusterName,// 1
-                                    final String brokerAddr,// 2
-                                    final String brokerName,// 3
-                                    final long brokerId// 4
+    public void unregisterBrokerAll(
+                                    final String clusterName,
+                                    final String brokerAddr,
+                                    final String brokerName,
+                                    final long brokerId
     ) {
         List<String> nameServerAddressList = this.remotingClient.getNameServerAddressList();
         if (nameServerAddressList != null) {
             for (String namesrvAddr : nameServerAddressList) {
                 try {
                     this.unregisterBroker(namesrvAddr, clusterName, brokerAddr, brokerName, brokerId);
-                    log.info("unregisterBroker OK, NamesrvAddr: {}", namesrvAddr);
+                    LOG.info("unregisterBroker OK, NamesrvAddr: {}", namesrvAddr);
                 } catch (Exception e) {
-                    log.warn("unregisterBroker Exception, " + namesrvAddr, e);
+                    LOG.warn("unregisterBroker Exception, " + namesrvAddr, e);
                 }
             }
         }

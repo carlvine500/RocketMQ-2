@@ -29,26 +29,34 @@ import java.net.UnknownHostException;
  * @author shijia.wxr<vintage.wang@gmail.com>
  */
 public class BrokerConfig {
+
     private String rocketmqHome = System.getProperty(MixAll.ROCKETMQ_HOME_PROPERTY,
         System.getenv(MixAll.ROCKETMQ_HOME_ENV));
+
     @ImportantField
     private String namesrvAddr = System.getProperty(MixAll.NAMESRV_ADDR_PROPERTY,
         System.getenv(MixAll.NAMESRV_ADDR_ENV));
+
     @ImportantField
     private String brokerIP1 = RemotingUtil.getLocalAddress();
+
     private String brokerIP2 = RemotingUtil.getLocalAddress();
+
     @ImportantField
     private String brokerName = localHostName();
+
     @ImportantField
     private String brokerClusterName = "DefaultCluster";
+
     @ImportantField
     private long brokerId = MixAll.MASTER_ID;
+
     private int brokerPermission = PermName.PERM_READ | PermName.PERM_WRITE;
+
     private int defaultTopicQueueNums = 8;
 
     // 自动创建Topic功能是否开启（线上建议关闭）
     @ImportantField
-
     private boolean autoCreateTopicEnable = true;
 
     // 自动创建以集群名字命名的Topic功能是否开启
