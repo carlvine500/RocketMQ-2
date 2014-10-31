@@ -36,7 +36,9 @@ import java.util.concurrent.ConcurrentHashMap;
  * @since 2013-8-11
  */
 public class ConsumerOffsetManager extends ConfigManager {
+
     private static final Logger log = LoggerFactory.getLogger(LoggerName.BrokerLoggerName);
+
     private static final String TOPIC_GROUP_SEPARATOR = "@";
 
     private ConcurrentHashMap<String/* topic@group */, ConcurrentHashMap<Integer, Long>> offsetTable =

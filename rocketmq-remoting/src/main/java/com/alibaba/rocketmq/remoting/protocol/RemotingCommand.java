@@ -35,8 +35,11 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @since 2013-7-13
  */
 public class RemotingCommand {
+
     public static String RemotingVersionKey = "rocketmq.remoting.version";
+
     private static volatile int ConfigVersion = -1;
+
     private static AtomicInteger RequestId = new AtomicInteger(0);
 
     private static final int RPC_TYPE = 0; // 0, REQUEST_COMMAND
@@ -49,11 +52,17 @@ public class RemotingCommand {
      * Header 部分
      */
     private int code;
+
     private LanguageCode language = LanguageCode.JAVA;
+
     private int version = 0;
+
     private int opaque = RequestId.getAndIncrement();
+
     private int flag = 0;
+
     private String remark;
+
     private HashMap<String, String> extFields;
 
     private transient CommandCustomHeader customHeader;

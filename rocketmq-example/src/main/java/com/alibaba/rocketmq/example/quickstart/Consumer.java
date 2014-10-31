@@ -34,7 +34,7 @@ public class Consumer {
     public static void main(String[] args) throws InterruptedException, MQClientException {
         DefaultMQPushConsumer consumer = new DefaultMQPushConsumer("DefaultCluster");
 
-        consumer.setNamesrvAddr("centos:9876");
+        consumer.setNamesrvAddr("localhost:9876");
 
         /**
          * 设置Consumer第一次启动是从队列头部开始消费还是队列尾部开始消费<br>

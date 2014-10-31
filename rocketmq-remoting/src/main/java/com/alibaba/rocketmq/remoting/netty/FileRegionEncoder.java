@@ -20,7 +20,7 @@ public class FileRegionEncoder extends MessageToByteEncoder<FileRegion> {
      * @param ctx the {@link io.netty.channel.ChannelHandlerContext} which this {@link io.netty.handler.codec.MessageToByteEncoder} belongs to
      * @param msg the message to encode
      * @param out the {@link io.netty.buffer.ByteBuf} into which the encoded message will be written
-     * @throws Exception is thrown if an error accour
+     * @throws Exception is thrown if an error occurs
      */
     @Override
     protected void encode(ChannelHandlerContext ctx, FileRegion msg, final ByteBuf out) throws Exception {

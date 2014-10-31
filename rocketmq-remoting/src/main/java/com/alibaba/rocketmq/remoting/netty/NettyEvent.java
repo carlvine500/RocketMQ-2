@@ -25,10 +25,12 @@ import io.netty.channel.Channel;
  * @since 2013-7-13
  */
 public class NettyEvent {
-    private final NettyEventType type;
-    private final String remoteAddr;
-    private final Channel channel;
 
+    private final NettyEventType type;
+
+    private final String remoteAddr;
+
+    private final Channel channel;
 
     public NettyEvent(NettyEventType type, String remoteAddr, Channel channel) {
         this.type = type;

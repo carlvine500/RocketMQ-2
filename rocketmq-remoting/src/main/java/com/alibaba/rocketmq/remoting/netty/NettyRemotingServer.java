@@ -59,16 +59,25 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @since 2013-7-13
  */
 public class NettyRemotingServer extends NettyRemotingAbstract implements RemotingServer {
+
     private static final Logger log = LoggerFactory.getLogger(RemotingHelper.RemotingLogName);
+
     private final ServerBootstrap serverBootstrap;
+
     private final EventLoopGroup eventLoopGroupWorker;
+
     private final EventLoopGroup eventLoopGroupBoss;
+
     private final NettyServerConfig nettyServerConfig;
+
     // 处理Callback应答器
     private final ExecutorService publicExecutor;
+
     private final ChannelEventListener channelEventListener;
+
     // 定时器
     private final Timer timer = new Timer("ServerHouseKeepingService", true);
+
     private DefaultEventExecutorGroup defaultEventExecutorGroup;
 
     private RPCHook rpcHook;
@@ -281,17 +290,13 @@ public class NettyRemotingServer extends NettyRemotingAbstract implements Remoti
     @Override
     public void shutdown() {
         try {
-            if (this.timer != null) {
-                this.timer.cancel();
-            }
+            this.timer.cancel();
 
             this.eventLoopGroupBoss.shutdownGracefully();
 
             this.eventLoopGroupWorker.shutdownGracefully();
 
-            if (this.nettyEventExecutor != null) {
-                this.nettyEventExecutor.shutdown();
-            }
+            this.nettyEventExecutor.shutdown();
 
             if (this.defaultEventExecutorGroup != null) {
                 this.defaultEventExecutorGroup.shutdownGracefully();
