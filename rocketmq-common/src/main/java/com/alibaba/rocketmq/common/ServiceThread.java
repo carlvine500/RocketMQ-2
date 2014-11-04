@@ -34,8 +34,9 @@ public abstract class ServiceThread implements Runnable {
     private static final long JoinTime = 90 * 1000;
     // 是否已经被Notify过
     protected volatile boolean hasNotified = false;
+
     // 线程是否已经停止
-    protected volatile boolean stoped = false;
+    protected volatile boolean stopped = false;
 
 
     public ServiceThread() {
@@ -62,13 +63,13 @@ public abstract class ServiceThread implements Runnable {
 
 
     public void makeStop() {
-        this.stoped = true;
+        this.stopped = true;
         stlog.info("makestop thread " + this.getServiceName());
     }
 
 
     public void stop(final boolean interrupt) {
-        this.stoped = true;
+        this.stopped = true;
         stlog.info("stop thread " + this.getServiceName() + " interrupt " + interrupt);
         synchronized (this) {
             if (!this.hasNotified) {
@@ -84,7 +85,7 @@ public abstract class ServiceThread implements Runnable {
 
 
     public void shutdown(final boolean interrupt) {
-        this.stoped = true;
+        this.stopped = true;
         stlog.info("shutdown thread " + this.getServiceName() + " interrupt " + interrupt);
         synchronized (this) {
             if (!this.hasNotified) {
@@ -100,11 +101,11 @@ public abstract class ServiceThread implements Runnable {
 
             long beginTime = System.currentTimeMillis();
             if (!this.thread.isDaemon()) {
-                this.thread.join(this.getJointime());
+                this.thread.join(this.getJoinTime());
             }
             long eclipseTime = System.currentTimeMillis() - beginTime;
             stlog.info("join thread " + this.getServiceName() + " eclipse time(ms) " + eclipseTime + " "
-                    + this.getJointime());
+                    + this.getJoinTime());
         }
         catch (InterruptedException e) {
             e.printStackTrace();
@@ -112,7 +113,7 @@ public abstract class ServiceThread implements Runnable {
     }
 
 
-    public void wakeup() {
+    public void wakeUp() {
         synchronized (this) {
             if (!this.hasNotified) {
                 this.hasNotified = true;
@@ -148,12 +149,12 @@ public abstract class ServiceThread implements Runnable {
     }
 
 
-    public boolean isStoped() {
-        return stoped;
+    public boolean isStopped() {
+        return stopped;
     }
 
 
-    public long getJointime() {
+    public long getJoinTime() {
         return JoinTime;
     }
 }

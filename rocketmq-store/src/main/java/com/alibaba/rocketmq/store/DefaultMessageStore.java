@@ -785,7 +785,7 @@ public class DefaultMessageStore implements MessageStore {
 
         boolean result = this.commitLog.appendData(startOffset, data);
         if (result) {
-            this.reputMessageService.wakeup();
+            this.reputMessageService.wakeUp();
         } else {
             log.error("appendToPhyQueue failed " + startOffset + " " + data.length);
         }
@@ -1484,7 +1484,7 @@ public class DefaultMessageStore implements MessageStore {
         public void run() {
             DefaultMessageStore.log.info(this.getServiceName() + " service started");
 
-            while (!this.isStoped()) {
+            while (!this.isStopped()) {
                 try {
                     int interval =
                             DefaultMessageStore.this.getMessageStoreConfig().getFlushIntervalConsumeQueue();
@@ -1509,7 +1509,7 @@ public class DefaultMessageStore implements MessageStore {
 
 
         @Override
-        public long getJointime() {
+        public long getJoinTime() {
             return 1000 * 60;
         }
     }
@@ -1613,7 +1613,7 @@ public class DefaultMessageStore implements MessageStore {
         public void run() {
             DefaultMessageStore.log.info(this.getServiceName() + " service started");
 
-            while (!this.isStoped()) {
+            while (!this.isStopped()) {
                 try {
                     this.waitForRunning(0);
                     this.doDispatch();
@@ -1716,7 +1716,7 @@ public class DefaultMessageStore implements MessageStore {
         public void run() {
             DefaultMessageStore.log.info(this.getServiceName() + " service started");
 
-            while (!this.isStoped()) {
+            while (!this.isStopped()) {
                 try {
                     this.waitForRunning(1000);
                     this.doReput();

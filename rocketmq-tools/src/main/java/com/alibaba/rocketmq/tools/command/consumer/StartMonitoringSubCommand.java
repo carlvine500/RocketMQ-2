@@ -29,7 +29,7 @@ import com.alibaba.rocketmq.tools.monitor.MonitorService;
 
 /**
  * 启动监控
- * 
+ *
  * @author shijia.wxr<vintage.wang@gmail.com>
  * @since 2014-7-5
  */
@@ -62,11 +62,9 @@ public class StartMonitoringSubCommand implements SubCommand {
                     new MonitorService(new MonitorConfig(), new DefaultMonitorListener(), rpcHook);
 
             monitorService.start();
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
-        }
-        finally {
+        } finally {
         }
     }
 }

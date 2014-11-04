@@ -958,7 +958,7 @@ public class MQClientInstance {
 
 
     public void rebalanceImmediately() {
-        this.rebalanceService.wakeup();
+        this.rebalanceService.wakeUp();
     }
 
 

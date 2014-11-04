@@ -24,11 +24,14 @@ import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * 后台定时更新时钟，JVM退出时，线程自动回收
- * 
+ *
+ * {@link SystemClock} is a optimized substitute of {@link System#currentTimeMillis()} for avoiding context switch
+ * overload.
+ *
+ * <p/>
+ * Every instance would start a thread to update the time, so it's supposed to be singleton in application context.
+ *
  * @author vintage.wang@gmail.com shijia.wxr@taobao.com
- * @see 
- *      <A>https://github.com/zhongl/jtoolkit/blob/master/common/src/main/java/com
- *      /github/zhongl/jtoolkit/SystemClock.java</A>
  */
 public class SystemClock {
 

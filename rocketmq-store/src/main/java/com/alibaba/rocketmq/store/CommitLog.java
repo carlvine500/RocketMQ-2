@@ -616,12 +616,12 @@ public class CommitLog {
                     putMessageResult.setPutMessageStatus(PutMessageStatus.FLUSH_DISK_TIMEOUT);
                 }
             } else {
-                service.wakeup();
+                service.wakeUp();
             }
         }
         // 异步刷盘
         else {
-            this.flushCommitLogService.wakeup();
+            this.flushCommitLogService.wakeUp();
         }
 
         // 同步双写
@@ -743,7 +743,7 @@ public class CommitLog {
         public void run() {
             CommitLog.log.info(this.getServiceName() + " service started");
 
-            while (!this.isStoped()) {
+            while (!this.isStopped()) {
                 boolean flushCommitLogTimed =
                         CommitLog.this.defaultMessageStore.getMessageStoreConfig().isFlushCommitLogTimed();
 
@@ -821,7 +821,7 @@ public class CommitLog {
 
 
         @Override
-        public long getJointime() {
+        public long getJoinTime() {
             // 由于CommitLog数据量较大，所以回收时间要更长
             return 1000 * 60 * 5;
         }
@@ -922,7 +922,7 @@ public class CommitLog {
         public void run() {
             CommitLog.log.info(this.getServiceName() + " service started");
 
-            while (!this.isStoped()) {
+            while (!this.isStopped()) {
                 try {
                     this.waitForRunning(0);
                     this.doCommit();
@@ -961,7 +961,7 @@ public class CommitLog {
 
 
         @Override
-        public long getJointime() {
+        public long getJoinTime() {
             // 由于CommitLog数据量较大，所以回收时间要更长
             return 1000 * 60 * 5;
         }

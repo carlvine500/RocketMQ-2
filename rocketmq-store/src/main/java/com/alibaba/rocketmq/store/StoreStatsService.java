@@ -478,7 +478,7 @@ public class StoreStatsService extends ServiceThread {
     public void run() {
         log.info(this.getServiceName() + " service started");
 
-        while (!this.isStoped()) {
+        while (!this.isStopped()) {
             try {
                 this.waitForRunning(FrequencyOfSampling);
 

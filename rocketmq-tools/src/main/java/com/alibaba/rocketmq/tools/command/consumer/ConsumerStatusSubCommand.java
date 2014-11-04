@@ -100,7 +100,7 @@ public class ConsumerStatusSubCommand implements SubCommand {
                         if (consumerRunningInfo != null) {
                             criTable.put(conn.getClientId(), consumerRunningInfo);
                             String filePath = now + "/" + conn.getClientId();
-                            MixAll.string2FileNotSafe(consumerRunningInfo.formatString(), filePath);
+                            MixAll.string2FileUnsafe(consumerRunningInfo.formatString(), filePath);
                             System.out.printf("%03d  %-40s %-20s %s\n",//
                                 i++,//
                                 conn.getClientId(),//
