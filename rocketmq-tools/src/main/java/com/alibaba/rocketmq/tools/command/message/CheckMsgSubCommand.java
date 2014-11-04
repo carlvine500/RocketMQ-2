@@ -53,6 +53,6 @@ public class CheckMsgSubCommand implements SubCommand {
             commandLine.getOptionValue("lStorePath").trim(), //
             Integer.parseInt(commandLine.getOptionValue("lSize").trim()));
         store.load();
-        store.traval(false);
+        store.travel(false);
     }
 }

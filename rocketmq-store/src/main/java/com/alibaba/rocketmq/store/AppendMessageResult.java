@@ -22,16 +22,22 @@ package com.alibaba.rocketmq.store;
  * @since 2013-7-21
  */
 public class AppendMessageResult {
+
     // 返回码
     private AppendMessageStatus status;
+
     // 从哪里开始写入
     private long wroteOffset;
+
     // 写入字节数
     private int wroteBytes;
+
     // 消息ID
     private String msgId;
+
     // 消息存储时间
     private long storeTimestamp;
+
     // 写入逻辑队列的offset（递进1）
     private long logicsOffset;
 

@@ -188,7 +188,7 @@ public class IndexService extends ServiceThread {
         // TODO 可能需要返回给最终用户
         long indexLastUpdateTimestamp = 0;
         long indexLastUpdatePhyoffset = 0;
-        maxNum = Math.min(maxNum, this.defaultMessageStore.getMessageStoreConfig().getMaxMsgsNumBatch());
+        maxNum = Math.min(maxNum, this.defaultMessageStore.getMessageStoreConfig().getMaxMsgNumBatch());
         try {
             this.readWriteLock.readLock().lock();
             if (!this.indexFileList.isEmpty()) {

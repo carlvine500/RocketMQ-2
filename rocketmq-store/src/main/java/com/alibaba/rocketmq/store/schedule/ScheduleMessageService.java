@@ -74,9 +74,7 @@ public class ScheduleMessageService extends ConfigManager {
 
 
     public void buildRunningStats(HashMap<String, String> stats) {
-        Iterator<Entry<Integer, Long>> it = this.offsetTable.entrySet().iterator();
-        while (it.hasNext()) {
-            Entry<Integer, Long> next = it.next();
+        for (Entry<Integer, Long> next : this.offsetTable.entrySet()) {
             int queueId = delayLevel2QueueId(next.getKey());
             long delayOffset = next.getValue();
             long maxOffset = this.defaultMessageStore.getMaxOffsetInQuque(SCHEDULE_TOPIC, queueId);
@@ -362,7 +360,7 @@ public class ScheduleMessageService extends ConfigManager {
                      * 索引文件被删除，定时任务中记录的offset已经被删除，会导致从该位置中取不到数据，
                      * 这里直接纠正下一次定时任务的offset为当前定时任务队列的最小值
                      */
-                    long cqMinOffset = cq.getMinOffsetInQuque();
+                    long cqMinOffset = cq.getMinOffsetInQueue();
                     if (offset < cqMinOffset) {
                         failScheduleOffset = cqMinOffset;
                         log.error("schedule CQ offset invalid. offset=" + offset + ", cqMinOffset="

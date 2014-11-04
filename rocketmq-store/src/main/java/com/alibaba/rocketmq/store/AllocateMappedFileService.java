@@ -35,7 +35,7 @@ import com.alibaba.rocketmq.common.constant.LoggerName;
  * @author shijia.wxr<vintage.wang@gmail.com>
  * @since 2013-7-21
  */
-public class AllocateMapedFileService extends ServiceThread {
+public class AllocateMappedFileService extends ServiceThread {
     private static final Logger log = LoggerFactory.getLogger(LoggerName.StoreLoggerName);
     private static int WaitTimeOut = 1000 * 5;
     private ConcurrentHashMap<String, AllocateRequest> requestTable =
@@ -45,7 +45,7 @@ public class AllocateMapedFileService extends ServiceThread {
     private volatile boolean hasException = false;
 
 
-    public MappedFile putRequestAndReturnMapedFile(String nextFilePath, String nextNextFilePath, int fileSize) {
+    public MappedFile putRequestAndReturnMappedFile(String nextFilePath, String nextNextFilePath, int fileSize) {
         AllocateRequest nextReq = new AllocateRequest(nextFilePath, fileSize);
         AllocateRequest nextNextReq = new AllocateRequest(nextNextFilePath, fileSize);
         boolean nextPutOK = (this.requestTable.putIfAbsent(nextFilePath, nextReq) == null);
@@ -94,7 +94,7 @@ public class AllocateMapedFileService extends ServiceThread {
 
     @Override
     public String getServiceName() {
-        return AllocateMapedFileService.class.getSimpleName();
+        return AllocateMappedFileService.class.getSimpleName();
     }
 
 
@@ -111,7 +111,7 @@ public class AllocateMapedFileService extends ServiceThread {
 
         for (AllocateRequest req : this.requestTable.values()) {
             if (req.mappedFile != null) {
-                log.info("delete pre allocated maped file, {}", req.mappedFile.getFileName());
+                log.info("delete pre allocated mapped file, {}", req.mappedFile.getFileName());
                 req.mappedFile.destroy(1000);
             }
         }

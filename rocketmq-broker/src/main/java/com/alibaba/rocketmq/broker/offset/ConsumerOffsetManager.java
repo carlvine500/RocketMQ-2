@@ -46,15 +46,9 @@ public class ConsumerOffsetManager extends ConfigManager {
 
     private transient BrokerController brokerController;
 
-
-    public ConsumerOffsetManager() {
-    }
-
-
     public ConsumerOffsetManager(BrokerController brokerController) {
         this.brokerController = brokerController;
     }
-
 
     /**
      * 扫描数据被删除了的topic，offset记录也对应删除
@@ -230,11 +224,10 @@ public class ConsumerOffsetManager extends ConfigManager {
         return this.offsetTable.get(key);
     }
 
-    public void cloneOffset(final String srcGroup, final String destGroup, final String topic) {
-        ConcurrentHashMap<Integer, Long> offsets =
-                this.offsetTable.get(topic + TOPIC_GROUP_SEPARATOR + srcGroup);
+    public void cloneOffset(final String srcGroup, final String dstGroup, final String topic) {
+        ConcurrentHashMap<Integer, Long> offsets = this.offsetTable.get(topic + TOPIC_GROUP_SEPARATOR + srcGroup);
         if (offsets != null) {
-            this.offsetTable.put(topic + TOPIC_GROUP_SEPARATOR + destGroup, offsets);
+            this.offsetTable.put(topic + TOPIC_GROUP_SEPARATOR + dstGroup, offsets);
         }
     }
 

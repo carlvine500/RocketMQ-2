@@ -30,10 +30,12 @@ public class DispatchRequest {
     private final long storeTimestamp;
     private final long consumeQueueOffset;
     private final String keys;
+
     /**
      * 事务相关部分
      */
     private final int sysFlag;
+
     private final long preparedTransactionOffset;
 
 
@@ -46,10 +48,12 @@ public class DispatchRequest {
             final long storeTimestamp,// 6
             final long consumeQueueOffset,// 7
             final String keys,// 8
+
             /**
              * 事务相关部分
              */
             final int sysFlag,// 9
+
             final long preparedTransactionOffset// 10
     ) {
         this.topic = topic;

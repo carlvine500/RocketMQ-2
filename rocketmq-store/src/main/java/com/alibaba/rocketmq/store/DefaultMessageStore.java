@@ -83,7 +83,7 @@ public class DefaultMessageStore implements MessageStore {
     // 消息索引服务
     private final IndexService indexService;
     // 预分配MapedFile对象服务
-    private final AllocateMapedFileService allocateMapedFileService;
+    private final AllocateMappedFileService allocateMappedFileService;
     // 从物理队列解析消息重新发送到逻辑队列
     private final ReputMessageService reputMessageService;
     // HA服务
@@ -109,7 +109,7 @@ public class DefaultMessageStore implements MessageStore {
 
     public DefaultMessageStore(final MessageStoreConfig messageStoreConfig) throws IOException {
         this.messageStoreConfig = messageStoreConfig;
-        this.allocateMapedFileService = new AllocateMapedFileService();
+        this.allocateMappedFileService = new AllocateMappedFileService();
         this.commitLog = new CommitLog(this);
         this.consumeQueueTable =
                 new ConcurrentHashMap<String/* topic */, ConcurrentHashMap<Integer/* queueId */, ConsumeQueue>>(
@@ -119,7 +119,7 @@ public class DefaultMessageStore implements MessageStore {
         this.cleanCommitLogService = new CleanCommitLogService();
         this.cleanConsumeQueueService = new CleanConsumeQueueService();
         this.dispatchMessageService =
-                new DispatchMessageService(this.messageStoreConfig.getPutMsgIndexHightWater());
+                new DispatchMessageService(this.messageStoreConfig.getPutMsgIndexHighWater());
         this.storeStatsService = new StoreStatsService();
         this.indexService = new IndexService(this);
         this.haService = new HAService(this);
@@ -140,7 +140,7 @@ public class DefaultMessageStore implements MessageStore {
         }
 
         // load过程依赖此服务，所以提前启动
-        this.allocateMapedFileService.start();
+        this.allocateMappedFileService.start();
         this.dispatchMessageService.start();
         // 因为下面的recover会分发请求到索引服务，如果不启动，分发过程会被流控
         this.indexService.start();
@@ -202,7 +202,7 @@ public class DefaultMessageStore implements MessageStore {
         }
 
         if (!result) {
-            this.allocateMapedFileService.shutdown();
+            this.allocateMappedFileService.shutdown();
         }
 
         return result;
@@ -343,7 +343,7 @@ public class DefaultMessageStore implements MessageStore {
             this.indexService.shutdown();
             this.flushConsumeQueueService.shutdown();
             this.commitLog.shutdown();
-            this.allocateMapedFileService.shutdown();
+            this.allocateMappedFileService.shutdown();
             if (this.reputMessageService != null) {
                 this.reputMessageService.shutdown();
             }
@@ -465,8 +465,8 @@ public class DefaultMessageStore implements MessageStore {
 
         ConsumeQueue consumeQueue = findConsumeQueue(topic, queueId);
         if (consumeQueue != null) {
-            minOffset = consumeQueue.getMinOffsetInQuque();
-            maxOffset = consumeQueue.getMaxOffsetInQuque();
+            minOffset = consumeQueue.getMinOffsetInQueue();
+            maxOffset = consumeQueue.getMaxOffsetInQueue();
 
             if (maxOffset == 0) {
                 status = GetMessageStatus.NO_MESSAGE_IN_QUEUE;
@@ -525,7 +525,7 @@ public class DefaultMessageStore implements MessageStore {
                                 SelectMappedBufferResult selectResult =
                                         this.commitLog.getMessage(offsetPy, sizePy);
                                 if (selectResult != null) {
-                                    this.storeStatsService.getGetMessageTransferedMsgCount()
+                                    this.storeStatsService.getGetMessageTransferredMsgCount()
                                         .incrementAndGet();
                                     getResult.addMessage(selectResult);
                                     status = GetMessageStatus.FOUND;
@@ -603,7 +603,7 @@ public class DefaultMessageStore implements MessageStore {
     public long getMaxOffsetInQuque(String topic, int queueId) {
         ConsumeQueue logic = this.findConsumeQueue(topic, queueId);
         if (logic != null) {
-            long offset = logic.getMaxOffsetInQuque();
+            long offset = logic.getMaxOffsetInQueue();
             return offset;
         }
 
@@ -617,7 +617,7 @@ public class DefaultMessageStore implements MessageStore {
     public long getMinOffsetInQuque(String topic, int queueId) {
         ConsumeQueue logic = this.findConsumeQueue(topic, queueId);
         if (logic != null) {
-            return logic.getMinOffsetInQuque();
+            return logic.getMinOffsetInQueue();
         }
 
         return -1;
@@ -838,7 +838,7 @@ public class DefaultMessageStore implements MessageStore {
             // 从小到达排序
             Collections.sort(queryOffsetResult.getPhyOffsets());
 
-            queryMessageResult.setIndexLastUpdatePhyoffset(queryOffsetResult.getIndexLastUpdatePhyoffset());
+            queryMessageResult.setIndexLastUpdatePhyOffset(queryOffsetResult.getIndexLastUpdatePhyoffset());
             queryMessageResult.setIndexLastUpdateTimestamp(queryOffsetResult.getIndexLastUpdateTimestamp());
 
             for (int m = 0; m < queryOffsetResult.getPhyOffsets().size(); m++) {
@@ -949,7 +949,7 @@ public class DefaultMessageStore implements MessageStore {
                         queueId,//
                         StorePathConfigHelper.getStorePathConsumeQueue(this.messageStoreConfig
                             .getStorePathRootDir()),//
-                        this.getMessageStoreConfig().getMapedFileSizeConsumeQueue(),//
+                        this.getMessageStoreConfig().getMappedFileSizeConsumeQueue(),//
                         this);
             ConsumeQueue oldLogic = map.putIfAbsent(queueId, newLogic);
             if (oldLogic != null) {
@@ -1053,7 +1053,7 @@ public class DefaultMessageStore implements MessageStore {
                                     queueId,//
                                     StorePathConfigHelper.getStorePathConsumeQueue(this.messageStoreConfig
                                         .getStorePathRootDir()),//
-                                    this.getMessageStoreConfig().getMapedFileSizeConsumeQueue(),//
+                                    this.getMessageStoreConfig().getMappedFileSizeConsumeQueue(),//
                                     this);
                         this.putConsumeQueue(topic, queueId, logic);
                         if (!logic.load()) {
@@ -1122,7 +1122,7 @@ public class DefaultMessageStore implements MessageStore {
             for (ConsumeQueue logic : maps.values()) {
                 // 恢复写入消息时，记录的队列offset
                 String key = logic.getTopic() + "-" + logic.getQueueId();
-                table.put(key, logic.getMaxOffsetInQuque());
+                table.put(key, logic.getMaxOffsetInQueue());
                 // 恢复每个队列的最小offset
                 logic.correctMinOffset(minPhyOffset);
             }
@@ -1144,7 +1144,7 @@ public class DefaultMessageStore implements MessageStore {
     public void putMessagePostionInfo(String topic, int queueId, long offset, int size, long tagsCode,
             long storeTimestamp, long logicOffset) {
         ConsumeQueue cq = this.findConsumeQueue(topic, queueId);
-        cq.putMessagePostionInfoWrapper(offset, size, tagsCode, storeTimestamp, logicOffset);
+        cq.putMessagePositionInfoWrapper(offset, size, tagsCode, storeTimestamp, logicOffset);
     }
 
 
@@ -1158,8 +1158,8 @@ public class DefaultMessageStore implements MessageStore {
     }
 
 
-    public AllocateMapedFileService getAllocateMapedFileService() {
-        return allocateMapedFileService;
+    public AllocateMappedFileService getAllocateMappedFileService() {
+        return allocateMappedFileService;
     }
 
 
@@ -1249,7 +1249,7 @@ public class DefaultMessageStore implements MessageStore {
                 this.lastRedeleteTimestamp = currentTimestamp;
                 int destroyMapedFileIntervalForcibly =
                         DefaultMessageStore.this.getMessageStoreConfig()
-                            .getDestroyMapedFileIntervalForcibly();
+                            .getDestroyMappedFileIntervalForcibly();
                 if (DefaultMessageStore.this.commitLog.retryDeleteFirstFile(destroyMapedFileIntervalForcibly)) {
                     // TODO
                 }
@@ -1263,7 +1263,7 @@ public class DefaultMessageStore implements MessageStore {
             int deletePhysicFilesInterval =
                     DefaultMessageStore.this.getMessageStoreConfig().getDeleteCommitLogFilesInterval();
             int destroyMapedFileIntervalForcibly =
-                    DefaultMessageStore.this.getMessageStoreConfig().getDestroyMapedFileIntervalForcibly();
+                    DefaultMessageStore.this.getMessageStoreConfig().getDestroyMappedFileIntervalForcibly();
 
             boolean timeup = this.isTimeToDelete();
             boolean spacefull = this.isSpaceToDelete();
@@ -1583,7 +1583,7 @@ public class DefaultMessageStore implements MessageStore {
         public void putRequest(final DispatchRequest dispatchRequest) {
             int requestsWriteSize = 0;
             int putMsgIndexHightWater =
-                    DefaultMessageStore.this.getMessageStoreConfig().getPutMsgIndexHightWater();
+                    DefaultMessageStore.this.getMessageStoreConfig().getPutMsgIndexHighWater();
             synchronized (this) {
                 this.requestsWrite.add(dispatchRequest);
                 requestsWriteSize = this.requestsWrite.size();
@@ -1849,8 +1849,8 @@ public class DefaultMessageStore implements MessageStore {
 
         ConsumeQueue consumeQueue = findConsumeQueue(topic, queueId);
         if (consumeQueue != null) {
-            minOffset = Math.max(minOffset, consumeQueue.getMinOffsetInQuque());
-            maxOffset = Math.min(maxOffset, consumeQueue.getMaxOffsetInQuque());
+            minOffset = Math.max(minOffset, consumeQueue.getMinOffsetInQueue());
+            maxOffset = Math.min(maxOffset, consumeQueue.getMaxOffsetInQueue());
 
             if (maxOffset == 0) {
                 return messageIds;
