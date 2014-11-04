@@ -366,7 +366,7 @@ public class AdminBrokerProcessor implements NettyRequestProcessor {
 
                 OffsetWrapper offsetWrapper = new OffsetWrapper();
 
-                long brokerOffset = this.brokerController.getMessageStore().getMaxOffsetInQuque(topic, i);
+                long brokerOffset = this.brokerController.getMessageStore().getMaxOffsetInQueue(topic, i);
                 if (brokerOffset < 0)
                     brokerOffset = 0;
 
@@ -511,11 +511,11 @@ public class AdminBrokerProcessor implements NettyRequestProcessor {
             mq.setQueueId(i);
 
             TopicOffset topicOffset = new TopicOffset();
-            long min = this.brokerController.getMessageStore().getMinOffsetInQuque(topic, i);
+            long min = this.brokerController.getMessageStore().getMinOffsetInQueue(topic, i);
             if (min < 0)
                 min = 0;
 
-            long max = this.brokerController.getMessageStore().getMaxOffsetInQuque(topic, i);
+            long max = this.brokerController.getMessageStore().getMaxOffsetInQueue(topic, i);
             if (max < 0)
                 max = 0;
 
@@ -805,7 +805,7 @@ public class AdminBrokerProcessor implements NettyRequestProcessor {
                         .decodeCommandCustomHeader(GetMaxOffsetRequestHeader.class);
 
         long offset =
-                this.brokerController.getMessageStore().getMaxOffsetInQuque(requestHeader.getTopic(),
+                this.brokerController.getMessageStore().getMaxOffsetInQueue(requestHeader.getTopic(),
                         requestHeader.getQueueId());
 
         responseHeader.setOffset(offset);
@@ -827,7 +827,7 @@ public class AdminBrokerProcessor implements NettyRequestProcessor {
                         .decodeCommandCustomHeader(GetMinOffsetRequestHeader.class);
 
         long offset =
-                this.brokerController.getMessageStore().getMinOffsetInQuque(requestHeader.getTopic(),
+                this.brokerController.getMessageStore().getMinOffsetInQueue(requestHeader.getTopic(),
                         requestHeader.getQueueId());
 
         responseHeader.setOffset(offset);
@@ -922,7 +922,7 @@ public class AdminBrokerProcessor implements NettyRequestProcessor {
         // 订阅组不存在
         else {
             long minOffset =
-                    this.brokerController.getMessageStore().getMinOffsetInQuque(requestHeader.getTopic(),
+                    this.brokerController.getMessageStore().getMinOffsetInQueue(requestHeader.getTopic(),
                             requestHeader.getQueueId());
             // 订阅组不存在情况下，如果这个队列的消息最小Offset是0，则表示这个Topic上线时间不长，服务器堆积的数据也不多，那么这个订阅组就从0开始消费。
             // 尤其对于Topic队列数动态扩容时，必须要从0开始消费。
@@ -1137,7 +1137,7 @@ public class AdminBrokerProcessor implements NettyRequestProcessor {
             long minTime = this.brokerController.getMessageStore().getEarliestMessageTime(topic, i);
             timeSpan.setMinTimeStamp(minTime);
 
-            long max = this.brokerController.getMessageStore().getMaxOffsetInQuque(topic, i);
+            long max = this.brokerController.getMessageStore().getMaxOffsetInQueue(topic, i);
             long maxTime =
                     this.brokerController.getMessageStore().getMessageStoreTimeStamp(topic, i, (max - 1));
             timeSpan.setMaxTimeStamp(maxTime);

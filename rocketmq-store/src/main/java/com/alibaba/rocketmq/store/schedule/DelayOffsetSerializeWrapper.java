@@ -22,7 +22,7 @@ import com.alibaba.rocketmq.remoting.protocol.RemotingSerializable;
 
 /**
  * 延时消息进度，序列化包装
- * 
+ *
  * @author shijia.wxr<vintage.wang@gmail.com>
  * @since 2013-7-21
  */

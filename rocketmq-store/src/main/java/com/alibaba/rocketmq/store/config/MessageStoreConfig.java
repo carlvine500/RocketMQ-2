@@ -23,7 +23,7 @@ import com.alibaba.rocketmq.store.ConsumeQueue;
 
 /**
  * 存储层配置文件类
- * 
+ *
  * @author shijia.wxr<vintage.wang@gmail.com>
  * @since 2013-7-21
  */

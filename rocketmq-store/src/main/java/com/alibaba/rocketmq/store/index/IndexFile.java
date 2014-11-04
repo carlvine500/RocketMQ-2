@@ -31,7 +31,7 @@ import com.alibaba.rocketmq.common.constant.LoggerName;
 
 /**
  * 存储具体消息索引信息的文件
- * 
+ *
  * @author shijia.wxr<vintage.wang@gmail.com>
  * @since 2013-7-21
  */
@@ -49,7 +49,7 @@ public class IndexFile {
 
 
     public IndexFile(final String fileName, final int hashSlotNum, final int indexNum,
-            final long endPhyOffset, final long endTimestamp) throws IOException {
+                     final long endPhyOffset, final long endTimestamp) throws IOException {
         int fileTotalSize =
                 IndexHeader.INDEX_HEADER_SIZE + (hashSlotNum * HASH_SLOT_SIZE) + (indexNum * INDEX_SIZE);
         this.mappedFile = new MappedFile(fileName, fileTotalSize);
@@ -130,11 +130,9 @@ public class IndexFile {
                 long timeDiff = storeTimestamp - this.indexHeader.getBeginTimestamp();
                 if (this.indexHeader.getBeginTimestamp() <= 0) {
                     timeDiff = 0;
-                }
-                else if (timeDiff > Integer.MAX_VALUE) {
+                } else if (timeDiff > Integer.MAX_VALUE) {
                     timeDiff = Integer.MAX_VALUE;
-                }
-                else if (timeDiff < 0) {
+                } else if (timeDiff < 0) {
                     timeDiff = 0;
                 }
 
@@ -166,22 +164,18 @@ public class IndexFile {
                 this.indexHeader.setEndTimestamp(storeTimestamp);
 
                 return true;
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 log.error("putKey exception, Key: " + key + " KeyHashCode: " + key.hashCode(), e);
-            }
-            finally {
+            } finally {
                 if (fileLock != null) {
                     try {
                         fileLock.release();
-                    }
-                    catch (IOException e) {
+                    } catch (IOException e) {
                         e.printStackTrace();
                     }
                 }
             }
-        }
-        else {
+        } else {
             log.warn("putKey index count " + this.indexHeader.getIndexCount() + " index max num "
                     + this.indexNum);
         }
@@ -215,12 +209,12 @@ public class IndexFile {
         result =
                 result
                         || (begin >= this.indexHeader.getBeginTimestamp() && begin <= this.indexHeader
-                            .getEndTimestamp());
+                        .getEndTimestamp());
 
         result =
                 result
                         || (end >= this.indexHeader.getBeginTimestamp() && end <= this.indexHeader
-                            .getEndTimestamp());
+                        .getEndTimestamp());
         return result;
     }
 
@@ -239,7 +233,7 @@ public class IndexFile {
      * 前提：入参时间区间在调用前已经匹配了当前索引文件的起始结束时间
      */
     public void selectPhyOffset(final List<Long> phyOffsets, final String key, final int maxNum,
-            final long begin, final long end, boolean lock) {
+                                final long begin, final long end, boolean lock) {
         if (this.mappedFile.hold()) {
             int keyHash = indexKeyHashMethod(key);
             int slotPos = keyHash % this.hashSlotNum;
@@ -261,9 +255,8 @@ public class IndexFile {
                 if (slotValue <= INVALID_INDEX || slotValue > this.indexHeader.getIndexCount()
                         || this.indexHeader.getIndexCount() <= 1) {
                     // TODO NOTFOUND
-                }
-                else {
-                    for (int nextIndexToRead = slotValue;;) {
+                } else {
+                    for (int nextIndexToRead = slotValue; ; ) {
                         if (phyOffsets.size() >= maxNum) {
                             break;
                         }
@@ -301,16 +294,13 @@ public class IndexFile {
                         nextIndexToRead = prevIndexRead;
                     }
                 }
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 log.error("selectPhyOffset exception ", e);
-            }
-            finally {
+            } finally {
                 if (fileLock != null) {
                     try {
                         fileLock.release();
-                    }
-                    catch (IOException e) {
+                    } catch (IOException e) {
                         e.printStackTrace();
                     }
                 }

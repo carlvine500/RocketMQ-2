@@ -30,8 +30,8 @@ import com.alibaba.rocketmq.common.constant.LoggerName;
 
 
 /**
- * 预分配MapedFile服务
- * 
+ * 预分配MappedFile服务
+ *
  * @author shijia.wxr<vintage.wang@gmail.com>
  * @since 2013-7-21
  */
@@ -79,12 +79,10 @@ public class AllocateMappedFileService extends ServiceThread {
                 }
                 this.requestTable.remove(nextFilePath);
                 return result.getMappedFile();
-            }
-            else {
+            } else {
                 log.error("find preallocate mmap failed, this never happen");
             }
-        }
-        catch (InterruptedException e) {
+        } catch (InterruptedException e) {
             log.warn(this.getServiceName() + " service has exception. ", e);
         }
 
@@ -104,8 +102,7 @@ public class AllocateMappedFileService extends ServiceThread {
 
         try {
             this.thread.join(this.getJointime());
-        }
-        catch (InterruptedException e) {
+        } catch (InterruptedException e) {
             e.printStackTrace();
         }
 
@@ -155,17 +152,14 @@ public class AllocateMappedFileService extends ServiceThread {
                 req.setMappedFile(mappedFile);
                 this.hasException = false;
             }
-        }
-        catch (InterruptedException e) {
+        } catch (InterruptedException e) {
             log.warn(this.getServiceName() + " service has exception, maybe by shutdown");
             this.hasException = true;
             return false;
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             log.warn(this.getServiceName() + " service has exception. ", e);
             this.hasException = true;
-        }
-        finally {
+        } finally {
             if (req != null)
                 req.getCountDownLatch().countDown();
         }

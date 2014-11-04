@@ -17,7 +17,7 @@ package com.alibaba.rocketmq.store;
 
 /**
  * 写入消息过程的返回结果
- * 
+ *
  * @author shijia.wxr<vintage.wang@gmail.com>
  * @since 2013-7-21
  */
@@ -27,7 +27,7 @@ public enum PutMessageStatus {
     FLUSH_SLAVE_TIMEOUT,
     SLAVE_NOT_AVAILABLE,
     SERVICE_NOT_AVAILABLE,
-    CREATE_MAPEDFILE_FAILED,
+    CREATE_MAPPED_FILE_FAILED,
     MESSAGE_ILLEGAL,
     UNKNOWN_ERROR,
 }

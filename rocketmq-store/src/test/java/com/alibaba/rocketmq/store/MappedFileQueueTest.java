@@ -40,7 +40,7 @@ public class MappedFileQueueTest {
 
 
     @Test
-    public void test_getLastMapedFile() {
+    public void test_getLastMappedFile() {
         final String fixedMsg = "0123456789abcdef";
         System.out.println("================================================================");
         AllocateMappedFileService allocateMappedFileService = new AllocateMappedFileService();
@@ -66,7 +66,7 @@ public class MappedFileQueueTest {
 
 
     @Test
-    public void test_findMapedFileByOffset() {
+    public void test_findMappedFileByOffset() {
         final String fixedMsg = "abcd";
         System.out.println("================================================================");
         AllocateMappedFileService allocateMappedFileService = new AllocateMappedFileService();
@@ -180,7 +180,7 @@ public class MappedFileQueueTest {
 
 
     @Test
-    public void test_getMapedMemorySize() {
+    public void test_getMappedMemorySize() {
         final String fixedMsg = "abcd";
         System.out.println("================================================================");
         AllocateMappedFileService allocateMappedFileService = new AllocateMappedFileService();

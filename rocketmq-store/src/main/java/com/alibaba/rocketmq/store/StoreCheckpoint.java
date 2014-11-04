@@ -31,7 +31,7 @@ import com.alibaba.rocketmq.common.constant.LoggerName;
 
 /**
  * 记录存储模型最终一致的时间点
- * 
+ *
  * @author shijia.wxr<vintage.wang@gmail.com>
  * @since 2013-7-21
  */
@@ -66,8 +66,7 @@ public class StoreCheckpoint {
                     + UtilAll.timeMillisToHumanString(this.logicsMsgTimestamp));
             log.info("store checkpoint file indexMsgTimestamp " + this.indexMsgTimestamp + ", "
                     + UtilAll.timeMillisToHumanString(this.indexMsgTimestamp));
-        }
-        else {
+        } else {
             log.info("store checkpoint file not exists, " + scpPath);
         }
     }
@@ -81,8 +80,7 @@ public class StoreCheckpoint {
 
         try {
             this.fileChannel.close();
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }

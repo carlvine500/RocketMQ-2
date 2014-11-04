@@ -26,7 +26,7 @@ import com.alibaba.rocketmq.common.protocol.heartbeat.SubscriptionData;
 
 /**
  * 存储层对外提供的接口
- * 
+ *
  * @author shijia.wxr<vintage.wang@gmail.com>
  * @since 2013-7-21
  */
@@ -66,19 +66,19 @@ public interface MessageStore {
      * 读取消息，如果types为null，则不做过滤
      */
     public GetMessageResult getMessage(final String topic, final int queueId, final long offset,
-            final int maxMsgNums, final SubscriptionData subscriptionData);
+                                       final int maxMsgNum, final SubscriptionData subscriptionData);
 
 
     /**
      * 获取指定队列最大Offset 如果队列不存在，返回-1
      */
-    public long getMaxOffsetInQuque(final String topic, final int queueId);
+    public long getMaxOffsetInQueue(final String topic, final int queueId);
 
 
     /**
      * 获取指定队列最小Offset 如果队列不存在，返回-1
      */
-    public long getMinOffsetInQuque(final String topic, final int queueId);
+    public long getMinOffsetInQueue(final String topic, final int queueId);
 
 
     /**
@@ -160,14 +160,14 @@ public interface MessageStore {
     /**
      * 手动触发删除文件
      */
-    public void excuteDeleteFilesManualy();
+    public void executeDeleteFilesManually();
 
 
     /**
      * 根据消息Key查询消息
      */
     public QueryMessageResult queryMessage(final String topic, final String key, final int maxNum,
-            final long begin, final long end);
+                                           final long begin, final long end);
 
 
     public void updateHaMasterAddress(final String newAddr);
@@ -195,5 +195,5 @@ public interface MessageStore {
      * 批量获取 messageId
      */
     public Map<String, Long> getMessageIds(final String topic, int queueId, long minOffset,
-            final long maxOffset, SocketAddress storeHost);
+                                           final long maxOffset, SocketAddress storeHost);
 }
