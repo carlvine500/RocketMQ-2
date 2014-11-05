@@ -46,6 +46,14 @@ public class ConsumerOffsetManager extends ConfigManager {
 
     private transient BrokerController brokerController;
 
+    /**
+     * Default constructor.
+     */
+    public ConsumerOffsetManager() {
+        //empty
+    }
+
+
     public ConsumerOffsetManager(BrokerController brokerController) {
         this.brokerController = brokerController;
     }
