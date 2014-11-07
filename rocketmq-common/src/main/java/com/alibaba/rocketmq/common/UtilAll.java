@@ -15,6 +15,8 @@
  */
 package com.alibaba.rocketmq.common;
 
+import com.alibaba.rocketmq.remoting.common.RemotingHelper;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -31,8 +33,6 @@ import java.util.Map;
 import java.util.zip.CRC32;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.InflaterInputStream;
-
-import com.alibaba.rocketmq.remoting.common.RemotingHelper;
 
 
 /**
@@ -93,7 +93,7 @@ public class UtilAll {
 
     public static boolean isItTimeToDo(final String when) {
         String[] whiles = when.split(";");
-        if (whiles != null && whiles.length > 0) {
+        if (whiles.length > 0) {
             Calendar now = Calendar.getInstance();
             for (String w : whiles) {
                 int nowHour = Integer.parseInt(w);
