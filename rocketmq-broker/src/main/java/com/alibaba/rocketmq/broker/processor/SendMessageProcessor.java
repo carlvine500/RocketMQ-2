@@ -67,9 +67,6 @@ import java.util.Random;
  * @since 2013-7-26
  */
 public class SendMessageProcessor implements NettyRequestProcessor {
-
-    private static final String CLASS_NAME = SendMessageProcessor.class.getName();
-
     private static final Logger LOG = LoggerFactory.getLogger(LoggerName.BrokerLoggerName);
 
     private final static int DLQ_NUMS_PER_GROUP = 1;
@@ -89,9 +86,7 @@ public class SendMessageProcessor implements NettyRequestProcessor {
     @Override
     public RemotingCommand processRequest(ChannelHandlerContext ctx, RemotingCommand request)
             throws RemotingCommandException {
-        System.out.println(CLASS_NAME + "#processRequest");
         SendMessageRequestHeaderV2 requestHeaderV2 = null;
-
         switch (request.getCode()) {
             case RequestCode.SEND_MESSAGE_V2:
                 requestHeaderV2 =

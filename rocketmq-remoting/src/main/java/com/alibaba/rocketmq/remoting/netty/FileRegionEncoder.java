@@ -10,9 +10,6 @@ import java.nio.ByteBuffer;
 import java.nio.channels.WritableByteChannel;
 
 public class FileRegionEncoder extends MessageToByteEncoder<FileRegion> {
-
-    private final String CLASS_NAME = FileRegionEncoder.class.getName();
-
     /**
      * Encode a message into a {@link io.netty.buffer.ByteBuf}. This method will be called for each written message that can be handled
      * by this encoder.
@@ -24,7 +21,6 @@ public class FileRegionEncoder extends MessageToByteEncoder<FileRegion> {
      */
     @Override
     protected void encode(ChannelHandlerContext ctx, FileRegion msg, final ByteBuf out) throws Exception {
-        System.out.println("Enter " + CLASS_NAME + "#encode");
         WritableByteChannel writableByteChannel = new WritableByteChannel() {
             @Override
             public int write(ByteBuffer src) throws IOException {
