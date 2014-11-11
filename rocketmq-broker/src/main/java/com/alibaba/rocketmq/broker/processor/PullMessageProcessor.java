@@ -199,8 +199,7 @@ public class PullMessageProcessor implements NettyRequestProcessor {
         final long suspendTimeoutMillisLong = hasSuspendFlag ? requestHeader.getSuspendTimeoutMillis() : 0;
 
         // 检查topic是否存在
-        TopicConfig topicConfig =
-                this.brokerController.getTopicConfigManager().selectTopicConfig(requestHeader.getTopic());
+        TopicConfig topicConfig = this.brokerController.getTopicConfigManager().selectTopicConfig(requestHeader.getTopic());
         if (null == topicConfig) {
             LOG.error("the topic " + requestHeader.getTopic() + " not exist, consumer: "
                     + RemotingHelper.parseChannelRemoteAddr(channel));
@@ -218,11 +217,10 @@ public class PullMessageProcessor implements NettyRequestProcessor {
         }
 
         // 检查队列有效性
-        if (requestHeader.getQueueId() < 0 || requestHeader.getQueueId() >= topicConfig.getReadQueueNums()) {
-            String errorInfo =
-                    "queueId[" + requestHeader.getQueueId() + "] is illagal,Topic :"
-                            + requestHeader.getTopic() + " topicConfig.readQueueNums: "
-                            + topicConfig.getReadQueueNums() + " consumer: " + channel.remoteAddress();
+        if (requestHeader.getQueueId() < 0 || requestHeader.getQueueId() >= topicConfig.getReadQueueNum()) {
+            String errorInfo = "queueId[" + requestHeader.getQueueId() + "] is illegal,Topic :"
+                            + requestHeader.getTopic() + " topicConfig.readQueueNum: "
+                            + topicConfig.getReadQueueNum() + " consumer: " + channel.remoteAddress();
             LOG.warn(errorInfo);
             response.setCode(ResponseCode.SYSTEM_ERROR);
             response.setRemark(errorInfo);
@@ -327,8 +325,7 @@ public class PullMessageProcessor implements NettyRequestProcessor {
                                         requestHeader.getQueueOffset() + getMessageResult.getMessageCount(),
                                         storeHost);
                         context.setMessageIds(messageIds);
-                        context.setBodyLength(getMessageResult.getBufferTotalSize()
-                                / getMessageResult.getMessageCount());
+                        context.setBodyLength(getMessageResult.getBufferTotalSize() / getMessageResult.getMessageCount());
                         this.executeConsumeMessageHookBefore(context);
                     }
 
@@ -343,8 +340,8 @@ public class PullMessageProcessor implements NettyRequestProcessor {
                         response.setCode(ResponseCode.PULL_OFFSET_MOVED);
 
                         // XXX: warn and notify me
-                        LOG.info(
-                                "the broker store no queue data, fix the request offset {} to {}, Topic: {} QueueId: {} Consumer Group: {}",
+                        LOG.info("the broker stores no queue data, fix the request offset {} to {}, Topic: {}" +
+                                        " QueueId: {} Consumer Group: {}",
                                 requestHeader.getQueueOffset(),
                                 getMessageResult.getNextBeginOffset(),
                                 requestHeader.getTopic(),
@@ -406,8 +403,7 @@ public class PullMessageProcessor implements NettyRequestProcessor {
                             public void operationComplete(ChannelFuture future) throws Exception {
                                 getMessageResult.release();
                                 if (!future.isSuccess()) {
-                                    LOG.error(
-                                            "transfer many message by pagecache failed, " + channel.remoteAddress(),
+                                    LOG.error("transfer many message by pagecache failed, " + channel.remoteAddress(),
                                             future.cause());
                                 }
                             }
@@ -458,8 +454,10 @@ public class PullMessageProcessor implements NettyRequestProcessor {
         // 存储Consumer消费进度
         boolean storeOffsetEnable = brokerAllowSuspend; // 说明是首次调用，相对于长轮询通知
         storeOffsetEnable = storeOffsetEnable && hasCommitOffsetFlag; // 说明Consumer设置了标志位
-        storeOffsetEnable = storeOffsetEnable // 只有Master支持存储offset
-                && this.brokerController.getMessageStoreConfig().getBrokerRole() != BrokerRole.SLAVE;
+        // 只有Master支持存储offset
+        storeOffsetEnable = storeOffsetEnable && this.brokerController.getMessageStoreConfig().getBrokerRole()
+                != BrokerRole.SLAVE;
+
         if (storeOffsetEnable) {
             this.brokerController.getConsumerOffsetManager().commitOffset(requestHeader.getConsumerGroup(),
                     requestHeader.getTopic(), requestHeader.getQueueId(), requestHeader.getCommitOffset());

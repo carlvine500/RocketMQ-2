@@ -70,8 +70,8 @@ public class TopicConfigManager extends ConfigManager {
             String topic = MixAll.SELF_TEST_TOPIC;
             TopicConfig topicConfig = new TopicConfig(topic);
             this.systemTopicList.add(topic);
-            topicConfig.setReadQueueNums(1);
-            topicConfig.setWriteQueueNums(1);
+            topicConfig.setReadQueueNum(1);
+            topicConfig.setWriteQueueNum(1);
             this.topicConfigTable.put(topicConfig.getTopicName(), topicConfig);
         }
         {
@@ -80,10 +80,10 @@ public class TopicConfigManager extends ConfigManager {
                 String topic = MixAll.DEFAULT_TOPIC;
                 TopicConfig topicConfig = new TopicConfig(topic);
                 this.systemTopicList.add(topic);
-                topicConfig.setReadQueueNums(this.brokerController.getBrokerConfig()
-                    .getDefaultTopicQueueNums());
-                topicConfig.setWriteQueueNums(this.brokerController.getBrokerConfig()
-                    .getDefaultTopicQueueNums());
+                topicConfig.setReadQueueNum(this.brokerController.getBrokerConfig()
+                        .getDefaultTopicQueueNums());
+                topicConfig.setWriteQueueNum(this.brokerController.getBrokerConfig()
+                        .getDefaultTopicQueueNums());
                 int perm = PermName.PERM_INHERIT | PermName.PERM_READ | PermName.PERM_WRITE;
                 topicConfig.setPerm(perm);
                 this.topicConfigTable.put(topicConfig.getTopicName(), topicConfig);
@@ -94,8 +94,8 @@ public class TopicConfigManager extends ConfigManager {
             String topic = MixAll.BENCHMARK_TOPIC;
             TopicConfig topicConfig = new TopicConfig(topic);
             this.systemTopicList.add(topic);
-            topicConfig.setReadQueueNums(1024);
-            topicConfig.setWriteQueueNums(1024);
+            topicConfig.setReadQueueNum(1024);
+            topicConfig.setWriteQueueNum(1024);
             this.topicConfigTable.put(topicConfig.getTopicName(), topicConfig);
         }
         {
@@ -119,8 +119,8 @@ public class TopicConfigManager extends ConfigManager {
             if (this.brokerController.getBrokerConfig().isBrokerTopicEnable()) {
                 perm |= PermName.PERM_READ | PermName.PERM_WRITE;
             }
-            topicConfig.setReadQueueNums(1);
-            topicConfig.setWriteQueueNums(1);
+            topicConfig.setReadQueueNum(1);
+            topicConfig.setWriteQueueNum(1);
             topicConfig.setPerm(perm);
             this.topicConfigTable.put(topicConfig.getTopicName(), topicConfig);
         }
@@ -129,8 +129,8 @@ public class TopicConfigManager extends ConfigManager {
             String topic = MixAll.OFFSET_MOVED_EVENT;
             TopicConfig topicConfig = new TopicConfig(topic);
             this.systemTopicList.add(topic);
-            topicConfig.setReadQueueNums(1);
-            topicConfig.setWriteQueueNums(1);
+            topicConfig.setReadQueueNum(1);
+            topicConfig.setWriteQueueNum(1);
             this.topicConfigTable.put(topicConfig.getTopicName(), topicConfig);
         }
     }
@@ -181,15 +181,15 @@ public class TopicConfigManager extends ConfigManager {
                             topicConfig = new TopicConfig(topic);
 
                             int queueNums =
-                                    clientDefaultTopicQueueNums > defaultTopicConfig.getWriteQueueNums() ? defaultTopicConfig
-                                        .getWriteQueueNums() : clientDefaultTopicQueueNums;
+                                    clientDefaultTopicQueueNums > defaultTopicConfig.getWriteQueueNum() ? defaultTopicConfig
+                                        .getWriteQueueNum() : clientDefaultTopicQueueNums;
 
                             if (queueNums < 0) {
                                 queueNums = 0;
                             }
 
-                            topicConfig.setReadQueueNums(queueNums);
-                            topicConfig.setWriteQueueNums(queueNums);
+                            topicConfig.setReadQueueNum(queueNums);
+                            topicConfig.setWriteQueueNum(queueNums);
                             int perm = defaultTopicConfig.getPerm();
                             perm &= ~PermName.PERM_INHERIT;
                             topicConfig.setPerm(perm);
@@ -256,8 +256,8 @@ public class TopicConfigManager extends ConfigManager {
                         return topicConfig;
 
                     topicConfig = new TopicConfig(topic);
-                    topicConfig.setReadQueueNums(clientDefaultTopicQueueNums);
-                    topicConfig.setWriteQueueNums(clientDefaultTopicQueueNums);
+                    topicConfig.setReadQueueNum(clientDefaultTopicQueueNums);
+                    topicConfig.setWriteQueueNum(clientDefaultTopicQueueNums);
                     topicConfig.setPerm(perm);
                     topicConfig.setTopicSysFlag(topicSysFlag);
 

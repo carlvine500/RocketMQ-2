@@ -29,7 +29,7 @@ import com.alibaba.rocketmq.common.message.MessageQueue;
  * PullConsumer，订阅消息
  */
 public class PullConsumer {
-    private static final Map<MessageQueue, Long> offseTable = new HashMap<MessageQueue, Long>();
+    private static final Map<MessageQueue, Long> offsetTable = new HashMap<MessageQueue, Long>();
 
 
     public static void main(String[] args) throws MQClientException {
@@ -71,12 +71,12 @@ public class PullConsumer {
 
 
     private static void putMessageQueueOffset(MessageQueue mq, long offset) {
-        offseTable.put(mq, offset);
+        offsetTable.put(mq, offset);
     }
 
 
     private static long getMessageQueueOffset(MessageQueue mq) {
-        Long offset = offseTable.get(mq);
+        Long offset = offsetTable.get(mq);
         if (offset != null)
             return offset;
 

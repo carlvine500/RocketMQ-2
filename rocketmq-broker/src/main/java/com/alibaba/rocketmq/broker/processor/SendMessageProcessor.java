@@ -420,7 +420,7 @@ public class SendMessageProcessor implements NettyRequestProcessor {
 
         // 检查队列有效性
         int queueIdInt = requestHeader.getQueueId();
-        int idValid = Math.max(topicConfig.getWriteQueueNums(), topicConfig.getReadQueueNums());
+        int idValid = Math.max(topicConfig.getWriteQueueNum(), topicConfig.getReadQueueNum());
         if (queueIdInt >= idValid) {
             String errorInfo = String.format("request queueId[%d] is illagal, %s Producer: %s",//
                     queueIdInt,//
@@ -436,7 +436,7 @@ public class SendMessageProcessor implements NettyRequestProcessor {
 
         // 随机指定一个队列
         if (queueIdInt < 0) {
-            queueIdInt = Math.abs(this.random.nextInt() % 99999999) % topicConfig.getWriteQueueNums();
+            queueIdInt = Math.abs(this.random.nextInt() % 99999999) % topicConfig.getWriteQueueNum();
         }
 
         int sysFlag = requestHeader.getSysFlag();

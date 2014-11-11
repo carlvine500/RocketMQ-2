@@ -358,7 +358,7 @@ public class AdminBrokerProcessor implements NettyRequestProcessor {
                 }
             }
 
-            for (int i = 0; i < topicConfig.getWriteQueueNums(); i++) {
+            for (int i = 0; i < topicConfig.getWriteQueueNum(); i++) {
                 MessageQueue mq = new MessageQueue();
                 mq.setTopic(topic);
                 mq.setBrokerName(this.brokerController.getBrokerConfig().getBrokerName());
@@ -504,7 +504,7 @@ public class AdminBrokerProcessor implements NettyRequestProcessor {
         }
 
         TopicStatsTable topicStatsTable = new TopicStatsTable();
-        for (int i = 0; i < topicConfig.getWriteQueueNums(); i++) {
+        for (int i = 0; i < topicConfig.getWriteQueueNum(); i++) {
             MessageQueue mq = new MessageQueue();
             mq.setTopic(topic);
             mq.setBrokerName(this.brokerController.getBrokerConfig().getBrokerName());
@@ -643,8 +643,8 @@ public class AdminBrokerProcessor implements NettyRequestProcessor {
         }
 
         TopicConfig topicConfig = new TopicConfig(requestHeader.getTopic());
-        topicConfig.setReadQueueNums(requestHeader.getReadQueueNums());
-        topicConfig.setWriteQueueNums(requestHeader.getWriteQueueNums());
+        topicConfig.setReadQueueNum(requestHeader.getReadQueueNums());
+        topicConfig.setWriteQueueNum(requestHeader.getWriteQueueNums());
         topicConfig.setTopicFilterType(requestHeader.getTopicFilterTypeEnum());
         topicConfig.setPerm(requestHeader.getPerm());
         topicConfig.setTopicSysFlag(requestHeader.getTopicSysFlag() == null ? 0 : requestHeader
@@ -1126,7 +1126,7 @@ public class AdminBrokerProcessor implements NettyRequestProcessor {
         }
 
         Set<QueueTimeSpan> timeSpanSet = new HashSet<QueueTimeSpan>();
-        for (int i = 0; i < topicConfig.getWriteQueueNums(); i++) {
+        for (int i = 0; i < topicConfig.getWriteQueueNum(); i++) {
             QueueTimeSpan timeSpan = new QueueTimeSpan();
             MessageQueue mq = new MessageQueue();
             mq.setTopic(topic);

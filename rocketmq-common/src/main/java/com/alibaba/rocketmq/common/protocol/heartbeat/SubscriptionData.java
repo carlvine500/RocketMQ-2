@@ -107,41 +107,55 @@ public class SubscriptionData implements Comparable<SubscriptionData> {
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj)
+        if (this == obj) {
             return true;
-        if (obj == null)
+        }
+
+        if (obj == null || !(obj instanceof SubscriptionData)) {
             return false;
-        if (getClass() != obj.getClass())
-            return false;
+        }
+
         SubscriptionData other = (SubscriptionData) obj;
-        if (classFilterMode != other.classFilterMode)
+        if (classFilterMode != other.classFilterMode) {
             return false;
+        }
+
         if (codeSet == null) {
-            if (other.codeSet != null)
+            if (other.codeSet != null) {
                 return false;
-        }
-        else if (!codeSet.equals(other.codeSet))
+            }
+        } else if (!codeSet.equals(other.codeSet)) {
             return false;
+        }
+
         if (subString == null) {
-            if (other.subString != null)
+            if (other.subString != null) {
                 return false;
+            }
+        } else if (!subString.equals(other.subString)) {
+            return false;
         }
-        else if (!subString.equals(other.subString))
+
+        if (subVersion != other.subVersion) {
             return false;
-        if (subVersion != other.subVersion)
-            return false;
+        }
+
         if (tagsSet == null) {
-            if (other.tagsSet != null)
+            if (other.tagsSet != null) {
                 return false;
-        }
-        else if (!tagsSet.equals(other.tagsSet))
+            }
+        } else if (!tagsSet.equals(other.tagsSet)) {
             return false;
+        }
+
         if (topic == null) {
-            if (other.topic != null)
+            if (other.topic != null) {
                 return false;
-        }
-        else if (!topic.equals(other.topic))
+            }
+        } else if (!topic.equals(other.topic)) {
             return false;
+        }
+
         return true;
     }
 

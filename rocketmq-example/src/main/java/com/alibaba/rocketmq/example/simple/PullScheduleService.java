@@ -24,8 +24,9 @@ public class PullScheduleService {
                 try {
                     // 获取从哪里拉取
                     long offset = consumer.fetchConsumeOffset(mq, false);
-                    if (offset < 0)
+                    if (offset < 0) {
                         offset = 0;
+                    }
 
                     PullResult pullResult = consumer.pull(mq, "*", offset, 32);
                     System.out.println(offset + "\t" + mq + "\t" + pullResult);

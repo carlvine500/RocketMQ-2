@@ -88,8 +88,8 @@ public class MQAdminImpl {
                     String addr = brokerData.getBrokerAddrs().get(MixAll.MASTER_ID);
                     if (addr != null) {
                         TopicConfig topicConfig = new TopicConfig(newTopic);
-                        topicConfig.setReadQueueNums(queueNum);
-                        topicConfig.setWriteQueueNums(queueNum);
+                        topicConfig.setReadQueueNum(queueNum);
+                        topicConfig.setWriteQueueNum(queueNum);
                         topicConfig.setTopicSysFlag(topicSysFlag);
                         try {
                             this.mQClientFactory.getMQClientAPIImpl().createTopic(addr, key, topicConfig,

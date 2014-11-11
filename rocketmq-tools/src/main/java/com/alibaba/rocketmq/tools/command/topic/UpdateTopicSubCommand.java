@@ -98,18 +98,18 @@ public class UpdateTopicSubCommand implements SubCommand {
 
         try {
             TopicConfig topicConfig = new TopicConfig();
-            topicConfig.setReadQueueNums(8);
-            topicConfig.setWriteQueueNums(8);
+            topicConfig.setReadQueueNum(8);
+            topicConfig.setWriteQueueNum(8);
             topicConfig.setTopicName(commandLine.getOptionValue('t').trim());
 
             // readQueueNums
             if (commandLine.hasOption('r')) {
-                topicConfig.setReadQueueNums(Integer.parseInt(commandLine.getOptionValue('r').trim()));
+                topicConfig.setReadQueueNum(Integer.parseInt(commandLine.getOptionValue('r').trim()));
             }
 
             // writeQueueNums
             if (commandLine.hasOption('w')) {
-                topicConfig.setWriteQueueNums(Integer.parseInt(commandLine.getOptionValue('w').trim()));
+                topicConfig.setWriteQueueNum(Integer.parseInt(commandLine.getOptionValue('w').trim()));
             }
 
             // perm
@@ -146,7 +146,7 @@ public class UpdateTopicSubCommand implements SubCommand {
                 if (isOrder) {
                     // 注册顺序消息到 nameserver
                     String brokerName = CommandUtil.fetchBrokerNameByAddr(defaultMQAdminExt, addr);
-                    String orderConf = brokerName + ":" + topicConfig.getWriteQueueNums();
+                    String orderConf = brokerName + ":" + topicConfig.getWriteQueueNum();
                     defaultMQAdminExt.createOrUpdateOrderConf(topicConfig.getTopicName(), orderConf, false);
                     System.out.println(String.format("set broker orderConf. isOrder=%s, orderConf=[%s]",
                         isOrder, orderConf.toString()));
@@ -176,7 +176,7 @@ public class UpdateTopicSubCommand implements SubCommand {
                     String splitor = "";
                     for (String s : brokerNameSet) {
                         orderConf.append(splitor).append(s).append(":")
-                            .append(topicConfig.getWriteQueueNums());
+                            .append(topicConfig.getWriteQueueNum());
                         splitor = ";";
                     }
                     defaultMQAdminExt.createOrUpdateOrderConf(topicConfig.getTopicName(),

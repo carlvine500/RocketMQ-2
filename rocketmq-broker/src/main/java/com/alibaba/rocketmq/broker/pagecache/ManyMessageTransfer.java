@@ -33,14 +33,13 @@ import com.alibaba.rocketmq.store.GetMessageResult;
 public class ManyMessageTransfer extends AbstractReferenceCounted implements FileRegion {
     private final ByteBuffer byteBufferHeader;
     private final GetMessageResult getMessageResult;
-    private long transfered; // the bytes which was transfered already
+    private long transferred; // the bytes which was transferred already
 
 
     public ManyMessageTransfer(ByteBuffer byteBufferHeader, GetMessageResult getMessageResult) {
         this.byteBufferHeader = byteBufferHeader;
         this.getMessageResult = getMessageResult;
     }
-
 
     @Override
     public long position() {
@@ -62,15 +61,15 @@ public class ManyMessageTransfer extends AbstractReferenceCounted implements Fil
     @Override
     public long transferTo(WritableByteChannel target, long position) throws IOException {
         if (this.byteBufferHeader.hasRemaining()) {
-            transfered += target.write(this.byteBufferHeader);
-            return transfered;
+            transferred += target.write(this.byteBufferHeader);
+            return transferred;
         }
         else {
             List<ByteBuffer> messageBufferList = this.getMessageResult.getMessageBufferList();
             for (ByteBuffer bb : messageBufferList) {
                 if (bb.hasRemaining()) {
-                    transfered += target.write(bb);
-                    return transfered;
+                    transferred += target.write(bb);
+                    return transferred;
                 }
             }
         }
@@ -92,6 +91,6 @@ public class ManyMessageTransfer extends AbstractReferenceCounted implements Fil
 
     @Override
     public long transfered() {
-        return transfered;
+        return transferred;
     }
 }

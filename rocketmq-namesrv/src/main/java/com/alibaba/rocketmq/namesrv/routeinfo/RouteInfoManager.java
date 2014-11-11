@@ -252,8 +252,8 @@ public class RouteInfoManager {
     private void createAndUpdateQueueData(final String brokerName, final TopicConfig topicConfig) {
         QueueData queueData = new QueueData();
         queueData.setBrokerName(brokerName);
-        queueData.setWriteQueueNums(topicConfig.getWriteQueueNums());
-        queueData.setReadQueueNums(topicConfig.getReadQueueNums());
+        queueData.setWriteQueueNums(topicConfig.getWriteQueueNum());
+        queueData.setReadQueueNums(topicConfig.getReadQueueNum());
         queueData.setPerm(topicConfig.getPerm());
         queueData.setTopicSynFlag(topicConfig.getTopicSysFlag());
 

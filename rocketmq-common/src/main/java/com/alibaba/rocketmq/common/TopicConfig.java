@@ -24,14 +24,16 @@ import com.alibaba.rocketmq.common.constant.PermName;
  * @author shijia.wxr<vintage.wang@gmail.com>
  */
 public class TopicConfig {
-    public static int DefaultReadQueueNums = 16;
-    public static int DefaultWriteQueueNums = 16;
+
+    public static int DefaultReadQueueNum = 16;
+
+    public static int DefaultWriteQueueNum = 16;
 
     private static final String SEPARATOR = " ";
 
     private String topicName;
-    private int readQueueNums = DefaultReadQueueNums;
-    private int writeQueueNums = DefaultWriteQueueNums;
+    private int readQueueNum = DefaultReadQueueNum;
+    private int writeQueueNum = DefaultWriteQueueNum;
     private int perm = PermName.PERM_READ | PermName.PERM_WRITE;
     private TopicFilterType topicFilterType = TopicFilterType.SINGLE_TAG;
     private int topicSysFlag = 0;
@@ -47,10 +49,10 @@ public class TopicConfig {
     }
 
 
-    public TopicConfig(String topicName, int readQueueNums, int writeQueueNums, int perm) {
+    public TopicConfig(String topicName, int readQueueNum, int writeQueueNum, int perm) {
         this.topicName = topicName;
-        this.readQueueNums = readQueueNums;
-        this.writeQueueNums = writeQueueNums;
+        this.readQueueNum = readQueueNum;
+        this.writeQueueNum = writeQueueNum;
         this.perm = perm;
     }
 
@@ -63,11 +65,11 @@ public class TopicConfig {
         sb.append(SEPARATOR);
 
         // 2
-        sb.append(this.readQueueNums);
+        sb.append(this.readQueueNum);
         sb.append(SEPARATOR);
 
         // 3
-        sb.append(this.writeQueueNums);
+        sb.append(this.writeQueueNum);
         sb.append(SEPARATOR);
 
         // 4
@@ -86,9 +88,9 @@ public class TopicConfig {
         if (strs.length == 5) {
             this.topicName = strs[0];
 
-            this.readQueueNums = Integer.parseInt(strs[1]);
+            this.readQueueNum = Integer.parseInt(strs[1]);
 
-            this.writeQueueNums = Integer.parseInt(strs[2]);
+            this.writeQueueNum = Integer.parseInt(strs[2]);
 
             this.perm = Integer.parseInt(strs[3]);
 
@@ -111,23 +113,23 @@ public class TopicConfig {
     }
 
 
-    public int getReadQueueNums() {
-        return readQueueNums;
+    public int getReadQueueNum() {
+        return readQueueNum;
     }
 
 
-    public void setReadQueueNums(int readQueueNums) {
-        this.readQueueNums = readQueueNums;
+    public void setReadQueueNum(int readQueueNum) {
+        this.readQueueNum = readQueueNum;
     }
 
 
-    public int getWriteQueueNums() {
-        return writeQueueNums;
+    public int getWriteQueueNum() {
+        return writeQueueNum;
     }
 
 
-    public void setWriteQueueNums(int writeQueueNums) {
-        this.writeQueueNums = writeQueueNums;
+    public void setWriteQueueNum(int writeQueueNum) {
+        this.writeQueueNum = writeQueueNum;
     }
 
 
@@ -181,8 +183,8 @@ public class TopicConfig {
         }
 
         TopicConfig other = (TopicConfig) obj;
-        return this.topicName.equals(other.topicName) && this.readQueueNums == other.readQueueNums
-                && this.writeQueueNums == other.writeQueueNums && this.perm == other.perm
+        return this.topicName.equals(other.topicName) && this.readQueueNum == other.readQueueNum
+                && this.writeQueueNum == other.writeQueueNum && this.perm == other.perm
                 && this.topicFilterType == other.topicFilterType
                 && this.topicSysFlag == other.topicSysFlag && this.order == other.order;
     }
@@ -190,8 +192,8 @@ public class TopicConfig {
 
     @Override
     public String toString() {
-        return "TopicConfig [topicName=" + topicName + ", readQueueNums=" + readQueueNums
-                + ", writeQueueNums=" + writeQueueNums + ", perm=" + PermName.perm2String(perm)
+        return "TopicConfig [topicName=" + topicName + ", readQueueNum=" + readQueueNum
+                + ", writeQueueNum=" + writeQueueNum + ", perm=" + PermName.perm2String(perm)
                 + ", topicFilterType=" + topicFilterType + ", topicSysFlag=" + topicSysFlag + ", order="
                 + order + "]";
     }

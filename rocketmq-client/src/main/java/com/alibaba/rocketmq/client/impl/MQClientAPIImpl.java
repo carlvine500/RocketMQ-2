@@ -292,8 +292,8 @@ public class MQClientAPIImpl {
         CreateTopicRequestHeader requestHeader = new CreateTopicRequestHeader();
         requestHeader.setTopic(topicWithProjectGroup);
         requestHeader.setDefaultTopic(defaultTopic);
-        requestHeader.setReadQueueNums(topicConfig.getReadQueueNums());
-        requestHeader.setWriteQueueNums(topicConfig.getWriteQueueNums());
+        requestHeader.setReadQueueNums(topicConfig.getReadQueueNum());
+        requestHeader.setWriteQueueNums(topicConfig.getWriteQueueNum());
         requestHeader.setPerm(topicConfig.getPerm());
         requestHeader.setTopicFilterType(topicConfig.getTopicFilterType().name());
         requestHeader.setTopicSysFlag(topicConfig.getTopicSysFlag());
