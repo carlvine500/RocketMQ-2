@@ -120,7 +120,7 @@ public class MappedFileQueue {
             long fileTailOffset = file.getFileFromOffset() + this.mappedFileSize;
             if (fileTailOffset > offset) {
                 if (offset >= file.getFileFromOffset()) {
-                    file.setWrotePosition((int) (offset % this.mappedFileSize));
+                    file.setWrittenPosition((int) (offset % this.mappedFileSize));
                     file.setCommittedPosition((int) (offset % this.mappedFileSize));
                 } else {
                     // 将文件删除掉
@@ -174,7 +174,7 @@ public class MappedFileQueue {
                 try {
                     MappedFile mappedFile = new MappedFile(file.getPath(), mappedFileSize);
 
-                    mappedFile.setWrotePosition(this.mappedFileSize);
+                    mappedFile.setWrittenPosition(this.mappedFileSize);
                     mappedFile.setCommittedPosition(this.mappedFileSize);
                     this.mappedFiles.add(mappedFile);
                     log.info("load " + file.getPath() + " OK");
@@ -200,7 +200,7 @@ public class MappedFileQueue {
         if (committed != 0) {
             MappedFile mappedFile = this.getLastMappedFile();
             if (mappedFile != null) {
-                return (mappedFile.getFileFromOffset() + mappedFile.getWrotePosition()) - committed;
+                return (mappedFile.getFileFromOffset() + mappedFile.getWrittenPosition()) - committed;
             }
         }
 
@@ -296,7 +296,7 @@ public class MappedFileQueue {
             if (!this.mappedFiles.isEmpty()) {
                 int lastIndex = this.mappedFiles.size() - 1;
                 MappedFile mappedFile = this.mappedFiles.get(lastIndex);
-                return mappedFile.getFileFromOffset() + mappedFile.getWrotePosition();
+                return mappedFile.getFileFromOffset() + mappedFile.getWrittenPosition();
             }
         } catch (Exception e) {
             log.error("getMinOffset has exception.", e);

@@ -60,8 +60,8 @@ public class IndexFile {
 
     public IndexFile(final String fileName, final int hashSlotNum, final int indexNum,
                      final long endPhyOffset, final long endTimestamp) throws IOException {
-        int fileTotalSize = IndexHeader.INDEX_HEADER_SIZE + (hashSlotNum * HASH_SLOT_SIZE) + (indexNum * INDEX_SIZE);
-        this.mappedFile = new MappedFile(fileName, fileTotalSize);
+        int totalFileSize = IndexHeader.INDEX_HEADER_SIZE + (hashSlotNum * HASH_SLOT_SIZE) + (indexNum * INDEX_SIZE);
+        this.mappedFile = new MappedFile(fileName, totalFileSize);
         this.fileChannel = this.mappedFile.getFileChannel();
         this.mappedByteBuffer = this.mappedFile.getMappedByteBuffer();
         this.hashSlotNum = hashSlotNum;

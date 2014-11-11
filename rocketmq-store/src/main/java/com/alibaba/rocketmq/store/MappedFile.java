@@ -48,10 +48,10 @@ public class MappedFile extends ReferenceResource {
     private static final Logger log = LoggerFactory.getLogger(LoggerName.StoreLoggerName);
 
     // 当前JVM中映射的虚拟内存总大小
-    private static final AtomicLong TotalMappedVirtualMemory = new AtomicLong(0);
+    private static final AtomicLong TOTAL_MAPPED_VIRTUAL_MEMORY = new AtomicLong(0);
 
     // 当前JVM中mmap句柄数量
-    private static final AtomicInteger TotalMappedFiles = new AtomicInteger(0);
+    private static final AtomicInteger TOTAL_MAPPED_FILE_NUMBER = new AtomicInteger(0);
 
     // 映射的文件名
     private final String fileName;
@@ -69,7 +69,7 @@ public class MappedFile extends ReferenceResource {
     private final MappedByteBuffer mappedByteBuffer;
 
     // 当前写到什么位置
-    private final AtomicInteger wrotePosition = new AtomicInteger(0);
+    private final AtomicInteger writtenPosition = new AtomicInteger(0);
 
     // Flush到什么位置
     private final AtomicInteger committedPosition = new AtomicInteger(0);
@@ -95,8 +95,8 @@ public class MappedFile extends ReferenceResource {
         try {
             this.fileChannel = new RandomAccessFile(this.file, "rw").getChannel();
             this.mappedByteBuffer = this.fileChannel.map(MapMode.READ_WRITE, 0, fileSize);
-            TotalMappedVirtualMemory.addAndGet(fileSize);
-            TotalMappedFiles.incrementAndGet();
+            TOTAL_MAPPED_VIRTUAL_MEMORY.addAndGet(fileSize);
+            TOTAL_MAPPED_FILE_NUMBER.incrementAndGet();
             ok = true;
         } catch (FileNotFoundException e) {
             log.error("create file channel " + this.fileName + " Failed. ", e);
@@ -175,13 +175,13 @@ public class MappedFile extends ReferenceResource {
     }
 
 
-    public static int getTotalMappedFiles() {
-        return TotalMappedFiles.get();
+    public static int getTotalMappedFileNumber() {
+        return TOTAL_MAPPED_FILE_NUMBER.get();
     }
 
 
     public static long getTotalMappedVirtualMemory() {
-        return TotalMappedVirtualMemory.get();
+        return TOTAL_MAPPED_VIRTUAL_MEMORY.get();
     }
 
 
@@ -218,7 +218,7 @@ public class MappedFile extends ReferenceResource {
         assert msg != null;
         assert cb != null;
 
-        int currentPos = this.wrotePosition.get();
+        int currentPos = this.writtenPosition.get();
 
         // 表示有空余空间
         if (currentPos < this.fileSize) {
@@ -226,13 +226,13 @@ public class MappedFile extends ReferenceResource {
             byteBuffer.position(currentPos);
             AppendMessageResult result =
                     cb.doAppend(this.getFileFromOffset(), byteBuffer, this.fileSize - currentPos, msg);
-            this.wrotePosition.addAndGet(result.getWroteBytes());
+            this.writtenPosition.addAndGet(result.getNumberOfBytesWritten());
             this.storeTimestamp = result.getStoreTimestamp();
             return result;
         }
 
         // 上层应用应该保证不会走到这里
-        log.error("MappedFile.appendMessage return null, wrotePosition: " + currentPos + " fileSize: "
+        log.error("MappedFile.appendMessage return null, writtenPosition: " + currentPos + " fileSize: "
                 + this.fileSize);
         return new AppendMessageResult(AppendMessageStatus.UNKNOWN_ERROR);
     }
@@ -249,17 +249,18 @@ public class MappedFile extends ReferenceResource {
     /**
      * 向存储层追加数据，一般在SLAVE存储结构中使用
      *
-     * @return 返回写入了多少数据
+     * @return <code>true</code> if data has been written;
+     *         <code>false</code> if there is no enough space in current <code>mappedByteBuffer</code>
      */
     public boolean appendMessage(final byte[] data) {
-        int currentPos = this.wrotePosition.get();
+        int currentPos = this.writtenPosition.get();
 
         // 表示有空余空间
         if ((currentPos + data.length) <= this.fileSize) {
             ByteBuffer byteBuffer = this.mappedByteBuffer.slice();
             byteBuffer.position(currentPos);
             byteBuffer.put(data);
-            this.wrotePosition.addAndGet(data.length);
+            this.writtenPosition.addAndGet(data.length);
             return true;
         }
 
@@ -276,13 +277,13 @@ public class MappedFile extends ReferenceResource {
     public int commit(final int flushLeastPages) {
         if (this.isAbleToFlush(flushLeastPages)) {
             if (this.hold()) {
-                int value = this.wrotePosition.get();
+                int value = this.writtenPosition.get();
                 this.mappedByteBuffer.force();
                 this.committedPosition.set(value);
                 this.release();
             } else {
                 log.warn("in commit, hold failed, commit offset = " + this.committedPosition.get());
-                this.committedPosition.set(this.wrotePosition.get());
+                this.committedPosition.set(this.writtenPosition.get());
             }
         }
 
@@ -302,7 +303,7 @@ public class MappedFile extends ReferenceResource {
 
     private boolean isAbleToFlush(final int flushLeastPages) {
         int flush = this.committedPosition.get();
-        int write = this.wrotePosition.get();
+        int write = this.writtenPosition.get();
 
         // 如果当前文件已经写满，应该立刻刷盘
         if (this.isFull()) {
@@ -319,13 +320,13 @@ public class MappedFile extends ReferenceResource {
 
 
     public boolean isFull() {
-        return this.fileSize == this.wrotePosition.get();
+        return this.fileSize == this.writtenPosition.get();
     }
 
 
     public SelectMappedBufferResult selectMappedBuffer(int pos, int size) {
         // 有消息
-        if ((pos + size) <= this.wrotePosition.get()) {
+        if ((pos + size) <= this.writtenPosition.get()) {
             // 从MappedBuffer读
             if (this.hold()) {
                 ByteBuffer byteBuffer = this.mappedByteBuffer.slice();
@@ -353,11 +354,11 @@ public class MappedFile extends ReferenceResource {
      * 读逻辑分区
      */
     public SelectMappedBufferResult selectMappedBuffer(int pos) {
-        if (pos < this.wrotePosition.get() && pos >= 0) {
+        if (pos < this.writtenPosition.get() && pos >= 0) {
             if (this.hold()) {
                 ByteBuffer byteBuffer = this.mappedByteBuffer.slice();
                 byteBuffer.position(pos);
-                int size = this.wrotePosition.get() - pos;
+                int size = this.writtenPosition.get() - pos;
                 ByteBuffer byteBufferNew = byteBuffer.slice();
                 byteBufferNew.limit(size);
                 return new SelectMappedBufferResult(this.fileFromOffset + pos, byteBufferNew, size, this);
@@ -387,8 +388,8 @@ public class MappedFile extends ReferenceResource {
         }
 
         clean(this.mappedByteBuffer);
-        TotalMappedVirtualMemory.addAndGet(this.fileSize * (-1));
-        TotalMappedFiles.decrementAndGet();
+        TOTAL_MAPPED_VIRTUAL_MEMORY.addAndGet(this.fileSize * (-1));
+        TOTAL_MAPPED_FILE_NUMBER.decrementAndGet();
         log.info("unmap file[REF:" + currentRef + "] " + this.fileName + " OK");
         return true;
     }
@@ -410,7 +411,7 @@ public class MappedFile extends ReferenceResource {
                 long beginTime = System.currentTimeMillis();
                 boolean result = this.file.delete();
                 log.info("delete file[REF:" + this.getRefCount() + "] " + this.fileName
-                        + (result ? " OK, " : " Failed, ") + "W:" + this.getWrotePosition() + " M:"
+                        + (result ? " OK, " : " Failed, ") + "W:" + this.getWrittenPosition() + " M:"
                         + this.getCommittedPosition() + ", "
                         + UtilAll.computeEclipseTimeMilliseconds(beginTime));
             } catch (Exception e) {
@@ -427,13 +428,13 @@ public class MappedFile extends ReferenceResource {
     }
 
 
-    public int getWrotePosition() {
-        return wrotePosition.get();
+    public int getWrittenPosition() {
+        return writtenPosition.get();
     }
 
 
-    public void setWrotePosition(int pos) {
-        this.wrotePosition.set(pos);
+    public void setWrittenPosition(int pos) {
+        this.writtenPosition.set(pos);
     }
 
 

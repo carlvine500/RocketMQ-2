@@ -233,11 +233,11 @@ public class IndexService extends ServiceThread {
     /**
      * 向队列中添加请求，队列满情况下，丢弃请求
      */
-    public void putRequest(final Object[] reqs) {
-        boolean offer = this.requestQueue.offer(reqs);
+    public void putRequest(final Object[] requests) {
+        boolean offer = this.requestQueue.offer(requests);
         if (!offer) {
             if (log.isDebugEnabled()) {
-                log.debug("putRequest index failed, {}", reqs);
+                log.debug("putRequest index failed, {}", requests);
             }
         }
     }
@@ -302,7 +302,7 @@ public class IndexService extends ServiceThread {
                                 }
 
                                 ok = indexFile.putKey(buildKey(topic, key), msg.getCommitLogOffset(),
-                                                msg.getStoreTimestamp());
+                                        msg.getStoreTimestamp());
                             }
                         }
                     }
@@ -376,12 +376,10 @@ public class IndexService extends ServiceThread {
         // 如果没找到，使用写锁创建文件
         if (indexFile == null) {
             try {
-                String fileName =
-                        this.storePath + File.separator
-                                + UtilAll.timeMillisToHumanString(System.currentTimeMillis());
-                indexFile =
-                        new IndexFile(fileName, this.hashSlotNum, this.indexNum, lastUpdateEndPhyOffset,
-                                lastUpdateIndexTimestamp);
+                String fileName = this.storePath + File.separator
+                        + UtilAll.timeMillisToHumanString(System.currentTimeMillis());
+                indexFile = new IndexFile(fileName, this.hashSlotNum, this.indexNum, lastUpdateEndPhyOffset,
+                        lastUpdateIndexTimestamp);
                 this.readWriteLock.writeLock().lock();
                 this.indexFileList.add(indexFile);
             } catch (Exception e) {

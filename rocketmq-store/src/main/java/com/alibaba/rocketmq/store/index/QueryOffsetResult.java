@@ -27,14 +27,13 @@ import java.util.List;
 public class QueryOffsetResult {
     private final List<Long> phyOffsets;
     private final long indexLastUpdateTimestamp;
-    private final long indexLastUpdatePhyoffset;
+    private final long indexLastUpdatePhyOffset;
 
 
-    public QueryOffsetResult(List<Long> phyOffsets, long indexLastUpdateTimestamp,
-                             long indexLastUpdatePhyoffset) {
+    public QueryOffsetResult(List<Long> phyOffsets, long indexLastUpdateTimestamp, long indexLastUpdatePhyOffset) {
         this.phyOffsets = phyOffsets;
         this.indexLastUpdateTimestamp = indexLastUpdateTimestamp;
-        this.indexLastUpdatePhyoffset = indexLastUpdatePhyoffset;
+        this.indexLastUpdatePhyOffset = indexLastUpdatePhyOffset;
     }
 
 
@@ -48,7 +47,7 @@ public class QueryOffsetResult {
     }
 
 
-    public long getIndexLastUpdatePhyoffset() {
-        return indexLastUpdatePhyoffset;
+    public long getIndexLastUpdatePhyOffset() {
+        return indexLastUpdatePhyOffset;
     }
 }

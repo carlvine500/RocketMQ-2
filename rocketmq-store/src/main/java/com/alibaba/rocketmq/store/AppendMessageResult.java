@@ -27,10 +27,10 @@ public class AppendMessageResult {
     private AppendMessageStatus status;
 
     // 从哪里开始写入
-    private long wroteOffset;
+    private long writeOffset;
 
     // 写入字节数
-    private int wroteBytes;
+    private int numberOfBytesWritten;
 
     // 消息ID
     private String msgId;
@@ -39,7 +39,7 @@ public class AppendMessageResult {
     private long storeTimestamp;
 
     // 写入逻辑队列的offset（递进1）
-    private long logicsOffset;
+    private long logicOffset;
 
 
     public AppendMessageResult(AppendMessageStatus status) {
@@ -47,14 +47,14 @@ public class AppendMessageResult {
     }
 
 
-    public AppendMessageResult(AppendMessageStatus status, long wroteOffset, int wroteBytes, String msgId,
-                               long storeTimestamp, long logicsOffset) {
+    public AppendMessageResult(AppendMessageStatus status, long writeOffset, int numberOfBytesWritten, String msgId,
+                               long storeTimestamp, long logicOffset) {
         this.status = status;
-        this.wroteOffset = wroteOffset;
-        this.wroteBytes = wroteBytes;
+        this.writeOffset = writeOffset;
+        this.numberOfBytesWritten = numberOfBytesWritten;
         this.msgId = msgId;
         this.storeTimestamp = storeTimestamp;
-        this.logicsOffset = logicsOffset;
+        this.logicOffset = logicOffset;
     }
 
 
@@ -73,23 +73,23 @@ public class AppendMessageResult {
     }
 
 
-    public long getWroteOffset() {
-        return wroteOffset;
+    public long getWriteOffset() {
+        return writeOffset;
     }
 
 
-    public void setWroteOffset(long wroteOffset) {
-        this.wroteOffset = wroteOffset;
+    public void setWriteOffset(long writeOffset) {
+        this.writeOffset = writeOffset;
     }
 
 
-    public int getWroteBytes() {
-        return wroteBytes;
+    public int getNumberOfBytesWritten() {
+        return numberOfBytesWritten;
     }
 
 
-    public void setWroteBytes(int wroteBytes) {
-        this.wroteBytes = wroteBytes;
+    public void setNumberOfBytesWritten(int numberOfBytesWritten) {
+        this.numberOfBytesWritten = numberOfBytesWritten;
     }
 
 
@@ -113,21 +113,21 @@ public class AppendMessageResult {
     }
 
 
-    public long getLogicsOffset() {
-        return logicsOffset;
+    public long getLogicOffset() {
+        return logicOffset;
     }
 
 
-    public void setLogicsOffset(long logicsOffset) {
-        this.logicsOffset = logicsOffset;
+    public void setLogicOffset(long logicOffset) {
+        this.logicOffset = logicOffset;
     }
 
 
     @Override
     public String toString() {
-        return "AppendMessageResult [status=" + status + ", wroteOffset=" + wroteOffset + ", wroteBytes="
-                + wroteBytes + ", msgId=" + msgId + ", storeTimestamp=" + storeTimestamp + ", logicsOffset="
-                + logicsOffset + "]";
+        return "AppendMessageResult [status=" + status + ", writeOffset=" + writeOffset + ", numberOfBytesWritten="
+                + numberOfBytesWritten + ", msgId=" + msgId + ", storeTimestamp=" + storeTimestamp + ", logicOffset="
+                + logicOffset + "]";
     }
 
 }

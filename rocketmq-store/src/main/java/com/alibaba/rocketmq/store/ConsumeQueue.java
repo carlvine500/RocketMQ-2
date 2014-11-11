@@ -243,7 +243,7 @@ public class ConsumeQueue {
             if (mappedFile != null) {
                 ByteBuffer byteBuffer = mappedFile.sliceByteBuffer();
                 // 先将Offset清空
-                mappedFile.setWrotePosition(0);
+                mappedFile.setWrittenPosition(0);
                 mappedFile.setCommittedPosition(0);
 
                 for (int i = 0; i < logicFileSize; i += CQStoreUnitSize) {
@@ -258,7 +258,7 @@ public class ConsumeQueue {
                             break;
                         } else {
                             int pos = i + CQStoreUnitSize;
-                            mappedFile.setWrotePosition(pos);
+                            mappedFile.setWrittenPosition(pos);
                             mappedFile.setCommittedPosition(pos);
                             this.maxPhysicOffset = offset;
                         }
@@ -273,7 +273,7 @@ public class ConsumeQueue {
                             }
 
                             int pos = i + CQStoreUnitSize;
-                            mappedFile.setWrotePosition(pos);
+                            mappedFile.setWrittenPosition(pos);
                             mappedFile.setCommittedPosition(pos);
                             this.maxPhysicOffset = offset;
 
@@ -305,7 +305,7 @@ public class ConsumeQueue {
         MappedFile mappedFile = this.mappedFileQueue.getLastMappedFile2();
         if (mappedFile != null) {
             // 找到写入位置对应的索引项的起始位置
-            int position = mappedFile.getWrotePosition() - CQStoreUnitSize;
+            int position = mappedFile.getWrittenPosition() - CQStoreUnitSize;
             if (position < 0)
                 position = 0;
 
@@ -436,15 +436,15 @@ public class ConsumeQueue {
         MappedFile mappedFile = this.mappedFileQueue.getLastMappedFile(expectLogicOffset);
         if (mappedFile != null) {
             // 纠正MappedFile逻辑队列索引顺序
-            if (mappedFile.isFirstCreateInQueue() && cqOffset != 0 && mappedFile.getWrotePosition() == 0) {
+            if (mappedFile.isFirstCreateInQueue() && cqOffset != 0 && mappedFile.getWrittenPosition() == 0) {
                 this.minLogicOffset = expectLogicOffset;
                 this.fillPreBlank(mappedFile, expectLogicOffset);
                 log.info("fill pre blank space " + mappedFile.getFileName() + " " + expectLogicOffset + " "
-                        + mappedFile.getWrotePosition());
+                        + mappedFile.getWrittenPosition());
             }
 
             if (cqOffset != 0) {
-                long currentLogicOffset = mappedFile.getWrotePosition() + mappedFile.getFileFromOffset();
+                long currentLogicOffset = mappedFile.getWrittenPosition() + mappedFile.getFileFromOffset();
                 if (expectLogicOffset != currentLogicOffset) {
                     // XXX: warn and notify me
                     logError

@@ -572,11 +572,11 @@ public class CommitLog {
             DispatchRequest dispatchRequest = new DispatchRequest(//
                     topic,// 1
                     queueId,// 2
-                    result.getWroteOffset(),// 3
-                    result.getWroteBytes(),// 4
+                    result.getWriteOffset(),// 3
+                    result.getNumberOfBytesWritten(),// 4
                     tagsCode,// 5
                     msg.getStoreTimestamp(),// 6
-                    result.getLogicsOffset(),// 7
+                    result.getLogicOffset(),// 7
                     msg.getKeys(),// 8
                     /**
                      * 事务部分
@@ -597,7 +597,7 @@ public class CommitLog {
         PutMessageResult putMessageResult = new PutMessageResult(PutMessageStatus.PUT_OK, result);
 
         // 统计消息SIZE
-        storeStatsService.getSinglePutMessageTopicSizeTotal(topic).addAndGet(result.getWroteBytes());
+        storeStatsService.getSinglePutMessageTopicSizeTotal(topic).addAndGet(result.getNumberOfBytesWritten());
 
         GroupCommitRequest request = null;
 
@@ -605,7 +605,7 @@ public class CommitLog {
         if (FlushDiskType.SYNC_FLUSH == this.defaultMessageStore.getMessageStoreConfig().getFlushDiskType()) {
             GroupCommitService service = (GroupCommitService) this.flushCommitLogService;
             if (msg.isWaitStoreMsgOK()) {
-                request = new GroupCommitRequest(result.getWroteOffset() + result.getWroteBytes());
+                request = new GroupCommitRequest(result.getWriteOffset() + result.getNumberOfBytesWritten());
                 service.putRequest(request);
                 boolean flushOK =
                         request.waitForFlush(this.defaultMessageStore.getMessageStoreConfig()
@@ -629,9 +629,9 @@ public class CommitLog {
             HAService service = this.defaultMessageStore.getHaService();
             if (msg.isWaitStoreMsgOK()) {
                 // 判断是否要等待
-                if (service.isSlaveOK(result.getWroteOffset() + result.getWroteBytes())) {
+                if (service.isSlaveOK(result.getWriteOffset() + result.getNumberOfBytesWritten())) {
                     if (null == request) {
-                        request = new GroupCommitRequest(result.getWroteOffset() + result.getWroteBytes());
+                        request = new GroupCommitRequest(result.getWriteOffset() + result.getNumberOfBytesWritten());
                     }
                     service.putRequest(request);
 
@@ -998,9 +998,7 @@ public class CommitLog {
             MessageExtBrokerInner msgInner = (MessageExtBrokerInner) msg;
             // PHY OFFSET
             long wroteOffset = fileFromOffset + byteBuffer.position();
-            String msgId =
-                    MessageDecoder.createMessageId(this.msgIdMemory, msgInner.getStoreHostBytes(),
-                            wroteOffset);
+            String msgId = MessageDecoder.createMessageId(this.msgIdMemory, msgInner.getStoreHostBytes(), wroteOffset);
 
             /**
              * 记录ConsumeQueue信息
