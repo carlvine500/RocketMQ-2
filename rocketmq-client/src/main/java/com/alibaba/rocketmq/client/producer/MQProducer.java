@@ -88,7 +88,7 @@ public interface MQProducer extends MQAdmin {
 
 
     /**
-     * 发送消息，Oneway形式，服务器不应答，无法保证消息是否成功到达服务器
+     * 发送消息，OneWay形式，服务器不应答，无法保证消息是否成功到达服务器
      * 
      * @param msg
      *            消息
@@ -96,7 +96,7 @@ public interface MQProducer extends MQAdmin {
      * @throws RemotingException
      * @throws InterruptedException
      */
-    public void sendOneway(final Message msg) throws MQClientException, RemotingException,
+    public void sendOneWay(final Message msg) throws MQClientException, RemotingException,
             InterruptedException;
 
 
@@ -135,7 +135,7 @@ public interface MQProducer extends MQAdmin {
 
 
     /**
-     * 向指定队列发送消息，Oneway形式，服务器不应答，无法保证消息是否成功到达服务器
+     * 向指定队列发送消息，OneWay形式，服务器不应答，无法保证消息是否成功到达服务器
      * 
      * @param msg
      *            消息
@@ -145,7 +145,7 @@ public interface MQProducer extends MQAdmin {
      * @throws RemotingException
      * @throws InterruptedException
      */
-    public void sendOneway(final Message msg, final MessageQueue mq) throws MQClientException,
+    public void sendOneWay(final Message msg, final MessageQueue mq) throws MQClientException,
             RemotingException, InterruptedException;
 
 
@@ -195,7 +195,7 @@ public interface MQProducer extends MQAdmin {
     /**
      * 发送消息，可以自定义选择队列，队列的总数可能会由于Broker的启停变化<br>
      * 如果要保证消息严格有序，在向运维人员申请Topic时，需要特别说明<br>
-     * Oneway形式，服务器不应答，无法保证消息是否成功到达服务器
+     * OneWay形式，服务器不应答，无法保证消息是否成功到达服务器
      * 
      * @param msg
      *            消息
@@ -207,10 +207,10 @@ public interface MQProducer extends MQAdmin {
      * @throws RemotingException
      * @throws InterruptedException
      */
-    public void sendOneway(final Message msg, final MessageQueueSelector selector, final Object arg)
+    public void sendOneWay(final Message msg, final MessageQueueSelector selector, final Object arg)
             throws MQClientException, RemotingException, InterruptedException;
 
 
     public TransactionSendResult sendMessageInTransaction(final Message msg,
-            final LocalTransactionExecutor tranExecuter, final Object arg) throws MQClientException;
+            final LocalTransactionExecutor tranExecutor, final Object arg) throws MQClientException;
 }

@@ -39,93 +39,134 @@ public class MessageStoreConfig {
 
     // CommitLog每个文件大小 1G
     private int mappedFileSizeCommitLog = 1024 * 1024 * 1024;
+
     // ConsumeQueue每个文件大小 默认存储30W条消息
     private int mappedFileSizeConsumeQueue = 300000 * ConsumeQueue.CQStoreUnitSize;
+
     // CommitLog刷盘间隔时间（单位毫秒）
     @ImportantField
     private int flushIntervalCommitLog = 1000;
+
     // 是否定时方式刷盘，默认是实时刷盘
     @ImportantField
     private boolean flushCommitLogTimed = false;
+
     // ConsumeQueue刷盘间隔时间（单位毫秒）
     private int flushIntervalConsumeQueue = 1000;
+
     // 清理资源间隔时间（单位毫秒）
     private int cleanResourceInterval = 10000;
+
     // 删除多个CommitLog文件的间隔时间（单位毫秒）
     private int deleteCommitLogFilesInterval = 100;
+
     // 删除多个ConsumeQueue文件的间隔时间（单位毫秒）
     private int deleteConsumeQueueFilesInterval = 100;
+
     // 强制删除文件间隔时间（单位毫秒）
     private int destroyMappedFileIntervalForcibly = 1000 * 120;
+
     // 定期检查Hanged文件间隔时间（单位毫秒）
     private int redeleteHangedFileInterval = 1000 * 120;
+
     // 何时触发删除文件, 默认凌晨4点删除文件
     @ImportantField
     private String deleteWhen = "04";
+
     // 磁盘空间最大使用率
     private int diskMaxUsedSpaceRatio = 75;
+
     // 文件保留时间（单位小时）
     @ImportantField
     private int fileReservedTime = 72;
+
     // 写消息索引到ConsumeQueue，缓冲区高水位，超过则开始流控
     private int putMsgIndexHighWater = 600000;
+
     // 最大消息大小，默认512K
     private int maxMessageSize = 1024 * 512;
+
     // 重启时，是否校验CRC
     private boolean checkCRCOnRecover = true;
+
     // 刷CommitLog，至少刷几个PAGE
     private int flushCommitLogLeastPages = 4;
+
     // 刷ConsumeQueue，至少刷几个PAGE
     private int flushConsumeQueueLeastPages = 2;
+
     // 刷CommitLog，彻底刷盘间隔时间
     private int flushCommitLogThoroughInterval = 1000 * 10;
+
     // 刷ConsumeQueue，彻底刷盘间隔时间
     private int flushConsumeQueueThoroughInterval = 1000 * 60;
+
     // 最大被拉取的消息字节数，消息在内存
     @ImportantField
     private int maxTransferBytesOnMessageInMemory = 1024 * 256;
+
     // 最大被拉取的消息个数，消息在内存
     @ImportantField
     private int maxTransferCountOnMessageInMemory = 32;
+
     // 最大被拉取的消息字节数，消息在磁盘
     @ImportantField
     private int maxTransferBytesOnMessageInDisk = 1024 * 64;
+
     // 最大被拉取的消息个数，消息在磁盘
     @ImportantField
     private int maxTransferCountOnMessageInDisk = 8;
+
     // 命中消息在内存的最大比例
     @ImportantField
     private int accessMessageInMemoryMaxRatio = 40;
+
     // 是否开启消息索引功能
     @ImportantField
     private boolean messageIndexEnable = true;
+
     private int maxHashSlotNum = 5000000;
+
     private int maxIndexNum = 5000000 * 4;
+
     private int maxMsgNumBatch = 64;
-    // 是否使用安全的消息索引功能，即可靠模式。
-    // 可靠模式下，异常宕机恢复慢
-    // 非可靠模式下，异常宕机恢复快
+
+    /**
+     *是否使用安全的消息索引功能，即可靠模式. 可靠模式下，异常宕机恢复慢; 非可靠模式下，异常宕机恢复快.
+     */
     @ImportantField
     private boolean messageIndexSafe = false;
+
     // HA功能
     private int haListenPort = 10912;
+
     private int haSendHeartbeatInterval = 1000 * 5;
+
     private int haHousekeepingInterval = 1000 * 20;
+
     private int haTransferBatchSize = 1024 * 32;
+
     // 如果不设置，则从NameServer获取Master HA服务地址
     @ImportantField
     private String haMasterAddress = null;
+
     // Slave落后Master超过此值，则认为存在异常
     private int haSlaveFallBehindMax = 1024 * 1024 * 256;
+
     @ImportantField
     private BrokerRole brokerRole = BrokerRole.ASYNC_MASTER;
+
     @ImportantField
     private FlushDiskType flushDiskType = FlushDiskType.ASYNC_FLUSH;
+
     // 同步刷盘超时时间
     private int syncFlushTimeout = 1000 * 5;
+
     // 定时消息相关
     private String messageDelayLevel = "1s 5s 10s 30s 1m 2m 3m 4m 5m 6m 7m 8m 9m 10m 20m 30m 1h 2h";
+
     private long flushDelayOffsetInterval = 1000 * 10;
+
     // 磁盘空间超过90%警戒水位，自动开始删除文件
     @ImportantField
     private boolean cleanFileForciblyEnable = true;

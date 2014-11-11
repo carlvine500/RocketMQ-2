@@ -20,18 +20,22 @@ package com.alibaba.rocketmq.client.consumer;
  * @since 2013-7-24
  */
 public enum PullStatus {
+
     /**
      * 找到消息
      */
     FOUND,
+
     /**
      * 没有新的消息可以被拉取
      */
     NO_NEW_MSG,
+
     /**
      * 经过过滤后，没有匹配的消息
      */
     NO_MATCHED_MSG,
+
     /**
      * Offset不合法，可能过大或者过小
      */

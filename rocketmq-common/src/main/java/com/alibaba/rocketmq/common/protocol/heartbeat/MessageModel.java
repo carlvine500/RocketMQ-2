@@ -9,16 +9,14 @@ package com.alibaba.rocketmq.common.protocol.heartbeat;
  * @author shijia.wxr<vintage.wang@gmail.com>
  */
 public enum MessageModel {
+
     /**
      * 广播模型
      */
     BROADCASTING,
+
     /**
      * 集群模型
      */
-    CLUSTERING,
-    // /**
-    // * 未知，如果是主动消费，很难确定应用的消息模型
-    // */
-    // UNKNOWNS,
+    CLUSTERING
 }

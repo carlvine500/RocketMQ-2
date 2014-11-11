@@ -32,6 +32,7 @@ import com.alibaba.rocketmq.remoting.exception.RemotingException;
  * @since 2013-7-24
  */
 public interface MQConsumer extends MQAdmin {
+
     /**
      * Consumer消费失败的消息可以选择重新发回到服务器端，并延时消费<br>
      * 会首先尝试将消息发回到消息之前存储的主机，此时只传送消息Offset，消息体不传送，不会占用网络带宽<br>

@@ -40,7 +40,7 @@ import com.alibaba.rocketmq.common.protocol.heartbeat.MessageModel;
 public class MQPullConsumerScheduleService {
     private final Logger log = ClientLogger.getLog();
     private DefaultMQPullConsumer defaultMQPullConsumer;
-    private int pullThreadNums = 20;
+    private int pullThreadNum = 20;
     private ConcurrentHashMap<String /* topic */, PullTaskCallback> callbackTable =
             new ConcurrentHashMap<String, PullTaskCallback>();
 
@@ -80,7 +80,6 @@ public class MQPullConsumerScheduleService {
         public PullTaskImpl(final MessageQueue messageQueue) {
             this.messageQueue = messageQueue;
         }
-
 
         @Override
         public void run() {
@@ -171,7 +170,7 @@ public class MQPullConsumerScheduleService {
     public void start() throws MQClientException {
         final String group = this.defaultMQPullConsumer.getConsumerGroup();
         this.scheduledThreadPoolExecutor = new ScheduledThreadPoolExecutor(//
-            this.pullThreadNums,//
+            this.pullThreadNum,//
             new ThreadFactoryImpl("PullMsgThread-" + group)//
                 );
 
@@ -214,13 +213,13 @@ public class MQPullConsumerScheduleService {
     }
 
 
-    public int getPullThreadNums() {
-        return pullThreadNums;
+    public int getPullThreadNum() {
+        return pullThreadNum;
     }
 
 
-    public void setPullThreadNums(int pullThreadNums) {
-        this.pullThreadNums = pullThreadNums;
+    public void setPullThreadNum(int pullThreadNum) {
+        this.pullThreadNum = pullThreadNum;
     }
 
 

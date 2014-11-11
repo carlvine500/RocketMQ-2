@@ -45,16 +45,24 @@ import com.alibaba.rocketmq.store.config.StorePathConfigHelper;
  * @since 2013-7-21
  */
 public class IndexService extends ServiceThread {
+
     private static final Logger log = LoggerFactory.getLogger(LoggerName.StoreLoggerName);
+
     private final DefaultMessageStore defaultMessageStore;
+
     // 索引配置
     private final int hashSlotNum;
+
     private final int indexNum;
+
     private final String storePath;
+
     // 索引文件集合
     private final ArrayList<IndexFile> indexFileList = new ArrayList<IndexFile>();
+
     // 读写锁（针对indexFileList）
     private final ReadWriteLock readWriteLock = new ReentrantReadWriteLock();
+
     private LinkedBlockingQueue<Object[]> requestQueue = new LinkedBlockingQueue<Object[]>(300000);
 
 
@@ -62,8 +70,7 @@ public class IndexService extends ServiceThread {
         this.defaultMessageStore = store;
         this.hashSlotNum = store.getMessageStoreConfig().getMaxHashSlotNum();
         this.indexNum = store.getMessageStoreConfig().getMaxIndexNum();
-        this.storePath =
-                StorePathConfigHelper.getStorePathIndex(store.getMessageStoreConfig().getStorePathRootDir());
+        this.storePath = StorePathConfigHelper.getStorePathIndex(store.getMessageStoreConfig().getStorePathRootDir());
     }
 
 
@@ -179,7 +186,7 @@ public class IndexService extends ServiceThread {
         List<Long> phyOffsets = new ArrayList<Long>(maxNum);
         // TODO 可能需要返回给最终用户
         long indexLastUpdateTimestamp = 0;
-        long indexLastUpdatePhyoffset = 0;
+        long indexLastUpdatePhyOffset = 0;
         maxNum = Math.min(maxNum, this.defaultMessageStore.getMessageStoreConfig().getMaxMsgNumBatch());
         try {
             this.readWriteLock.readLock().lock();
@@ -190,7 +197,7 @@ public class IndexService extends ServiceThread {
 
                     if (lastFile) {
                         indexLastUpdateTimestamp = f.getEndTimestamp();
-                        indexLastUpdatePhyoffset = f.getEndPhyOffset();
+                        indexLastUpdatePhyOffset = f.getEndPhyOffset();
                     }
 
                     if (f.isTimeMatched(begin, end)) {
@@ -214,7 +221,7 @@ public class IndexService extends ServiceThread {
             this.readWriteLock.readLock().unlock();
         }
 
-        return new QueryOffsetResult(phyOffsets, indexLastUpdateTimestamp, indexLastUpdatePhyoffset);
+        return new QueryOffsetResult(phyOffsets, indexLastUpdateTimestamp, indexLastUpdatePhyOffset);
     }
 
 
@@ -281,12 +288,11 @@ public class IndexService extends ServiceThread {
                 }
 
                 if (keys != null && keys.length() > 0) {
-                    String[] keyset = keys.split(MessageConst.KEY_SEPARATOR);
-                    for (String key : keyset) {
+                    String[] keySet = keys.split(MessageConst.KEY_SEPARATOR);
+                    for (String key : keySet) {
                         // TODO 是否需要TRIM
                         if (key.length() > 0) {
-                            for (boolean ok =
-                                         indexFile.putKey(buildKey(topic, key), msg.getCommitLogOffset(),
+                            for (boolean ok = indexFile.putKey(buildKey(topic, key), msg.getCommitLogOffset(),
                                                  msg.getStoreTimestamp()); !ok; ) {
                                 log.warn("index file full, so create another one, " + indexFile.getFileName());
                                 indexFile = retryGetAndCreateIndexFile();
@@ -295,8 +301,7 @@ public class IndexService extends ServiceThread {
                                     break MSG_WHILE;
                                 }
 
-                                ok =
-                                        indexFile.putKey(buildKey(topic, key), msg.getCommitLogOffset(),
+                                ok = indexFile.putKey(buildKey(topic, key), msg.getCommitLogOffset(),
                                                 msg.getStoreTimestamp());
                             }
                         }

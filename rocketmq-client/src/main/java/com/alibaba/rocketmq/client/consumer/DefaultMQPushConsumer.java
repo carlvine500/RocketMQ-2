@@ -39,55 +39,62 @@ import java.util.Set;
 
 /**
  * 类似于Broker Push消息到Consumer方式，但实际仍然是Consumer内部后台从Broker Pull消息<br>
- * 采用长轮询方式拉消息，实时性同push方式一致，且不会无谓的拉消息导致Broker、Consumer压力增大
+ * 采用长轮询方式拉消息，实时性同push方式一致，且不会无谓的拉消息导致Broker、Consumer压力增大.
  * 
  * @author shijia.wxr<vintage.wang@gmail.com>
  * @since 2013-7-24
  */
 public class DefaultMQPushConsumer extends ClientConfig implements MQPushConsumer {
     protected final transient DefaultMQPushConsumerImpl defaultMQPushConsumerImpl;
+
     /**
      * 做同样事情的Consumer归为同一个Group，应用必须设置，并保证命名唯一
      */
     private String consumerGroup;
+
     /**
      * 集群消费/广播消费
      */
     private MessageModel messageModel = MessageModel.CLUSTERING;
+
     /**
      * Consumer第一次启动时，从哪里开始消费
      */
     private ConsumeFromWhere consumeFromWhere = ConsumeFromWhere.CONSUME_FROM_LAST_OFFSET;
+
     /**
      * Consumer第一次启动时，如果回溯消费，默认回溯到哪个时间点，数据格式如下，时间精度秒：<br>
      * 20131223171201<br>
      * 表示2013年12月23日17点12分01秒<br>
      * 默认回溯到相对启动时间的半小时前
      */
-    private String consumeTimestamp = UtilAll.timeMillisToHumanString3(System.currentTimeMillis()
-            - (1000 * 60 * 30));
+    private String consumeTimestamp = UtilAll.timeMillisToHumanString3(System.currentTimeMillis() - (1000 * 60 * 30));
+
     /**
      * 队列分配算法，应用可重写
      */
-
     private AllocateMessageQueueStrategy allocateMessageQueueStrategy;
 
     /**
      * 订阅关系
      */
     private Map<String /* topic */, String /* sub expression */> subscription = new HashMap<String, String>();
+
     /**
      * 消息监听器
      */
     private MessageListener messageListener;
+
     /**
      * Offset存储，系统会根据客户端配置自动创建相应的实现，如果应用配置了，则以应用配置的为主
      */
     private OffsetStore offsetStore;
+
     /**
      * 消费消息线程，最小数目
      */
     private int consumeThreadMin = 20;
+
     /**
      * 消费消息线程，最大数目
      */
@@ -102,18 +109,22 @@ public class DefaultMQPushConsumer extends ClientConfig implements MQPushConsume
      * 同一队列并行消费的最大跨度，顺序消费方式情况下，此参数无效
      */
     private int consumeConcurrentlyMaxSpan = 2000;
+
     /**
      * 本地队列消息数超过此阀值，开始流控
      */
     private int pullThresholdForQueue = 1000;
+
     /**
      * 拉消息间隔，如果为了降低拉取速度，可以设置大于0的值
      */
     private long pullInterval = 0;
+
     /**
      * 消费一批消息，最大数
      */
     private int consumeMessageBatchMaxSize = 1;
+
     /**
      * 拉消息，一次拉多少条
      */

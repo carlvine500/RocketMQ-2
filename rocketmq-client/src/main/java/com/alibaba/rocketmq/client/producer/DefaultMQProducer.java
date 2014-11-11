@@ -37,40 +37,50 @@ import java.util.List;
  * @since 2013-7-25
  */
 public class DefaultMQProducer extends ClientConfig implements MQProducer {
+
     protected final transient DefaultMQProducerImpl defaultMQProducerImpl;
+
     /**
      * 一般发送同样消息的Producer，归为同一个Group，应用必须设置，并保证命名唯一
      */
     private String producerGroup;
+
     /**
      * 支持在发送消息时，如果Topic不存在，自动创建Topic，但是要指定Key
      */
     private String createTopicKey = MixAll.DEFAULT_TOPIC;
+
     /**
      * 发送消息，自动创建Topic时，默认队列数
      */
-    private volatile int defaultTopicQueueNums = 4;
+    private volatile int defaultTopicQueueNum = 4;
+
     /**
      * 发送消息超时，不建议修改
      */
     private int sendMsgTimeout = 3000;
+
     /**
      * Message Body大小超过阀值，则压缩
      */
-    private int compressMsgBodyOverHowmuch = 1024 * 4;
+    private int compressMsgBodyThreshold = 1024 * 4;
+
     /**
      * 发送失败后，重试几次
      */
     private int retryTimesWhenSendFailed = 2;
+
     /**
      * 消息已经成功写入Master，但是刷盘超时或者同步到Slave失败，则尝试重试另一个Broker，不建议修改默认值<br>
      * 顺序消息无效
      */
     private boolean retryAnotherBrokerWhenNotStoreOK = false;
+
     /**
      * 最大消息大小，默认512K
      */
     private int maxMessageSize = 1024 * 128;
+
     /**
      * 是否为单元化的发布者
      */
@@ -131,7 +141,7 @@ public class DefaultMQProducer extends ClientConfig implements MQProducer {
 
 
     @Override
-    public void sendOneway(Message msg) throws MQClientException, RemotingException, InterruptedException {
+    public void sendOneWay(Message msg) throws MQClientException, RemotingException, InterruptedException {
         this.defaultMQProducerImpl.sendOneway(msg);
     }
 
@@ -151,7 +161,7 @@ public class DefaultMQProducer extends ClientConfig implements MQProducer {
 
 
     @Override
-    public void sendOneway(Message msg, MessageQueue mq) throws MQClientException, RemotingException,
+    public void sendOneWay(Message msg, MessageQueue mq) throws MQClientException, RemotingException,
             InterruptedException {
         this.defaultMQProducerImpl.sendOneway(msg, mq);
     }
@@ -172,14 +182,14 @@ public class DefaultMQProducer extends ClientConfig implements MQProducer {
 
 
     @Override
-    public void sendOneway(Message msg, MessageQueueSelector selector, Object arg) throws MQClientException,
+    public void sendOneWay(Message msg, MessageQueueSelector selector, Object arg) throws MQClientException,
             RemotingException, InterruptedException {
         this.defaultMQProducerImpl.sendOneway(msg, selector, arg);
     }
 
 
     @Override
-    public TransactionSendResult sendMessageInTransaction(Message msg, LocalTransactionExecutor tranExecuter,
+    public TransactionSendResult sendMessageInTransaction(Message msg, LocalTransactionExecutor tranExecutor,
             final Object arg) throws MQClientException {
         throw new RuntimeException(
             "sendMessageInTransaction not implement, please use TransactionMQProducer class");
@@ -267,13 +277,13 @@ public class DefaultMQProducer extends ClientConfig implements MQProducer {
     }
 
 
-    public int getCompressMsgBodyOverHowmuch() {
-        return compressMsgBodyOverHowmuch;
+    public int getCompressMsgBodyThreshold() {
+        return compressMsgBodyThreshold;
     }
 
 
-    public void setCompressMsgBodyOverHowmuch(int compressMsgBodyOverHowmuch) {
-        this.compressMsgBodyOverHowmuch = compressMsgBodyOverHowmuch;
+    public void setCompressMsgBodyThreshold(int compressMsgBodyThreshold) {
+        this.compressMsgBodyThreshold = compressMsgBodyThreshold;
     }
 
 
@@ -302,13 +312,13 @@ public class DefaultMQProducer extends ClientConfig implements MQProducer {
     }
 
 
-    public int getDefaultTopicQueueNums() {
-        return defaultTopicQueueNums;
+    public int getDefaultTopicQueueNum() {
+        return defaultTopicQueueNum;
     }
 
 
-    public void setDefaultTopicQueueNums(int defaultTopicQueueNums) {
-        this.defaultTopicQueueNums = defaultTopicQueueNums;
+    public void setDefaultTopicQueueNum(int defaultTopicQueueNum) {
+        this.defaultTopicQueueNum = defaultTopicQueueNum;
     }
 
 

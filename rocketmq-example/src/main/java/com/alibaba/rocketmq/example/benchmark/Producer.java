@@ -99,7 +99,7 @@ public class Producer {
         producer.setNamesrvAddr("lizhanhui:9876");
         producer.setInstanceName(Long.toString(System.currentTimeMillis()));
 
-        producer.setCompressMsgBodyOverHowmuch(Integer.MAX_VALUE);
+        producer.setCompressMsgBodyThreshold(Integer.MAX_VALUE);
 
         producer.start();
 

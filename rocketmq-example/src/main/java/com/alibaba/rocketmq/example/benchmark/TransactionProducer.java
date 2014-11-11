@@ -106,7 +106,7 @@ public class TransactionProducer {
         final TransactionMQProducer producer = new TransactionMQProducer("benchmark_transaction_producer");
         producer.setInstanceName(Long.toString(System.currentTimeMillis()));
         producer.setTransactionCheckListener(transactionCheckListener);
-        producer.setDefaultTopicQueueNums(1000);
+        producer.setDefaultTopicQueueNum(1000);
         producer.start();
 
         final TransactionExecutorBImpl tranExecuter = new TransactionExecutorBImpl(ischeck);

@@ -46,38 +46,47 @@ public class DefaultMQPullConsumer extends ClientConfig implements MQPullConsume
      * 做同样事情的Consumer归为同一个Group，应用必须设置，并保证命名唯一
      */
     private String consumerGroup;
+
     /**
      * 长轮询模式，Consumer连接在Broker挂起最长时间，不建议修改
      */
     private long brokerSuspendMaxTimeMillis = 1000 * 20;
+
     /**
      * 长轮询模式，Consumer超时时间（必须要大于brokerSuspendMaxTimeMillis），不建议修改
      */
     private long consumerTimeoutMillisWhenSuspend = 1000 * 30;
+
     /**
      * 非阻塞拉模式，Consumer超时时间，不建议修改
      */
     private long consumerPullTimeoutMillis = 1000 * 10;
+
     /**
      * 集群消费/广播消费
      */
     private MessageModel messageModel = MessageModel.CLUSTERING;
+
     /**
      * 队列变化监听器
      */
     private MessageQueueListener messageQueueListener;
+
     /**
      * Offset存储，系统会根据客户端配置自动创建相应的实现，如果应用配置了，则以应用配置的为主
      */
     private OffsetStore offsetStore;
+
     /**
      * 需要监听哪些Topic的队列变化
      */
     private Set<String> registerTopics = new HashSet<String>();
+
     /**
      * 队列分配算法，应用可重写
      */
     private AllocateMessageQueueStrategy allocateMessageQueueStrategy = new AllocateMessageQueueAveragely();
+
     /**
      * 是否为单元化的订阅组
      */
@@ -273,30 +282,30 @@ public class DefaultMQPullConsumer extends ClientConfig implements MQPullConsume
 
 
     @Override
-    public PullResult pull(MessageQueue mq, String subExpression, long offset, int maxNums)
+    public PullResult pull(MessageQueue mq, String subExpression, long offset, int maxNum)
             throws MQClientException, RemotingException, MQBrokerException, InterruptedException {
-        return this.defaultMQPullConsumerImpl.pull(mq, subExpression, offset, maxNums);
+        return this.defaultMQPullConsumerImpl.pull(mq, subExpression, offset, maxNum);
     }
 
 
     @Override
-    public void pull(MessageQueue mq, String subExpression, long offset, int maxNums,
+    public void pull(MessageQueue mq, String subExpression, long offset, int maxNum,
             PullCallback pullCallback) throws MQClientException, RemotingException, InterruptedException {
-        this.defaultMQPullConsumerImpl.pull(mq, subExpression, offset, maxNums, pullCallback);
+        this.defaultMQPullConsumerImpl.pull(mq, subExpression, offset, maxNum, pullCallback);
     }
 
 
     @Override
-    public PullResult pullBlockIfNotFound(MessageQueue mq, String subExpression, long offset, int maxNums)
+    public PullResult pullBlockIfNotFound(MessageQueue mq, String subExpression, long offset, int maxNum)
             throws MQClientException, RemotingException, MQBrokerException, InterruptedException {
-        return this.defaultMQPullConsumerImpl.pullBlockIfNotFound(mq, subExpression, offset, maxNums);
+        return this.defaultMQPullConsumerImpl.pullBlockIfNotFound(mq, subExpression, offset, maxNum);
     }
 
 
     @Override
-    public void pullBlockIfNotFound(MessageQueue mq, String subExpression, long offset, int maxNums,
+    public void pullBlockIfNotFound(MessageQueue mq, String subExpression, long offset, int maxNum,
             PullCallback pullCallback) throws MQClientException, RemotingException, InterruptedException {
-        this.defaultMQPullConsumerImpl.pullBlockIfNotFound(mq, subExpression, offset, maxNums, pullCallback);
+        this.defaultMQPullConsumerImpl.pullBlockIfNotFound(mq, subExpression, offset, maxNum, pullCallback);
     }
 
 

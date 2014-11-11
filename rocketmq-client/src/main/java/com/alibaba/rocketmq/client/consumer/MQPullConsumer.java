@@ -30,6 +30,7 @@ import com.alibaba.rocketmq.remoting.exception.RemotingException;
  * @since 2013-7-24
  */
 public interface MQPullConsumer extends MQConsumer {
+
     /**
      * 启动服务
      * 
@@ -65,7 +66,7 @@ public interface MQPullConsumer extends MQConsumer {
      *            如果subExpression等于null或者*，则表示全部订阅
      * @param offset
      *            从指定队列哪个位置开始拉取
-     * @param maxNums
+     * @param maxNum
      *            一次最多拉取条数
      * @return 参见PullResult
      * @throws MQClientException
@@ -74,11 +75,11 @@ public interface MQPullConsumer extends MQConsumer {
      * @throws RemotingException
      */
     public PullResult pull(final MessageQueue mq, final String subExpression, final long offset,
-            final int maxNums) throws MQClientException, RemotingException, MQBrokerException,
+            final int maxNum) throws MQClientException, RemotingException, MQBrokerException,
             InterruptedException;
 
 
-    public void pull(final MessageQueue mq, final String subExpression, final long offset, final int maxNums,
+    public void pull(final MessageQueue mq, final String subExpression, final long offset, final int maxNum,
             final PullCallback pullCallback) throws MQClientException, RemotingException,
             InterruptedException;
 
@@ -95,7 +96,7 @@ public interface MQPullConsumer extends MQConsumer {
      *            如果subExpression等于null或者*，则表示全部订阅
      * @param offset
      *            从指定队列哪个位置开始拉取
-     * @param maxNums
+     * @param maxNum
      *            一次最多拉取条数
      * @return 参见PullResult
      * @throws InterruptedException
@@ -104,12 +105,12 @@ public interface MQPullConsumer extends MQConsumer {
      * @throws MQClientException
      */
     public PullResult pullBlockIfNotFound(final MessageQueue mq, final String subExpression,
-            final long offset, final int maxNums) throws MQClientException, RemotingException,
+            final long offset, final int maxNum) throws MQClientException, RemotingException,
             MQBrokerException, InterruptedException;
 
 
     public void pullBlockIfNotFound(final MessageQueue mq, final String subExpression, final long offset,
-            final int maxNums, final PullCallback pullCallback) throws MQClientException, RemotingException,
+            final int maxNum, final PullCallback pullCallback) throws MQClientException, RemotingException,
             InterruptedException;
 
 

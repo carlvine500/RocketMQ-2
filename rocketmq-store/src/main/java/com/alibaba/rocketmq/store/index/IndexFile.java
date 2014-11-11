@@ -36,22 +36,31 @@ import com.alibaba.rocketmq.common.constant.LoggerName;
  * @since 2013-7-21
  */
 public class IndexFile {
+
     private static final Logger log = LoggerFactory.getLogger(LoggerName.StoreLoggerName);
+
     private static int HASH_SLOT_SIZE = 4;
+
     private static int INDEX_SIZE = 20;
+
     private static int INVALID_INDEX = 0;
+
     private final int hashSlotNum;
+
     private final int indexNum;
+
     private final MappedFile mappedFile;
+
     private final FileChannel fileChannel;
+
     private final MappedByteBuffer mappedByteBuffer;
+
     private final IndexHeader indexHeader;
 
 
     public IndexFile(final String fileName, final int hashSlotNum, final int indexNum,
                      final long endPhyOffset, final long endTimestamp) throws IOException {
-        int fileTotalSize =
-                IndexHeader.INDEX_HEADER_SIZE + (hashSlotNum * HASH_SLOT_SIZE) + (indexNum * INDEX_SIZE);
+        int fileTotalSize = IndexHeader.INDEX_HEADER_SIZE + (hashSlotNum * HASH_SLOT_SIZE) + (indexNum * INDEX_SIZE);
         this.mappedFile = new MappedFile(fileName, fileTotalSize);
         this.fileChannel = this.mappedFile.getFileChannel();
         this.mappedByteBuffer = this.mappedFile.getMappedByteBuffer();

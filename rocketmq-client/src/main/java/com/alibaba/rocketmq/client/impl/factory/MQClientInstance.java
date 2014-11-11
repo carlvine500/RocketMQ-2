@@ -587,7 +587,7 @@ public class MQClientInstance {
                             for (QueueData data : topicRouteData.getQueueDatas()) {
                                 // 读写分区个数是一致，故只做一次判断
                                 int queueNums =
-                                        Math.min(defaultMQProducer.getDefaultTopicQueueNums(),
+                                        Math.min(defaultMQProducer.getDefaultTopicQueueNum(),
                                             data.getReadQueueNums());
                                 data.setReadQueueNums(queueNums);
                                 data.setWriteQueueNums(queueNums);
