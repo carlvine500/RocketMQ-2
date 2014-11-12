@@ -38,6 +38,8 @@
         <module>rocketmq-example</module>
         <module>rocketmq-filtersrv</module>
         <module>rocketmq-srvutil</module>
+        <module>rocketmq-spring-adaptor</module>
+        <module>rocketmq-web-example</module>
     </modules>
 
     <developers>
@@ -57,6 +59,13 @@
             <name>allenzhu</name>
             <url>https://github.com/allenzhu</url>
             <email>allen.jie.zhu@gmail.com</email>
+            <timezone>8</timezone>
+        </developer>
+
+        <developer>
+            <name>Li Zhanhui</name>
+            <url>https://github.com/lizhanhui</url>
+            <email>lizhanhui@gmail.com</email>
             <timezone>8</timezone>
         </developer>
     </developers>
@@ -150,19 +159,6 @@
                     </descriptors>
                 </configuration>
             </plugin>
-
-            <!--
-                        <plugin>
-                            <artifactId>maven-assembly-plugin</artifactId>
-                            <configuration>
-                                <finalName>alibaba-rocketmq-client-java-${project.version}</finalName>
-                                <descriptors>
-                                    <descriptor>release-client.xml</descriptor>
-                                </descriptors>
-                            </configuration>
-                        </plugin>
-            -->
-
 
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -349,11 +345,11 @@
                 <artifactId>derby</artifactId>
                 <version>10.10.2.0</version>
             </dependency>
-<dependency>
-  <groupId>jboss</groupId>
-  <artifactId>javassist</artifactId>
-  <version>3.7.ga</version>
-</dependency>
+            <dependency>
+              <groupId>jboss</groupId>
+              <artifactId>javassist</artifactId>
+              <version>3.7.ga</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 </project>

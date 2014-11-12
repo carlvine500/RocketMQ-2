@@ -39,13 +39,9 @@ import java.util.Set;
  * @author shijia.wxr<vintage.wang@gmail.com>
  * @since 2013-7-24
  */
-public class DefaultMQPullConsumer extends ClientConfig implements MQPullConsumer {
-    protected final transient DefaultMQPullConsumerImpl defaultMQPullConsumerImpl;
+public class DefaultMQPullConsumer extends DefaultMQConsumer implements MQPullConsumer {
 
-    /**
-     * 做同样事情的Consumer归为同一个Group，应用必须设置，并保证命名唯一
-     */
-    private String consumerGroup;
+    protected final transient DefaultMQPullConsumerImpl defaultMQPullConsumerImpl;
 
     /**
      * 长轮询模式，Consumer连接在Broker挂起最长时间，不建议修改
@@ -61,11 +57,6 @@ public class DefaultMQPullConsumer extends ClientConfig implements MQPullConsume
      * 非阻塞拉模式，Consumer超时时间，不建议修改
      */
     private long consumerPullTimeoutMillis = 1000 * 10;
-
-    /**
-     * 集群消费/广播消费
-     */
-    private MessageModel messageModel = MessageModel.CLUSTERING;
 
     /**
      * 队列变化监听器
@@ -109,7 +100,7 @@ public class DefaultMQPullConsumer extends ClientConfig implements MQPullConsume
 
 
     public DefaultMQPullConsumer(final String consumerGroup, RPCHook rpcHook) {
-        this.consumerGroup = consumerGroup;
+        setConsumerGroup(consumerGroup);
         defaultMQPullConsumerImpl = new DefaultMQPullConsumerImpl(this, rpcHook);
     }
 
@@ -174,7 +165,6 @@ public class DefaultMQPullConsumer extends ClientConfig implements MQPullConsume
         this.allocateMessageQueueStrategy = allocateMessageQueueStrategy;
     }
 
-
     public long getBrokerSuspendMaxTimeMillis() {
         return brokerSuspendMaxTimeMillis;
     }
@@ -183,17 +173,6 @@ public class DefaultMQPullConsumer extends ClientConfig implements MQPullConsume
     public void setBrokerSuspendMaxTimeMillis(long brokerSuspendMaxTimeMillis) {
         this.brokerSuspendMaxTimeMillis = brokerSuspendMaxTimeMillis;
     }
-
-
-    public String getConsumerGroup() {
-        return consumerGroup;
-    }
-
-
-    public void setConsumerGroup(String consumerGroup) {
-        this.consumerGroup = consumerGroup;
-    }
-
 
     public long getConsumerPullTimeoutMillis() {
         return consumerPullTimeoutMillis;
@@ -214,17 +193,6 @@ public class DefaultMQPullConsumer extends ClientConfig implements MQPullConsume
         this.consumerTimeoutMillisWhenSuspend = consumerTimeoutMillisWhenSuspend;
     }
 
-
-    public MessageModel getMessageModel() {
-        return messageModel;
-    }
-
-
-    public void setMessageModel(MessageModel messageModel) {
-        this.messageModel = messageModel;
-    }
-
-
     public MessageQueueListener getMessageQueueListener() {
         return messageQueueListener;
     }
@@ -234,7 +202,6 @@ public class DefaultMQPullConsumer extends ClientConfig implements MQPullConsume
         this.messageQueueListener = messageQueueListener;
     }
 
-
     public Set<String> getRegisterTopics() {
         return registerTopics;
     }
@@ -243,7 +210,6 @@ public class DefaultMQPullConsumer extends ClientConfig implements MQPullConsume
     public void setRegisterTopics(Set<String> registerTopics) {
         this.registerTopics = registerTopics;
     }
-
 
     @Override
     public void sendMessageBack(MessageExt msg, int delayLevel) throws RemotingException, MQBrokerException,

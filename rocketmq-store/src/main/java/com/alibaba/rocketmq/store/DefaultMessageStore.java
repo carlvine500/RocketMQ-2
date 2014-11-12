@@ -1457,7 +1457,7 @@ public class DefaultMessageStore implements MessageStore {
             if (currentTimeMillis >= (this.lastFlushTimestamp + flushConsumeQueueThoroughInterval)) {
                 this.lastFlushTimestamp = currentTimeMillis;
                 flushConsumeQueueLeastPages = 0;
-                logicsMsgTimestamp = DefaultMessageStore.this.getStoreCheckpoint().getLogicsMsgTimestamp();
+                logicsMsgTimestamp = DefaultMessageStore.this.getStoreCheckpoint().getLogicMsgTimestamp();
             }
 
             ConcurrentHashMap<String, ConcurrentHashMap<Integer, ConsumeQueue>> tables =
@@ -1474,7 +1474,7 @@ public class DefaultMessageStore implements MessageStore {
 
             if (0 == flushConsumeQueueLeastPages) {
                 if (logicsMsgTimestamp > 0) {
-                    DefaultMessageStore.this.getStoreCheckpoint().setLogicsMsgTimestamp(logicsMsgTimestamp);
+                    DefaultMessageStore.this.getStoreCheckpoint().setLogicMsgTimestamp(logicsMsgTimestamp);
                 }
                 DefaultMessageStore.this.getStoreCheckpoint().flush();
             }

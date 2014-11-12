@@ -15,7 +15,6 @@
  */
 package com.alibaba.rocketmq.client.consumer;
 
-import com.alibaba.rocketmq.client.ClientConfig;
 import com.alibaba.rocketmq.client.QueryResult;
 import com.alibaba.rocketmq.client.consumer.listener.MessageListener;
 import com.alibaba.rocketmq.client.consumer.rebalance.AllocateMessageQueueAveragely;
@@ -28,7 +27,6 @@ import com.alibaba.rocketmq.common.UtilAll;
 import com.alibaba.rocketmq.common.consumer.ConsumeFromWhere;
 import com.alibaba.rocketmq.common.message.MessageExt;
 import com.alibaba.rocketmq.common.message.MessageQueue;
-import com.alibaba.rocketmq.common.protocol.heartbeat.MessageModel;
 import com.alibaba.rocketmq.remoting.RPCHook;
 import com.alibaba.rocketmq.remoting.exception.RemotingException;
 
@@ -44,18 +42,9 @@ import java.util.Set;
  * @author shijia.wxr<vintage.wang@gmail.com>
  * @since 2013-7-24
  */
-public class DefaultMQPushConsumer extends ClientConfig implements MQPushConsumer {
+public class DefaultMQPushConsumer extends DefaultMQConsumer implements MQPushConsumer {
+
     protected final transient DefaultMQPushConsumerImpl defaultMQPushConsumerImpl;
-
-    /**
-     * 做同样事情的Consumer归为同一个Group，应用必须设置，并保证命名唯一
-     */
-    private String consumerGroup;
-
-    /**
-     * 集群消费/广播消费
-     */
-    private MessageModel messageModel = MessageModel.CLUSTERING;
 
     /**
      * Consumer第一次启动时，从哪里开始消费
@@ -103,7 +92,7 @@ public class DefaultMQPushConsumer extends ClientConfig implements MQPushConsume
     /**
      * 消息堆积超过此阀值，动态调整线程池数
      */
-    private long adjustThreadPoolNumsThreshold = 100000;
+    private long adjustThreadPoolNumThreshold = 100000;
 
     /**
      * 同一队列并行消费的最大跨度，顺序消费方式情况下，此参数无效
@@ -142,16 +131,12 @@ public class DefaultMQPushConsumer extends ClientConfig implements MQPushConsume
 
 
     public DefaultMQPushConsumer() {
-
         this(MixAll.DEFAULT_CONSUMER_GROUP, null, new AllocateMessageQueueAveragely());
-
     }
 
 
     public DefaultMQPushConsumer(RPCHook rpcHook) {
-
         this(MixAll.DEFAULT_CONSUMER_GROUP, rpcHook, new AllocateMessageQueueAveragely());
-
     }
 
 
@@ -162,7 +147,7 @@ public class DefaultMQPushConsumer extends ClientConfig implements MQPushConsume
 
     public DefaultMQPushConsumer(final String consumerGroup, RPCHook rpcHook,
             AllocateMessageQueueStrategy allocateMessageQueueStrategy) {
-        this.consumerGroup = consumerGroup;
+        setConsumerGroup(consumerGroup);
         this.allocateMessageQueueStrategy = allocateMessageQueueStrategy;
         defaultMQPushConsumerImpl = new DefaultMQPushConsumerImpl(this, rpcHook);
     }
@@ -259,16 +244,6 @@ public class DefaultMQPushConsumer extends ClientConfig implements MQPushConsume
     }
 
 
-    public String getConsumerGroup() {
-        return consumerGroup;
-    }
-
-
-    public void setConsumerGroup(String consumerGroup) {
-        this.consumerGroup = consumerGroup;
-    }
-
-
     public int getConsumeThreadMax() {
         return consumeThreadMax;
     }
@@ -301,16 +276,6 @@ public class DefaultMQPushConsumer extends ClientConfig implements MQPushConsume
 
     public void setMessageListener(MessageListener messageListener) {
         this.messageListener = messageListener;
-    }
-
-
-    public MessageModel getMessageModel() {
-        return messageModel;
-    }
-
-
-    public void setMessageModel(MessageModel messageModel) {
-        this.messageModel = messageModel;
     }
 
 
@@ -456,12 +421,12 @@ public class DefaultMQPushConsumer extends ClientConfig implements MQPushConsume
     }
 
 
-    public long getAdjustThreadPoolNumsThreshold() {
-        return adjustThreadPoolNumsThreshold;
+    public long getAdjustThreadPoolNumThreshold() {
+        return adjustThreadPoolNumThreshold;
     }
 
 
-    public void setAdjustThreadPoolNumsThreshold(long adjustThreadPoolNumsThreshold) {
-        this.adjustThreadPoolNumsThreshold = adjustThreadPoolNumsThreshold;
+    public void setAdjustThreadPoolNumThreshold(long adjustThreadPoolNumThreshold) {
+        this.adjustThreadPoolNumThreshold = adjustThreadPoolNumThreshold;
     }
 }

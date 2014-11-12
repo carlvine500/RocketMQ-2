@@ -41,7 +41,7 @@ public class StoreCheckpoint {
     private final FileChannel fileChannel;
     private final MappedByteBuffer mappedByteBuffer;
     private volatile long physicMsgTimestamp = 0;
-    private volatile long logicsMsgTimestamp = 0;
+    private volatile long logicMsgTimestamp = 0;
     private volatile long indexMsgTimestamp = 0;
 
 
@@ -57,13 +57,13 @@ public class StoreCheckpoint {
         if (fileExists) {
             log.info("store checkpoint file exists, " + scpPath);
             this.physicMsgTimestamp = this.mappedByteBuffer.getLong(0);
-            this.logicsMsgTimestamp = this.mappedByteBuffer.getLong(8);
+            this.logicMsgTimestamp = this.mappedByteBuffer.getLong(8);
             this.indexMsgTimestamp = this.mappedByteBuffer.getLong(16);
 
             log.info("store checkpoint file physicMsgTimestamp " + this.physicMsgTimestamp + ", "
                     + UtilAll.timeMillisToHumanString(this.physicMsgTimestamp));
-            log.info("store checkpoint file logicsMsgTimestamp " + this.logicsMsgTimestamp + ", "
-                    + UtilAll.timeMillisToHumanString(this.logicsMsgTimestamp));
+            log.info("store checkpoint file logicMsgTimestamp " + this.logicMsgTimestamp + ", "
+                    + UtilAll.timeMillisToHumanString(this.logicMsgTimestamp));
             log.info("store checkpoint file indexMsgTimestamp " + this.indexMsgTimestamp + ", "
                     + UtilAll.timeMillisToHumanString(this.indexMsgTimestamp));
         } else {
@@ -88,7 +88,7 @@ public class StoreCheckpoint {
 
     public void flush() {
         this.mappedByteBuffer.putLong(0, this.physicMsgTimestamp);
-        this.mappedByteBuffer.putLong(8, this.logicsMsgTimestamp);
+        this.mappedByteBuffer.putLong(8, this.logicMsgTimestamp);
         this.mappedByteBuffer.putLong(16, this.indexMsgTimestamp);
         this.mappedByteBuffer.force();
     }
@@ -104,13 +104,13 @@ public class StoreCheckpoint {
     }
 
 
-    public long getLogicsMsgTimestamp() {
-        return logicsMsgTimestamp;
+    public long getLogicMsgTimestamp() {
+        return logicMsgTimestamp;
     }
 
 
-    public void setLogicsMsgTimestamp(long logicsMsgTimestamp) {
-        this.logicsMsgTimestamp = logicsMsgTimestamp;
+    public void setLogicMsgTimestamp(long logicMsgTimestamp) {
+        this.logicMsgTimestamp = logicMsgTimestamp;
     }
 
 
@@ -120,7 +120,7 @@ public class StoreCheckpoint {
 
 
     public long getMinTimestamp() {
-        long min = Math.min(this.physicMsgTimestamp, this.logicsMsgTimestamp);
+        long min = Math.min(this.physicMsgTimestamp, this.logicMsgTimestamp);
 
         // 向前倒退3s，防止因为时间精度问题导致丢数据
         // fixed https://github.com/alibaba/RocketMQ/issues/467

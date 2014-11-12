@@ -27,9 +27,9 @@ public class StoreCheckpointTest {
         try {
             StoreCheckpoint storeCheckpoint = new StoreCheckpoint("./a/b/0000");
             long physicMsgTimestamp = 0xAABB;
-            long logicsMsgTimestamp = 0xCCDD;
+            long logicMsgTimestamp = 0xCCDD;
             storeCheckpoint.setPhysicMsgTimestamp(physicMsgTimestamp);
-            storeCheckpoint.setLogicsMsgTimestamp(logicsMsgTimestamp);
+            storeCheckpoint.setLogicMsgTimestamp(logicMsgTimestamp);
             storeCheckpoint.flush();
 
             // 因为时间精度问题，所以最小时间向前回退3s
@@ -40,7 +40,7 @@ public class StoreCheckpointTest {
 
             storeCheckpoint = new StoreCheckpoint("a/b/0000");
             assertTrue(physicMsgTimestamp == storeCheckpoint.getPhysicMsgTimestamp());
-            assertTrue(logicsMsgTimestamp == storeCheckpoint.getLogicsMsgTimestamp());
+            assertTrue(logicMsgTimestamp == storeCheckpoint.getLogicMsgTimestamp());
         }
         catch (Throwable e) {
             e.printStackTrace();

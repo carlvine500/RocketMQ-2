@@ -387,7 +387,7 @@ public class ConsumeQueue {
         for (int i = 0; i < MaxRetries && canWrite; i++) {
             boolean result = this.putMessagePositionInfo(offset, size, tagsCode, logicOffset);
             if (result) {
-                this.defaultMessageStore.getStoreCheckpoint().setLogicsMsgTimestamp(storeTimestamp);
+                this.defaultMessageStore.getStoreCheckpoint().setLogicMsgTimestamp(storeTimestamp);
                 return;
             }
             // 只有一种情况会失败，创建新的MappedFile时报错或者超时
