@@ -21,4 +21,5 @@ RocketMQ是一款分布式、队列模型的消息中间件，具有以下特点
 * 请在git clone命令之前执行`git config --global core.autocrlf false`，确保本地代码使用Unix换行格式
 * 请在develop分支上开发
 * 每次提交须有Issue关联，可在git提交注释中增加`#issue号码`进行关联
+
 ----------
