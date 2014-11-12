@@ -15,7 +15,6 @@
  */
 package com.alibaba.rocketmq.client.consumer;
 
-import com.alibaba.rocketmq.client.ClientConfig;
 import com.alibaba.rocketmq.client.QueryResult;
 import com.alibaba.rocketmq.client.consumer.rebalance.AllocateMessageQueueAveragely;
 import com.alibaba.rocketmq.client.consumer.store.OffsetStore;
@@ -25,7 +24,6 @@ import com.alibaba.rocketmq.client.impl.consumer.DefaultMQPullConsumerImpl;
 import com.alibaba.rocketmq.common.MixAll;
 import com.alibaba.rocketmq.common.message.MessageExt;
 import com.alibaba.rocketmq.common.message.MessageQueue;
-import com.alibaba.rocketmq.common.protocol.heartbeat.MessageModel;
 import com.alibaba.rocketmq.remoting.RPCHook;
 import com.alibaba.rocketmq.remoting.exception.RemotingException;
 
@@ -39,7 +37,7 @@ import java.util.Set;
  * @author shijia.wxr<vintage.wang@gmail.com>
  * @since 2013-7-24
  */
-public class DefaultMQPullConsumer extends DefaultMQConsumer implements MQPullConsumer {
+public class DefaultMQPullConsumer extends BaseMQConsumer implements MQPullConsumer {
 
     protected final transient DefaultMQPullConsumerImpl defaultMQPullConsumerImpl;
 

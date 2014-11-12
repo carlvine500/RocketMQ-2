@@ -15,7 +15,7 @@ import com.alibaba.rocketmq.common.protocol.heartbeat.MessageModel;
  * @version 1.0
  * @since 1.0
  */
-public abstract class DefaultMQConsumer extends ClientConfig {
+public abstract class BaseMQConsumer extends ClientConfig {
 
     /**
      * 做同样事情的Consumer归为同一个Group，应用必须设置，并保证命名唯一

@@ -42,7 +42,7 @@ import java.util.Set;
  * @author shijia.wxr<vintage.wang@gmail.com>
  * @since 2013-7-24
  */
-public class DefaultMQPushConsumer extends DefaultMQConsumer implements MQPushConsumer {
+public class DefaultMQPushConsumer extends BaseMQConsumer implements MQPushConsumer {
 
     protected final transient DefaultMQPushConsumerImpl defaultMQPushConsumerImpl;
 
