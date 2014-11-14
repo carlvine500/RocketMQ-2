@@ -57,13 +57,20 @@ import java.util.concurrent.ConcurrentHashMap;
  * @since 2013-7-24
  */
 public class DefaultMQPullConsumerImpl implements MQConsumerInner {
+
     private final Logger log = ClientLogger.getLog();
+
     private final DefaultMQPullConsumer defaultMQPullConsumer;
+
     private ServiceState serviceState = ServiceState.CREATE_JUST;
+
     private MQClientInstance mQClientFactory;
+
     private PullAPIWrapper pullAPIWrapper;
+
     // 消费进度存储
     private OffsetStore offsetStore;
+
     // Rebalance实现
     private RebalanceImpl rebalanceImpl = new RebalancePullImpl(this);
 
@@ -193,9 +200,9 @@ public class DefaultMQPullConsumerImpl implements MQConsumerInner {
 
 
     @Override
-    public void doRebalance() {
+    public void rebalance() {
         if (this.rebalanceImpl != null) {
-            this.rebalanceImpl.doRebalance();
+            this.rebalanceImpl.rebalance(defaultMQPullConsumer.getMessageModel());
         }
     }
 
@@ -212,8 +219,7 @@ public class DefaultMQPullConsumerImpl implements MQConsumerInner {
             this.offsetStore.persistAll(mqs);
         }
         catch (Exception e) {
-            log.error("group: " + this.defaultMQPullConsumer.getConsumerGroup()
-                    + " persistConsumerOffset exception", e);
+            log.error("group: " + this.defaultMQPullConsumer.getConsumerGroup() + " persistConsumerOffset exception", e);
         }
     }
 
@@ -280,7 +286,7 @@ public class DefaultMQPullConsumerImpl implements MQConsumerInner {
         }
 
         if (maxNums <= 0) {
-            throw new MQClientException("maxNums <= 0", null);
+            throw new MQClientException("maxNum <= 0", null);
         }
 
         // 自动订阅
@@ -502,7 +508,6 @@ public class DefaultMQPullConsumerImpl implements MQConsumerInner {
 
             // 初始化Rebalance变量
             this.rebalanceImpl.setConsumerGroup(this.defaultMQPullConsumer.getConsumerGroup());
-            this.rebalanceImpl.setMessageModel(this.defaultMQPullConsumer.getMessageModel());
             this.rebalanceImpl.setAllocateMessageQueueStrategy(this.defaultMQPullConsumer
                 .getAllocateMessageQueueStrategy());
             this.rebalanceImpl.setmQClientFactory(this.mQClientFactory);

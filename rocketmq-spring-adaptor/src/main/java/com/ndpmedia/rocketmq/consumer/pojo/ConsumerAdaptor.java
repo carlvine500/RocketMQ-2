@@ -70,7 +70,7 @@ public class ConsumerAdaptor {
      * Start to process messages.
      * @throws MQClientException
      */
-    public void start() throws MQClientException {
+    public synchronized void start() throws MQClientException {
         if (!started) {
             consumer = new DefaultMQPushConsumer(consumerGroup);
             //Message consuming model, cluster or broadcasting.
@@ -79,6 +79,7 @@ public class ConsumerAdaptor {
             if (null != nameServer && !nameServer.isEmpty()) {
                 consumer.setNamesrvAddr(nameServer);
             }
+            consumer.setConsumeFromWhere(consumeFrom);
 
             consumer.subscribe(topic, tags);
             consumer.registerMessageListener(messageListener);
@@ -91,7 +92,7 @@ public class ConsumerAdaptor {
     /**
      * Stop the client.
      */
-    public void stop() {
+    public synchronized void stop() {
         if (started) {
             consumer.shutdown();
             started = false;

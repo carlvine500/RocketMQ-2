@@ -470,7 +470,7 @@ public class DefaultMQProducerImpl implements MQProducerInner {
         try {
             this.sendDefaultImpl(msg, CommunicationMode.ASYNC, sendCallback);
         } catch (MQBrokerException e) {
-            throw new MQClientException("unknow exception", e);
+            throw new MQClientException("unknown exception", e);
         }
     }
 
@@ -882,7 +882,7 @@ public class DefaultMQProducerImpl implements MQProducerInner {
         try {
             this.sendSelectImpl(msg, selector, arg, CommunicationMode.ONEWAY, null);
         } catch (MQBrokerException e) {
-            throw new MQClientException("unknow exception", e);
+            throw new MQClientException("unknown exception", e);
         }
     }
 

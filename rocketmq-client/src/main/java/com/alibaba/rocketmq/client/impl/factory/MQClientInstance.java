@@ -967,10 +967,10 @@ public class MQClientInstance {
             MQConsumerInner impl = this.consumerTable.get(group);
             if (impl != null) {
                 try {
-                    impl.doRebalance();
+                    impl.rebalance();
                 }
                 catch (Exception e) {
-                    log.error("doRebalance exception", e);
+                    log.error("rebalance exception", e);
                 }
             }
         }
@@ -1174,7 +1174,7 @@ public class MQClientInstance {
         }
         finally {
             // 放在 finally 主要是确保 rebalance 一定被执行
-            consumer.getRebalanceImpl().doRebalance();
+            consumer.getRebalanceImpl().rebalance();
         }
     }
 

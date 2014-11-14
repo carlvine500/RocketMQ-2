@@ -29,7 +29,9 @@ import com.alibaba.rocketmq.common.ServiceThread;
  * @since 2013-7-24
  */
 public class RebalanceService extends ServiceThread {
+
     private final Logger log = ClientLogger.getLog();
+
     private final MQClientInstance mqClientFactory;
 
 

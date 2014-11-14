@@ -15,14 +15,14 @@
  */
 package com.alibaba.rocketmq.client.impl.consumer;
 
-import java.util.Set;
-
 import com.alibaba.rocketmq.common.consumer.ConsumeFromWhere;
 import com.alibaba.rocketmq.common.message.MessageQueue;
 import com.alibaba.rocketmq.common.protocol.body.ConsumerRunningInfo;
 import com.alibaba.rocketmq.common.protocol.heartbeat.ConsumeType;
 import com.alibaba.rocketmq.common.protocol.heartbeat.MessageModel;
 import com.alibaba.rocketmq.common.protocol.heartbeat.SubscriptionData;
+
+import java.util.Set;
 
 
 /**
@@ -31,9 +31,7 @@ import com.alibaba.rocketmq.common.protocol.heartbeat.SubscriptionData;
  * @author shijia.wxr<vintage.wang@gmail.com>
  * @since 2013-7-24
  */
-public interface MQConsumerInner {
-    public String groupName();
-
+public interface MQConsumerInner extends MQConsumerBaseInner {
 
     public MessageModel messageModel();
 
@@ -47,7 +45,7 @@ public interface MQConsumerInner {
     public Set<SubscriptionData> subscriptions();
 
 
-    public void doRebalance();
+    public void rebalance();
 
 
     public void persistConsumerOffset();

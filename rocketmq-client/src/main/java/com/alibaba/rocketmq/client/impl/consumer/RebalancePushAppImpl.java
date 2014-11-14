@@ -35,16 +35,16 @@ import java.util.concurrent.TimeUnit;
  * @author shijia.wxr<vintage.wang@gmail.com>
  * @since 2013-6-22
  */
-public class RebalancePushImpl extends RebalanceImpl {
+public class RebalancePushAppImpl extends RebalanceImpl {
 
     private final DefaultMQPushConsumerImpl defaultMQPushConsumerImpl;
 
-    public RebalancePushImpl(DefaultMQPushConsumerImpl defaultMQPushConsumerImpl) {
+    public RebalancePushAppImpl(DefaultMQPushConsumerImpl defaultMQPushConsumerImpl) {
         this(null, null, null, defaultMQPushConsumerImpl);
     }
 
-    public RebalancePushImpl(String consumerGroup, AllocateMessageQueueStrategy allocateMessageQueueStrategy,
-                             MQClientInstance mQClientFactory, DefaultMQPushConsumerImpl defaultMQPushConsumerImpl) {
+    public RebalancePushAppImpl(String consumerGroup, AllocateMessageQueueStrategy allocateMessageQueueStrategy,
+                                MQClientInstance mQClientFactory, DefaultMQPushConsumerImpl defaultMQPushConsumerImpl) {
         super(consumerGroup, allocateMessageQueueStrategy, mQClientFactory);
         this.defaultMQPushConsumerImpl = defaultMQPushConsumerImpl;
     }

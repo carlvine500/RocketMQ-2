@@ -15,14 +15,13 @@
  */
 package com.alibaba.rocketmq.client.impl.consumer;
 
-import java.util.List;
-import java.util.Set;
-
 import com.alibaba.rocketmq.client.consumer.AllocateMessageQueueStrategy;
 import com.alibaba.rocketmq.client.consumer.MessageQueueListener;
 import com.alibaba.rocketmq.client.impl.factory.MQClientInstance;
 import com.alibaba.rocketmq.common.message.MessageQueue;
-import com.alibaba.rocketmq.common.protocol.heartbeat.MessageModel;
+
+import java.util.List;
+import java.util.Set;
 
 
 /**
@@ -30,18 +29,18 @@ import com.alibaba.rocketmq.common.protocol.heartbeat.MessageModel;
  * @since 2013-6-22
  */
 public class RebalancePullImpl extends RebalanceImpl {
+
     private final DefaultMQPullConsumerImpl defaultMQPullConsumerImpl;
 
 
     public RebalancePullImpl(DefaultMQPullConsumerImpl defaultMQPullConsumerImpl) {
-        this(null, null, null, null, defaultMQPullConsumerImpl);
+        this(null, null, null, defaultMQPullConsumerImpl);
     }
 
 
-    public RebalancePullImpl(String consumerGroup, MessageModel messageModel,
-            AllocateMessageQueueStrategy allocateMessageQueueStrategy, MQClientInstance mQClientFactory,
+    public RebalancePullImpl(String consumerGroup, AllocateMessageQueueStrategy allocateMessageQueueStrategy, MQClientInstance mQClientFactory,
             DefaultMQPullConsumerImpl defaultMQPullConsumerImpl) {
-        super(consumerGroup, messageModel, allocateMessageQueueStrategy, mQClientFactory);
+        super(consumerGroup, allocateMessageQueueStrategy, mQClientFactory);
         this.defaultMQPullConsumerImpl = defaultMQPullConsumerImpl;
     }
 

@@ -70,31 +70,47 @@ import java.util.concurrent.ConcurrentHashMap;
  * @since 2013-6-15
  */
 public class DefaultMQPushConsumerImpl implements MQConsumerInner {
+
     // 拉消息异常时，延迟一段时间再拉
     private static final long PullTimeDelayMillsWhenException = 3000;
+
     // 本地内存队列慢，流控间隔时间
     private static final long PullTimeDelayMillsWhenFlowControl = 50;
+
     // 被挂起后，下次拉取间隔时间
     private static final long PullTimeDelayMillsWhenSuspend = 1000;
+
     // 长轮询模式，Consumer连接在Broker挂起最长时间
     private static final long BrokerSuspendMaxTimeMillis = 1000 * 15;
+
     // 长轮询模式，Consumer超时时间（必须要大于brokerSuspendMaxTimeMillis）
     private static final long ConsumerTimeoutMillisWhenSuspend = 1000 * 30;
+
     private final Logger log = ClientLogger.getLog();
+
     private final DefaultMQPushConsumer defaultMQPushConsumer;
+
     // Rebalance实现
     private final RebalanceImpl rebalanceImpl = new RebalancePushImpl(this);
+
     private ServiceState serviceState = ServiceState.CREATE_JUST;
+
     private MQClientInstance mQClientFactory;
+
     private PullAPIWrapper pullAPIWrapper;
+
     // 是否暂停接收消息 suspend/resume
     private volatile boolean pause = false;
+
     // 是否顺序消费消息
     private boolean consumeOrderly = false;
+
     // 消费消息监听器
     private MessageListener messageListenerInner;
+
     // 消费进度存储
     private OffsetStore offsetStore;
+
     // 消费消息服务
     private ConsumeMessageService consumeMessageService;
 
@@ -250,9 +266,9 @@ public class DefaultMQPushConsumerImpl implements MQConsumerInner {
 
 
     @Override
-    public void doRebalance() {
+    public void rebalance() {
         if (this.rebalanceImpl != null) {
-            this.rebalanceImpl.doRebalance();
+            this.rebalanceImpl.rebalance(defaultMQPushConsumer.getMessageModel());
         }
     }
 
@@ -684,7 +700,6 @@ public class DefaultMQPushConsumerImpl implements MQConsumerInner {
 
                 // 初始化Rebalance变量
                 this.rebalanceImpl.setConsumerGroup(this.defaultMQPushConsumer.getConsumerGroup());
-                this.rebalanceImpl.setMessageModel(this.defaultMQPushConsumer.getMessageModel());
                 this.rebalanceImpl.setAllocateMessageQueueStrategy(this.defaultMQPushConsumer
                         .getAllocateMessageQueueStrategy());
                 this.rebalanceImpl.setmQClientFactory(this.mQClientFactory);
@@ -1058,9 +1073,7 @@ public class DefaultMQPushConsumerImpl implements MQConsumerInner {
         long msgDuijiCntTotal = 0;
         ConcurrentHashMap<MessageQueue, ProcessQueue> processQueueTable =
                 this.rebalanceImpl.getProcessQueueTable();
-        Iterator<Entry<MessageQueue, ProcessQueue>> it = processQueueTable.entrySet().iterator();
-        while (it.hasNext()) {
-            Entry<MessageQueue, ProcessQueue> next = it.next();
+        for (Entry<MessageQueue, ProcessQueue> next : processQueueTable.entrySet()) {
             ProcessQueue value = next.getValue();
             msgDuijiCntTotal += value.getMsgDuijiCnt();
         }
@@ -1112,10 +1125,7 @@ public class DefaultMQPushConsumerImpl implements MQConsumerInner {
         info.getSubscriptionSet().addAll(subSet);
 
         // 消费进度、Rebalance、内部消费队列的信息
-        Iterator<Entry<MessageQueue, ProcessQueue>> it =
-                this.rebalanceImpl.getProcessQueueTable().entrySet().iterator();
-        while (it.hasNext()) {
-            Entry<MessageQueue, ProcessQueue> next = it.next();
+        for (Entry<MessageQueue, ProcessQueue> next : this.rebalanceImpl.getProcessQueueTable().entrySet()) {
             MessageQueue mq = next.getKey();
             ProcessQueue pq = next.getValue();
 

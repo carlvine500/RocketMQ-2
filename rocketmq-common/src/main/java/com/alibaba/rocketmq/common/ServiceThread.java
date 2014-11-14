@@ -23,15 +23,19 @@ import com.alibaba.rocketmq.common.constant.LoggerName;
 
 /**
  * 后台服务线程基类
- * 
+ *
  * @author shijia.wxr<vintage.wang@gmail.com>
  */
 public abstract class ServiceThread implements Runnable {
-    private static final Logger stlog = LoggerFactory.getLogger(LoggerName.CommonLoggerName);
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(LoggerName.CommonLoggerName);
+
     // 执行线程
     protected final Thread thread;
+
     // 线程回收时间，默认90S
     private static final long JoinTime = 90 * 1000;
+
     // 是否已经被Notify过
     protected volatile boolean hasNotified = false;
 
@@ -64,13 +68,13 @@ public abstract class ServiceThread implements Runnable {
 
     public void makeStop() {
         this.stopped = true;
-        stlog.info("makestop thread " + this.getServiceName());
+        LOGGER.info("makeStop thread " + this.getServiceName());
     }
 
 
     public void stop(final boolean interrupt) {
         this.stopped = true;
-        stlog.info("stop thread " + this.getServiceName() + " interrupt " + interrupt);
+        LOGGER.info("stop thread " + this.getServiceName() + " interrupt " + interrupt);
         synchronized (this) {
             if (!this.hasNotified) {
                 this.hasNotified = true;
@@ -86,7 +90,7 @@ public abstract class ServiceThread implements Runnable {
 
     public void shutdown(final boolean interrupt) {
         this.stopped = true;
-        stlog.info("shutdown thread " + this.getServiceName() + " interrupt " + interrupt);
+        LOGGER.info("shutdown thread " + this.getServiceName() + " interrupt " + interrupt);
         synchronized (this) {
             if (!this.hasNotified) {
                 this.hasNotified = true;
@@ -104,10 +108,9 @@ public abstract class ServiceThread implements Runnable {
                 this.thread.join(this.getJoinTime());
             }
             long eclipseTime = System.currentTimeMillis() - beginTime;
-            stlog.info("join thread " + this.getServiceName() + " eclipse time(ms) " + eclipseTime + " "
+            LOGGER.info("join thread " + this.getServiceName() + " eclipse time(ms) " + eclipseTime + " "
                     + this.getJoinTime());
-        }
-        catch (InterruptedException e) {
+        } catch (InterruptedException e) {
             e.printStackTrace();
         }
     }
@@ -133,11 +136,9 @@ public abstract class ServiceThread implements Runnable {
 
             try {
                 this.wait(interval);
-            }
-            catch (InterruptedException e) {
+            } catch (InterruptedException e) {
                 e.printStackTrace();
-            }
-            finally {
+            } finally {
                 this.hasNotified = false;
                 this.onWaitEnd();
             }
